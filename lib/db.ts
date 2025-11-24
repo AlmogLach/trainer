@@ -834,13 +834,39 @@ export async function addToDailyNutritionLog(
 
 // ============= NUTRITION SWAPS =============
 export async function getNutritionSwaps() {
-  const { data, error } = await supabase
-    .from('nutrition_swaps')
-    .select('*')
-    .order('food_name', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('nutrition_swaps')
+      .select('*')
+      .order('food_name', { ascending: true });
 
-  if (error) throw error;
-  return data || [];
+    if (error) {
+      console.error('Error fetching nutrition swaps:', error);
+      // If RLS error, provide helpful message
+      if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
+        throw new DatabaseError(
+          'RLS policy issue: Please ensure "Allow public read access on nutrition_swaps" policy exists. Run setup-rls-policies.sql',
+          error,
+          error.code
+        );
+      }
+      // If table doesn't exist
+      if (error.code === '42P01' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        throw new DatabaseError(
+          'nutrition_swaps table does not exist. Please run the migration to create it.',
+          error,
+          error.code
+        );
+      }
+      throw error;
+    }
+    
+    console.log(`Loaded ${data?.length || 0} nutrition swaps from database`);
+    return data || [];
+  } catch (err: any) {
+    console.error('getNutritionSwaps error:', err);
+    throw err;
+  }
 }
 
 // ============= FOOD HISTORY =============

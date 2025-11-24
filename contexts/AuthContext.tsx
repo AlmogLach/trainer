@@ -24,6 +24,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Helper to cache user data in sessionStorage
+    const cacheUser = (userData: User) => {
+      try {
+        sessionStorage.setItem('cached_user', JSON.stringify({
+          user: userData,
+          timestamp: Date.now(),
+        }));
+      } catch (e) {
+        // Ignore storage errors (e.g., in private mode)
+      }
+    };
+
+    // Helper to get cached user data
+    const getCachedUser = (): User | null => {
+      try {
+        const cached = sessionStorage.getItem('cached_user');
+        if (!cached) return null;
+        
+        const { user: cachedUser, timestamp } = JSON.parse(cached);
+        // Cache is valid for 5 minutes
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          return cachedUser;
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
     // Initial load - check session first
     const initAuth = async () => {
       try {
@@ -35,6 +64,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // No session - user is not logged in
           setUser(null);
           setLoading(false);
+          // Clear cache
+          try {
+            sessionStorage.removeItem('cached_user');
+          } catch {}
+          return;
+        }
+
+        // Check cache first
+        const cachedUser = getCachedUser();
+        if (cachedUser && cachedUser.id === session.user.id) {
+          setUser(cachedUser);
+          setLoading(false);
+          // Still refresh in background
+          getCurrentUser()
+            .then((currentUser) => {
+              if (mounted && currentUser) {
+                setUser(currentUser);
+                cacheUser(currentUser);
+              }
+            })
+            .catch((error) => {
+              console.error('Error loading user from DB:', error);
+            });
           return;
         }
 
@@ -64,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .then((currentUser) => {
             if (mounted && currentUser) {
               setUser(currentUser);
+              cacheUser(currentUser);
             }
           })
           .catch((error) => {
@@ -93,6 +146,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
+          // Helper to cache user data
+          const cacheUser = (userData: User) => {
+            try {
+              sessionStorage.setItem('cached_user', JSON.stringify({
+                user: userData,
+                timestamp: Date.now(),
+              }));
+            } catch (e) {
+              // Ignore storage errors
+            }
+          };
+
           // Create user from auth data first
           const tempUser: User = {
             id: session.user.id,
@@ -118,6 +183,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .then((currentUser) => {
             if (mounted && currentUser) {
               setUser(currentUser);
+              // Cache the user data
+              try {
+                sessionStorage.setItem('cached_user', JSON.stringify({
+                  user: currentUser,
+                  timestamp: Date.now(),
+                }));
+              } catch (e) {
+                // Ignore storage errors
+              }
             }
           })
           .catch((error) => {
@@ -136,6 +210,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setLoading(false);
+    // Clear cache
+    try {
+      sessionStorage.removeItem('cached_user');
+    } catch {}
   };
 
   return (

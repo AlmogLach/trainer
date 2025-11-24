@@ -10,19 +10,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import { getTrainerTrainees, getTrainerStats, getTraineesWithStatus, getWorkoutLogs, getBodyWeightHistory } from "@/lib/db";
+import { getTrainerStats, getTraineesWithStatus, getTrainerTrainees, getWorkoutLogs, getBodyWeightHistory } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import type { User as UserType } from "@/lib/types";
 
 function TrainerDashboardContent() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const [trainees, setTrainees] = useState<Array<{
-    id: string;
-    name: string;
-    planActive: boolean;
-    lastWorkout: string | null;
-  }>>([]);
   const [stats, setStats] = useState({
     activeTrainees: 0,
     workoutsToday: { completed: 0, total: 0 },
@@ -50,19 +44,13 @@ function TrainerDashboardContent() {
       setLoading(true);
       setError(null);
 
-      // Load all data in parallel
-      const [traineesList, statsData, statusData] = await Promise.all([
-        getTrainerTrainees(trainerId),
+      // Load data in parallel - getTraineesWithStatus already includes all trainee data
+      // No need to call getTrainerTrainees separately (it's called inside getTraineesWithStatus)
+      const [statsData, statusData] = await Promise.all([
         getTrainerStats(trainerId),
         getTraineesWithStatus(trainerId),
       ]);
 
-      setTrainees(traineesList.map(t => ({
-        id: t.id,
-        name: t.name,
-        planActive: false,
-        lastWorkout: null,
-      })));
       setStats(statsData);
       setTraineesWithStatus(statusData);
     } catch (err: any) {
@@ -119,20 +107,34 @@ function TrainerDashboardContent() {
     try {
       if (!trainerId) return;
 
-      const trainees = await getTrainerTrainees(trainerId);
+      // Use already loaded traineesWithStatus instead of fetching again
+      const trainees = traineesWithStatus.length > 0 
+        ? traineesWithStatus 
+        : await getTraineesWithStatus(trainerId);
+      
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       const headers = ["שם", "תוכנית", "אימונים השבוע", "התאמה", "משקל ממוצע", "שינוי משקל", "נפח כולל", "אימון אחרון"];
       const rows: string[][] = [];
 
-      for (const trainee of trainees) {
-        const logs = await getWorkoutLogs(trainee.id);
+      // Load all data in parallel for all trainees (batch loading)
+      const traineeIds = trainees.map(t => t.id);
+      const [allLogs, allWeights] = await Promise.all([
+        Promise.all(traineeIds.map(id => getWorkoutLogs(id))),
+        Promise.all(traineeIds.map(id => getBodyWeightHistory(id)))
+      ]);
+
+      // Process each trainee using pre-loaded data
+      for (let i = 0; i < trainees.length; i++) {
+        const trainee = trainees[i];
+        const logs = allLogs[i];
+        const weightHistory = allWeights[i];
+        
         const weekLogs = logs.filter(log => 
           new Date(log.date) >= weekAgo && log.completed
         );
 
-        const weightHistory = await getBodyWeightHistory(trainee.id);
         let averageWeight: number | null = null;
         let weightChange: number | null = null;
         
@@ -157,18 +159,15 @@ function TrainerDashboardContent() {
           });
         });
 
-        const traineesWithStatus = await getTraineesWithStatus(trainerId);
-        const traineeStatus = traineesWithStatus.find(t => t.id === trainee.id);
-
         rows.push([
           trainee.name,
-          traineeStatus?.planName || "אין תוכנית",
+          trainee.planName || "אין תוכנית",
           weekLogs.length.toString(),
-          `${traineeStatus?.compliance || 0}%`,
+          `${trainee.compliance || 0}%`,
           averageWeight ? `${averageWeight.toFixed(1)} ק"ג` : "אין",
           weightChange ? `${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)} ק"ג` : "אין",
           `${totalVolume.toFixed(0)} ק"ג`,
-          traineeStatus?.lastWorkout ? new Date(traineeStatus.lastWorkout).toLocaleDateString("he-IL") : "אין"
+          trainee.lastWorkout ? new Date(trainee.lastWorkout).toLocaleDateString("he-IL") : "אין"
         ]);
       }
 
@@ -199,8 +198,11 @@ function TrainerDashboardContent() {
     try {
       if (!trainerId) return;
 
-      const trainees = await getTrainerTrainees(trainerId);
-      const stats = await getTrainerStats(trainerId);
+      // Use already loaded data instead of fetching again
+      const trainees = traineesWithStatus.length > 0 
+        ? traineesWithStatus 
+        : await getTraineesWithStatus(trainerId);
+      const currentStats = stats.activeTrainees > 0 ? stats : await getTrainerStats(trainerId);
 
       const headers = ["שם", "סטטוס", "אימונים (סה\"כ)", "אימונים (שבוע)", "אימונים (חודש)", "התאמה", "משקל ממוצע", "נפח כולל"];
       const rows: string[][] = [];
@@ -209,13 +211,23 @@ function TrainerDashboardContent() {
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-      for (const trainee of trainees) {
-        const logs = await getWorkoutLogs(trainee.id);
+      // Load all data in parallel for all trainees (batch loading)
+      const traineeIds = trainees.map(t => t.id);
+      const [allLogs, allWeights] = await Promise.all([
+        Promise.all(traineeIds.map(id => getWorkoutLogs(id))),
+        Promise.all(traineeIds.map(id => getBodyWeightHistory(id)))
+      ]);
+
+      // Process each trainee using pre-loaded data
+      for (let i = 0; i < trainees.length; i++) {
+        const trainee = trainees[i];
+        const logs = allLogs[i];
+        const weightHistory = allWeights[i];
+        
         const completedLogs = logs.filter(log => log.completed);
         const weekLogs = completedLogs.filter(log => new Date(log.date) >= weekAgo);
         const monthLogs = completedLogs.filter(log => new Date(log.date) >= monthAgo);
 
-        const weightHistory = await getBodyWeightHistory(trainee.id);
         let averageWeight: number | null = null;
         
         if (weightHistory.length > 0) {
@@ -233,16 +245,13 @@ function TrainerDashboardContent() {
           });
         });
 
-        const traineesWithStatus = await getTraineesWithStatus(trainerId);
-        const traineeStatus = traineesWithStatus.find(t => t.id === trainee.id);
-
         rows.push([
           trainee.name,
-          traineeStatus?.status === 'active' ? 'פעיל' : 'לא פעיל',
+          trainee.status === 'active' ? 'פעיל' : 'לא פעיל',
           completedLogs.length.toString(),
           weekLogs.length.toString(),
           monthLogs.length.toString(),
-          `${traineeStatus?.compliance || 0}%`,
+          `${trainee.compliance || 0}%`,
           averageWeight ? `${averageWeight.toFixed(1)} ק"ג` : "אין",
           `${totalVolume.toFixed(0)} ק"ג`
         ]);
@@ -250,9 +259,9 @@ function TrainerDashboardContent() {
 
       const csvContent = [
         "דוח ביצועים - " + new Date().toLocaleDateString("he-IL"),
-        `מתאמנים פעילים: ${stats.activeTrainees}`,
-        `אימונים היום: ${stats.workoutsToday.completed}/${stats.workoutsToday.total}`,
-        `התאמה ממוצעת: ${stats.averageCompliance}%`,
+        `מתאמנים פעילים: ${currentStats.activeTrainees}`,
+        `אימונים היום: ${currentStats.workoutsToday.completed}/${currentStats.workoutsToday.total}`,
+        `התאמה ממוצעת: ${currentStats.averageCompliance}%`,
         "",
         headers.join(","),
         ...rows.map(row => row.join(","))

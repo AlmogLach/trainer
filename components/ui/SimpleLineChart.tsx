@@ -13,6 +13,7 @@ export interface SimpleLineChartProps {
   chartWidth?: number;
   yAxisSteps?: number;
   useThemeColors?: boolean; // Use theme classes instead of hardcoded colors
+  label?: string; // Optional label at the bottom
 }
 
 export function SimpleLineChart({ 
@@ -24,7 +25,8 @@ export function SimpleLineChart({
   className = "",
   chartWidth: propChartWidth,
   yAxisSteps = 3,
-  useThemeColors = false
+  useThemeColors = false,
+  label
 }: SimpleLineChartProps) {
   if (data.length === 0) {
     return (
@@ -128,8 +130,26 @@ export function SimpleLineChart({
               className={useThemeColors ? "fill-primary stroke-background" : undefined}
               strokeWidth="2"
             />
+            {/* Tooltip on hover - shows on native hover */}
+            <title>
+              {new Date(point.date).toLocaleDateString("he-IL")}: {point.value.toFixed(unit === "kg" ? 1 : 0)}{unit}
+            </title>
           </g>
         ))}
+        
+        {/* Optional label at the bottom */}
+        {label && (
+          <text
+            x={(propChartWidth ?? 350) / 2}
+            y={chartHeight - 10}
+            fontSize="12"
+            textAnchor="middle"
+            fill={textColor}
+            className={useThemeColors ? "fill-muted-foreground font-medium" : undefined}
+          >
+            {label}
+          </text>
+        )}
       </svg>
     </div>
   );

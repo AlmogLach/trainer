@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
-  ArrowLeft, Save, Plus, X, Loader2, Apple, Trash2, Edit, Search, History
+  ArrowLeft, Save, Plus, Loader2, Apple
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -20,6 +20,9 @@ import {
 } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
 import type { NutritionMenu } from "@/lib/types";
+import { MealCard, type Meal } from "@/components/trainer/nutrition/MealCard";
+import { FoodHistorySidebar } from "@/components/trainer/nutrition/FoodHistorySidebar";
+import { MacrosDistribution } from "@/components/trainer/nutrition/MacrosDistribution";
 
 function EditNutritionPlanContent() {
   const params = useParams();
@@ -35,17 +38,8 @@ function EditNutritionPlanContent() {
   const [carbsPercent, setCarbsPercent] = useState(40);
   const [fatPercent, setFatPercent] = useState(30);
   
-  const [meals, setMeals] = useState<Array<{
-    id: string;
-    mealName: string;
-    foods: Array<{
-      id: string;
-      foodName: string;
-      amount: string;
-    }>;
-  }>>([]);
+  const [meals, setMeals] = useState<Meal[]>([]);
   
-  const [editingMealName, setEditingMealName] = useState<Record<string, string>>({});
   const [foodHistory, setFoodHistory] = useState<FoodHistoryItem[]>([]);
   const [loadingFoodHistory, setLoadingFoodHistory] = useState(false);
   const [showFoodHistory, setShowFoodHistory] = useState(false);
@@ -59,15 +53,6 @@ function EditNutritionPlanContent() {
       loadFoodHistory();
     }
   }, [traineeId, user?.id]);
-
-  useEffect(() => {
-    // Ensure percentages sum to 100
-    const total = proteinPercent + carbsPercent + fatPercent;
-    if (total !== 100) {
-      const diff = 100 - total;
-      setFatPercent(prev => prev + diff);
-    }
-  }, [proteinPercent, carbsPercent]);
 
   const loadNutritionPlan = async () => {
     try {
@@ -175,15 +160,6 @@ function EditNutritionPlanContent() {
         ? { ...meal, mealName: newName }
         : meal
     ));
-    setEditingMealName(prev => {
-      const updated = { ...prev };
-      delete updated[mealId];
-      return updated;
-    });
-  };
-
-  const startEditingMealName = (mealId: string, currentName: string) => {
-    setEditingMealName(prev => ({ ...prev, [mealId]: currentName }));
   };
 
   const addFoodFromHistory = (mealId: string, food: FoodHistoryItem) => {
@@ -203,9 +179,9 @@ function EditNutritionPlanContent() {
     setShowFoodHistory(false);
   };
 
-  const filteredFoodHistory = foodHistory.filter(food =>
-    food.foodName.toLowerCase().includes(foodSearchQuery.toLowerCase())
-  );
+  const selectedMealName = selectedMealForFood 
+    ? meals.find(m => m.id === selectedMealForFood)?.mealName || null
+    : null;
 
   const handleSave = async () => {
     if (!planName.trim()) {
@@ -313,83 +289,14 @@ function EditNutritionPlanContent() {
               />
             </div>
 
-            {/* Macronutrient Distribution */}
-            <div>
-              <label className="text-sm text-gray-400 mb-2 block">חלוקת מקרונוטריינטים:</label>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">חלבון (%)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={proteinPercent}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
-                      const remaining = 100 - value - carbsPercent;
-                      setProteinPercent(value);
-                      if (remaining >= 0 && remaining <= 100) {
-                        setFatPercent(remaining);
-                      }
-                    }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">פחמימות (%)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={carbsPercent}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
-                      const remaining = 100 - proteinPercent - value;
-                      setCarbsPercent(value);
-                      if (remaining >= 0 && remaining <= 100) {
-                        setFatPercent(remaining);
-                      }
-                    }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">שומן (%)</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={fatPercent}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 0;
-                      const remaining = 100 - proteinPercent - carbsPercent;
-                      setFatPercent(value);
-                      if (remaining >= 0 && remaining <= 100) {
-                        setCarbsPercent(remaining);
-                      }
-                    }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
-                  />
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#00ff88]"></div>
-                  <span className="text-gray-400">חלבון: {proteinPercent}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#ffa500]"></div>
-                  <span className="text-gray-400">פחמימות: {carbsPercent}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#ff6b6b]"></div>
-                  <span className="text-gray-400">שומן: {fatPercent}%</span>
-                </div>
-                <span className={`text-xs ${proteinPercent + carbsPercent + fatPercent === 100 ? 'text-[#00ff88]' : 'text-red-400'}`}>
-                  סה"כ: {proteinPercent + carbsPercent + fatPercent}%
-                </span>
-              </div>
-            </div>
+            <MacrosDistribution
+              proteinPercent={proteinPercent}
+              carbsPercent={carbsPercent}
+              fatPercent={fatPercent}
+              onProteinChange={setProteinPercent}
+              onCarbsChange={setCarbsPercent}
+              onFatChange={setFatPercent}
+            />
           </CardContent>
         </Card>
 
@@ -412,160 +319,20 @@ function EditNutritionPlanContent() {
           </CardHeader>
           <CardContent className="space-y-6">
             {meals.map((meal) => (
-              <div key={meal.id} className="border border-gray-800 rounded-lg p-4 bg-[#0f1a2a]">
-                <div className="flex items-center justify-between mb-4">
-                  {editingMealName[meal.id] !== undefined ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <Input
-                        value={editingMealName[meal.id]}
-                        onChange={(e) => setEditingMealName(prev => ({ ...prev, [meal.id]: e.target.value }))}
-                        onBlur={() => {
-                          if (editingMealName[meal.id]?.trim()) {
-                            updateMealName(meal.id, editingMealName[meal.id].trim());
-                          } else {
-                            setEditingMealName(prev => {
-                              const updated = { ...prev };
-                              delete updated[meal.id];
-                              return updated;
-                            });
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            if (editingMealName[meal.id]?.trim()) {
-                              updateMealName(meal.id, editingMealName[meal.id].trim());
-                            }
-                          } else if (e.key === 'Escape') {
-                            setEditingMealName(prev => {
-                              const updated = { ...prev };
-                              delete updated[meal.id];
-                              return updated;
-                            });
-                          }
-                        }}
-                        autoFocus
-                        className="bg-[#1a2332] border-gray-700 text-white flex-1 max-w-xs"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (editingMealName[meal.id]?.trim()) {
-                            updateMealName(meal.id, editingMealName[meal.id].trim());
-                          }
-                        }}
-                        className="bg-[#00ff88] hover:bg-[#00e677] text-black"
-                      >
-                        שמור
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingMealName(prev => {
-                            const updated = { ...prev };
-                            delete updated[meal.id];
-                            return updated;
-                          });
-                        }}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <h3 
-                        className="text-lg font-semibold text-white cursor-pointer hover:text-[#00ff88] transition-colors"
-                        onClick={() => startEditingMealName(meal.id, meal.mealName)}
-                      >
-                        {meal.mealName}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => startEditingMealName(meal.id, meal.mealName)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {meals.length > 1 && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => removeMeal(meal.id)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedMealForFood(meal.id);
-                              setShowFoodHistory(true);
-                            }}
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                            title="הוסף מהיסטוריה"
-                          >
-                            <History className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => addFoodToMeal(meal.id)}
-                            className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
-                          >
-                            <Plus className="h-4 w-4 ml-2" />
-                            הוסף מזון
-                          </Button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {meal.foods.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-4">אין מזונות בארוחה זו</p>
-                ) : (
-                  <div className="space-y-3">
-                    {meal.foods.map((food) => (
-                      <div key={food.id} className="flex items-center gap-3 p-3 bg-[#1a2332] rounded-lg border border-gray-800">
-                        <div className="flex-1 grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-xs text-gray-400 mb-1 block">שם המזון:</label>
-                            <Input
-                              value={food.foodName}
-                              onChange={(e) => updateFood(meal.id, food.id, "foodName", e.target.value)}
-                              placeholder="לדוגמה: חזה עוף"
-                              className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-xs text-gray-400 mb-1 block">כמות (גרם):</label>
-                            <Input
-                              type="number"
-                              value={food.amount}
-                              onChange={(e) => updateFood(meal.id, food.id, "amount", e.target.value)}
-                              placeholder="200"
-                              className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeFoodFromMeal(meal.id, food.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <MealCard
+                key={meal.id}
+                meal={meal}
+                isOnlyMeal={meals.length === 1}
+                onUpdateName={updateMealName}
+                onAddFood={addFoodToMeal}
+                onRemoveFood={removeFoodFromMeal}
+                onUpdateFood={updateFood}
+                onRemove={removeMeal}
+                onOpenFoodHistory={(mealId) => {
+                  setSelectedMealForFood(mealId);
+                  setShowFoodHistory(true);
+                }}
+              />
             ))}
           </CardContent>
         </Card>
@@ -601,111 +368,30 @@ function EditNutritionPlanContent() {
       </div>
 
       {/* Food History Sidebar */}
-      <aside className={`
-        ${showFoodHistory ? 'flex' : 'hidden'} lg:flex
-        lg:w-80 flex-col bg-[#1a2332] border-l border-gray-800
-        fixed lg:relative inset-y-0 left-0 z-30 lg:z-auto
-      `}>
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <History className="h-5 w-5" />
-            היסטוריית מזונות
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden text-white hover:bg-gray-800"
-            onClick={() => {
-              setShowFoodHistory(false);
-              setSelectedMealForFood(null);
-            }}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-        
-        <div className="p-4 border-b border-gray-800">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              value={foodSearchQuery}
-              onChange={(e) => setFoodSearchQuery(e.target.value)}
-              placeholder="חפש מזון..."
-              className="bg-[#0f1a2a] border-gray-700 text-white pr-10"
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {loadingFoodHistory ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-[#00ff88]" />
-            </div>
-          ) : selectedMealForFood ? (
-            <div className="mb-3 p-3 bg-[#00ff88]/20 border border-[#00ff88]/50 rounded-lg">
-              <p className="text-xs text-[#00ff88] font-semibold mb-1">מוסיף לארוחה:</p>
-              <p className="text-sm text-white">
-                {meals.find(m => m.id === selectedMealForFood)?.mealName || ''}
-              </p>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSelectedMealForFood(null);
-                  setShowFoodHistory(false);
-                }}
-                className="mt-2 text-xs text-gray-400 hover:text-white h-6 px-2"
-              >
-                <X className="h-3 w-3 ml-1" />
-                ביטול בחירה
-              </Button>
-            </div>
-          ) : null}
-          
-          {filteredFoodHistory.length === 0 && !loadingFoodHistory ? (
-            <div className="text-center text-gray-500 py-8">
-              אין היסטוריית מזונות
-            </div>
-          ) : (
-            filteredFoodHistory.map((food, index) => (
-              <div
-                key={`${food.foodName}-${index}`}
-                className="flex items-center gap-3 p-3 bg-[#0f1a2a] rounded-lg hover:bg-[#1a2332] cursor-pointer border border-gray-800"
-                onClick={() => {
-                  if (selectedMealForFood) {
-                    addFoodFromHistory(selectedMealForFood, food);
-                  } else if (meals.length > 0) {
-                    // Auto-select first meal if none selected
-                    addFoodFromHistory(meals[0].id, food);
-                  }
-                }}
-              >
-                <Apple className="h-5 w-5 text-gray-400" />
-                <div className="flex-1">
-                  <p className="text-white text-sm">{food.foodName}</p>
-                  {food.amount && (
-                    <p className="text-gray-500 text-xs">כמות: {food.amount} גרם</p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  className="bg-[#00ff88] hover:bg-[#00e677] text-black"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (selectedMealForFood) {
-                      addFoodFromHistory(selectedMealForFood, food);
-                    } else if (meals.length > 0) {
-                      addFoodFromHistory(meals[0].id, food);
-                    }
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
-          )}
-        </div>
-      </aside>
+      <div className={`${showFoodHistory ? 'flex' : 'hidden'} lg:flex lg:w-80`}>
+        <FoodHistorySidebar
+          foodHistory={foodHistory}
+          loading={loadingFoodHistory}
+          searchQuery={foodSearchQuery}
+          onSearchChange={setFoodSearchQuery}
+          selectedMealId={selectedMealForFood}
+          mealName={selectedMealName}
+          onAddFood={(food) => {
+            if (selectedMealForFood) {
+              addFoodFromHistory(selectedMealForFood, food);
+            } else if (meals.length > 0) {
+              addFoodFromHistory(meals[0].id, food);
+            }
+          }}
+          onClose={() => {
+            setShowFoodHistory(false);
+            setSelectedMealForFood(null);
+          }}
+          onCancelSelection={() => {
+            setSelectedMealForFood(null);
+          }}
+        />
+      </div>
       </div>
     </div>
   );

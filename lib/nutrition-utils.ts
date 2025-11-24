@@ -92,9 +92,10 @@ export function getMatchQuality(
   // Average match (lower is better)
   const avgMatch = (proteinMatch + carbsMatch + fatMatch + calorieMatch) / 4;
   
-  if (avgMatch < 0.1) return { text: "מצוינת", color: "green", score: avgMatch };
-  if (avgMatch < 0.2) return { text: "טובה", color: "green", score: avgMatch };
-  if (avgMatch < 0.3) return { text: "בינונית", color: "yellow", score: avgMatch };
+  // More lenient thresholds - "close enough" is good
+  if (avgMatch < 0.15) return { text: "מצוינת", color: "green", score: avgMatch };
+  if (avgMatch < 0.25) return { text: "טובה", color: "green", score: avgMatch };
+  if (avgMatch < 0.4) return { text: "סבירה", color: "yellow", score: avgMatch };
   return { text: "נמוכה", color: "red", score: avgMatch };
 }
 

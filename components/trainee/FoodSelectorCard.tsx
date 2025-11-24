@@ -37,9 +37,16 @@ export function FoodSelectorCard({
             {foodName || "בחר מזון"}
           </p>
           {foodName && amount && (
-            <p className="text-gray-400 text-sm mt-1">
-              ({amount} גרם)
-            </p>
+            <div className="mt-1">
+              <p className="text-[#00ff88] font-bold text-base">
+                {title === "יעד:" ? `~${amount}` : amount} גרם
+              </p>
+              {title === "יעד:" && (
+                <p className="text-gray-500 text-xs mt-0.5">
+                  כמות משוערת לערכים דומים
+                </p>
+              )}
+            </div>
           )}
         </div>
         <Button
