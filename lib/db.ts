@@ -19,6 +19,38 @@ import type {
   NutritionMenu,
 } from './types';
 
+// ============= ERROR HANDLING =============
+export class DatabaseError extends Error {
+  constructor(
+    message: string,
+    public readonly originalError?: any,
+    public readonly code?: string
+  ) {
+    super(message);
+    this.name = 'DatabaseError';
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, DatabaseError);
+    }
+  }
+}
+
+function handleDatabaseError(operation: string, error: any): never {
+  if (error?.code === '42703' || error?.code === 'PGRST204' || error?.message?.includes('column')) {
+    throw new DatabaseError(
+      `Column or table does not exist. Please run the migration. Operation: ${operation}`,
+      error,
+      error?.code
+    );
+  }
+  
+  throw new DatabaseError(
+    `Database operation failed: ${operation}. ${error?.message || 'Unknown error'}`,
+    error,
+    error?.code
+  );
+}
+
 // ============= USERS =============
 export async function getTrainerTrainees(trainerId: string): Promise<User[]> {
   const { data, error } = await supabase
@@ -28,7 +60,7 @@ export async function getTrainerTrainees(trainerId: string): Promise<User[]> {
     .eq('role', 'trainee')
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) handleDatabaseError('getTrainerTrainees', error);
   return data || [];
 }
 
@@ -402,52 +434,60 @@ export async function getBodyWeightHistory(traineeId: string): Promise<Array<{ d
 export async function saveBodyWeight(traineeId: string, weight: number): Promise<void> {
   const today = new Date().toISOString().split('T')[0];
   
-  // Check if there's a workout log for today (with or without sets)
-  const { data: existingLogs, error: fetchError } = await supabase
-    .from('workout_logs')
-    .select('id, routine_id')
-    .eq('user_id', traineeId)
-    .eq('date', today)
-    .limit(1);
-
-  if (fetchError) throw fetchError;
-
-  if (existingLogs && existingLogs.length > 0) {
-    // Update existing log with body weight
-    const { error: updateError } = await supabase
+  try {
+    // Check if there's a workout log for today (with or without sets)
+    const { data: existingLogs, error: fetchError } = await supabase
       .from('workout_logs')
-      .update({ body_weight: weight })
-      .eq('id', existingLogs[0].id);
+      .select('id, routine_id')
+      .eq('user_id', traineeId)
+      .eq('date', today)
+      .limit(1);
 
-    if (updateError) throw updateError;
-  } else {
-    // Need to create a new log, but we need a routine_id (required field)
-    // Get active workout plan to get routine_id
-    const plan = await getActiveWorkoutPlan(traineeId);
-    if (!plan) {
-      throw new Error('אין תוכנית אימונים פעילה');
+    if (fetchError) handleDatabaseError('saveBodyWeight (fetch)', fetchError);
+
+    if (existingLogs && existingLogs.length > 0) {
+      // Update existing log with body weight
+      const { error: updateError } = await supabase
+        .from('workout_logs')
+        .update({ body_weight: weight })
+        .eq('id', existingLogs[0].id);
+
+      if (updateError) handleDatabaseError('saveBodyWeight (update)', updateError);
+    } else {
+      // Need to create a new log, but we need a routine_id (required field)
+      // Get active workout plan to get routine_id
+      const plan = await getActiveWorkoutPlan(traineeId);
+      if (!plan) {
+        throw new DatabaseError('אין תוכנית אימונים פעילה');
+      }
+
+      // Get routines to find the first one (default)
+      const routines = await getRoutinesWithExercises(plan.id);
+      if (routines.length === 0) {
+        throw new DatabaseError('אין routines בתוכנית');
+      }
+      const routineId = routines[0].id;
+
+      // Create new log for today with body weight only (no sets = not a real workout)
+      const { error: insertError } = await supabase
+        .from('workout_logs')
+        .insert({
+          user_id: traineeId,
+          routine_id: routineId,
+          date: today,
+          body_weight: weight,
+          start_time: new Date().toISOString(),
+          completed: false,
+        });
+
+      if (insertError) handleDatabaseError('saveBodyWeight (insert)', insertError);
     }
-
-    // Get routines to find the first one (default)
-    const routines = await getRoutinesWithExercises(plan.id);
-    if (routines.length === 0) {
-      throw new Error('אין routines בתוכנית');
+  } catch (error) {
+    // Re-throw DatabaseError as-is, wrap others
+    if (error instanceof DatabaseError) {
+      throw error;
     }
-    const routineId = routines[0].id;
-
-    // Create new log for today with body weight only (no sets = not a real workout)
-    const { error: insertError } = await supabase
-      .from('workout_logs')
-      .insert({
-        user_id: traineeId,
-        routine_id: routineId,
-        date: today,
-        body_weight: weight,
-        start_time: new Date().toISOString(),
-        completed: false,
-      });
-
-    if (insertError) throw insertError;
+    handleDatabaseError('saveBodyWeight', error);
   }
 }
 
