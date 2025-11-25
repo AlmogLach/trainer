@@ -459,40 +459,11 @@ function WorkoutSummaryContent() {
         </div>
       </div>
 
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1a2332] border-t border-gray-800 px-4 py-2 pb-safe">
-        <div className="max-w-md mx-auto flex items-center justify-around">
-          <Link href="/trainee/dashboard" className="flex flex-col items-center gap-1 py-2 px-4">
-            <Home className={`h-5 w-5 ${pathname === '/trainee/dashboard' ? 'text-[#00ff88]' : 'text-gray-500'}`} />
-            <span className={`text-xs ${pathname === '/trainee/dashboard' ? 'text-[#00ff88]' : 'text-gray-500'}`}>בית</span>
-          </Link>
-          <Link href="/trainee/history" className="flex flex-col items-center gap-1 py-2 px-4">
-            <BarChart3 className={`h-5 w-5 ${pathname === '/trainee/history' ? 'text-[#00ff88]' : 'text-gray-500'}`} />
-            <span className={`text-xs ${pathname === '/trainee/history' ? 'text-[#00ff88]' : 'text-gray-500'}`}>התקדמות</span>
-          </Link>
-          <Link href="/trainee/nutrition" className="flex flex-col items-center gap-1 py-2 px-4">
-            <Apple className={`h-5 w-5 ${pathname === '/trainee/nutrition' ? 'text-[#00ff88]' : 'text-gray-500'}`} />
-            <span className={`text-xs ${pathname === '/trainee/nutrition' ? 'text-[#00ff88]' : 'text-gray-500'}`}>תזונה</span>
-          </Link>
-          <Link href="/trainee/workout" className="flex flex-col items-center gap-1 py-2 px-4">
-            <Dumbbell className={`h-5 w-5 ${pathname?.startsWith('/trainee/workout') ? 'text-[#00ff88]' : 'text-gray-500'}`} />
-            <span className={`text-xs ${pathname?.startsWith('/trainee/workout') ? 'text-[#00ff88]' : 'text-gray-500'}`}>אימון</span>
-          </Link>
-          <Link href="/trainee/settings" className="flex flex-col items-center gap-1 py-2 px-4">
-            <Settings className={`h-5 w-5 ${pathname === '/trainee/settings' ? 'text-[#00ff88]' : 'text-gray-500'}`} />
-            <span className={`text-xs ${pathname === '/trainee/settings' ? 'text-[#00ff88]' : 'text-gray-500'}`}>הגדרות</span>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }
 
 export default function WorkoutSummary() {
-  return (
-    <ProtectedRoute requiredRole="trainee">
-      <WorkoutSummaryContent />
-    </ProtectedRoute>
-  );
+  return <WorkoutSummaryContent />;
 }
 
