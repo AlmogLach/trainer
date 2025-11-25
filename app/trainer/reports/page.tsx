@@ -299,26 +299,26 @@ function ReportsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-5 lg:p-6" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <div className="min-h-screen bg-background" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header - Connected to top header */}
+        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-xl sm:rounded-b-[2rem] px-4 lg:px-6 py-3 sm:py-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Reports 📊</p>
-              <h1 className="text-4xl font-black text-foreground">דוחות וסטטיסטיקות</h1>
-              <p className="text-muted-foreground text-sm mt-2">סקירה כללית של ביצועי המתאמנים</p>
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-primary font-bold text-[10px] sm:text-sm uppercase tracking-wider mb-0.5 sm:mb-1">FitLog Reports 📊</p>
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-black text-foreground">דוחות וסטטיסטיקות</h1>
+              <p className="text-muted-foreground text-[11px] sm:text-sm mt-1 sm:mt-2">סקירה כללית של ביצועי המתאמנים</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex gap-2 bg-card p-1.5 rounded-xl border-2 border-border shadow-md">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex gap-1.5 sm:gap-2 bg-card p-1 sm:p-1.5 rounded-lg sm:rounded-xl border-2 border-border shadow-md">
                 <Button
                   size="sm"
                   variant={timeFilter === "week" ? "default" : "ghost"}
                   onClick={() => setTimeFilter("week")}
                   className={timeFilter === "week" 
-                    ? "bg-primary text-background font-black rounded-lg" 
-                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                    ? "bg-primary text-background font-black rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3"}
                 >
                   שבוע
                 </Button>
@@ -327,8 +327,8 @@ function ReportsContent() {
                   variant={timeFilter === "month" ? "default" : "ghost"}
                   onClick={() => setTimeFilter("month")}
                   className={timeFilter === "month" 
-                    ? "bg-primary text-background font-black rounded-lg" 
-                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                    ? "bg-primary text-background font-black rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3"}
                 >
                   חודש
                 </Button>
@@ -337,79 +337,82 @@ function ReportsContent() {
                   variant={timeFilter === "all" ? "default" : "ghost"}
                   onClick={() => setTimeFilter("all")}
                   className={timeFilter === "all" 
-                    ? "bg-primary text-background font-black rounded-lg" 
-                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                    ? "bg-primary text-background font-black rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg text-[10px] sm:text-sm h-7 sm:h-8 px-2 sm:px-3"}
                 >
                   הכל
                 </Button>
               </div>
               <Button
                 onClick={exportReport}
-                className="h-11 px-6 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
+                className="h-8 sm:h-11 px-3 sm:px-6 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-lg sm:rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 text-xs sm:text-base"
               >
-                <Download className="h-5 w-5 ml-2" />
-                ייצא ל-CSV
+                <Download className="h-3 w-3 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+                <span className="hidden sm:inline">ייצא ל-CSV</span>
+                <span className="sm:hidden">ייצא</span>
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Content with padding */}
+        <div className="px-2 sm:px-4 lg:px-6 py-3 sm:py-6 space-y-3 sm:space-y-6">
         {/* Enhanced Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-2 border-blue-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '0ms' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">מתאמנים פעילים</CardTitle>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-2 border-blue-500/20 shadow-lg rounded-lg sm:rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '0ms' }}>
+            <CardHeader className="pb-1 sm:pb-3 p-2 sm:p-6">
+              <CardTitle className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">מתאמנים פעילים</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6 pt-0">
               <div className="flex items-center justify-between">
-                <div className="text-4xl font-black text-blue-500">{stats.activeTrainees}</div>
-                <div className="bg-blue-500/20 p-3 rounded-2xl">
-                  <Users className="h-8 w-8 text-blue-500" />
+                <div className="text-xl sm:text-3xl lg:text-4xl font-black text-blue-500">{stats.activeTrainees}</div>
+                <div className="bg-blue-500/20 p-1.5 sm:p-3 rounded-lg sm:rounded-2xl">
+                  <Users className="h-4 w-4 sm:h-8 sm:w-8 text-blue-500" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '50ms' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">אימונים היום</CardTitle>
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 shadow-lg rounded-lg sm:rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '50ms' }}>
+            <CardHeader className="pb-1 sm:pb-3 p-2 sm:p-6">
+              <CardTitle className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">אימונים היום</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6 pt-0">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-4xl font-black text-primary">{stats.workoutsToday.completed}</div>
-                  <div className="text-sm text-muted-foreground font-medium">מתוך {stats.workoutsToday.total}</div>
+                  <div className="text-xl sm:text-3xl lg:text-4xl font-black text-primary">{stats.workoutsToday.completed}</div>
+                  <div className="text-[10px] sm:text-sm text-muted-foreground font-medium">מתוך {stats.workoutsToday.total}</div>
                 </div>
-                <div className="bg-primary/20 p-3 rounded-2xl">
-                  <Activity className="h-8 w-8 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-2 border-purple-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '100ms' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">התאמה ממוצעת</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="text-4xl font-black text-purple-500">{stats.averageCompliance}%</div>
-                <div className="bg-purple-500/20 p-3 rounded-2xl">
-                  <Target className="h-8 w-8 text-purple-500" />
+                <div className="bg-primary/20 p-1.5 sm:p-3 rounded-lg sm:rounded-2xl">
+                  <Activity className="h-4 w-4 sm:h-8 sm:w-8 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-2 border-orange-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '150ms' }}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">התראות</CardTitle>
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-2 border-purple-500/20 shadow-lg rounded-lg sm:rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '100ms' }}>
+            <CardHeader className="pb-1 sm:pb-3 p-2 sm:p-6">
+              <CardTitle className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">התאמה ממוצעת</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6 pt-0">
               <div className="flex items-center justify-between">
-                <div className="text-4xl font-black text-orange-500">{stats.alerts}</div>
-                <div className="bg-orange-500/20 p-3 rounded-2xl">
-                  <AlertTriangle className="h-8 w-8 text-orange-500" />
+                <div className="text-xl sm:text-3xl lg:text-4xl font-black text-purple-500">{stats.averageCompliance}%</div>
+                <div className="bg-purple-500/20 p-1.5 sm:p-3 rounded-lg sm:rounded-2xl">
+                  <Target className="h-4 w-4 sm:h-8 sm:w-8 text-purple-500" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-2 border-orange-500/20 shadow-lg rounded-lg sm:rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '150ms' }}>
+            <CardHeader className="pb-1 sm:pb-3 p-2 sm:p-6">
+              <CardTitle className="text-[10px] sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">התראות</CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-6 pt-0">
+              <div className="flex items-center justify-between">
+                <div className="text-xl sm:text-3xl lg:text-4xl font-black text-orange-500">{stats.alerts}</div>
+                <div className="bg-orange-500/20 p-1.5 sm:p-3 rounded-lg sm:rounded-2xl">
+                  <AlertTriangle className="h-4 w-4 sm:h-8 sm:w-8 text-orange-500" />
                 </div>
               </div>
             </CardContent>
@@ -417,127 +420,220 @@ function ReportsContent() {
         </div>
 
         {/* Enhanced Reports Table */}
-        <Card className="bg-card border-2 border-border shadow-lg rounded-[2rem]">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/20 p-2.5 rounded-2xl">
-                <BarChart3 className="h-6 w-6 text-primary" />
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+          <CardHeader className="p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-primary/20 p-1.5 sm:p-2.5 rounded-lg sm:rounded-2xl">
+                  <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
+                </div>
+                <CardTitle className="text-lg sm:text-2xl font-black text-foreground">דוחות מתאמנים</CardTitle>
               </div>
-              <CardTitle className="text-2xl font-black text-foreground">דוחות מתאמנים</CardTitle>
               {reports.length > 0 && (
-                <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/30">
-                  <span className="text-primary font-black text-sm">{reports.length}</span>
+                <div className="bg-primary/10 px-2 sm:px-3 py-1 rounded-lg border border-primary/30">
+                  <span className="text-primary font-black text-xs sm:text-sm">{reports.length}</span>
                   <span className="text-muted-foreground text-xs mr-1">מתאמנים</span>
                 </div>
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto rounded-xl border-2 border-border">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-border bg-accent/30">
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">שם</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">תוכנית</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">סטטוס</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (סה"כ)</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (שבוע)</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (חודש)</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">התאמה</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">משקל ממוצע</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">שינוי משקל</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">נפח כולל</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימון אחרון</th>
-                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">פעולות</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reports.length === 0 ? (
-                    <tr>
-                      <td colSpan={12} className="text-center py-16">
-                        <div className="space-y-4">
-                          <div className="bg-accent/30 p-8 rounded-3xl inline-block">
-                            <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
-                          </div>
-                          <p className="text-foreground font-black text-xl">אין נתונים להצגה</p>
-                          <p className="text-muted-foreground">לא נמצאו דוחות לתקופה הנבחרת</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    reports.map((report, index) => (
-                      <tr key={report.id} className="border-b border-border hover:bg-accent/30 transition-all animate-in fade-in slide-in-from-bottom-1 duration-300" style={{ animationDelay: `${index * 30}ms` }}>
-                        <td className="p-4 text-foreground font-black">{report.name}</td>
-                        <td className="p-4 text-muted-foreground font-medium">{report.planName}</td>
-                        <td className="p-4">
-                          <span className={`px-3 py-1.5 rounded-lg text-xs font-black ${
-                            report.status === 'active' 
-                              ? 'bg-green-500/20 text-green-500 border border-green-500/30' 
-                              : 'bg-gray-500/20 text-gray-500 border border-gray-500/30'
-                          }`}>
-                            {report.status === 'active' ? 'פעיל' : 'לא פעיל'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-foreground font-bold">{report.totalWorkouts}</td>
-                        <td className="p-4 text-foreground font-bold">{report.workoutsThisWeek}</td>
-                        <td className="p-4 text-foreground font-bold">{report.workoutsThisMonth}</td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-accent rounded-full h-2.5 max-w-[70px]">
-                              <div 
-                                className={`h-2.5 rounded-full transition-all ${
-                                  report.compliance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
-                                  report.compliance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
-                                  'bg-gradient-to-r from-red-500 to-red-400'
-                                }`}
-                                style={{ width: `${Math.min(100, report.compliance)}%` }}
-                              />
-                            </div>
-                            <span className="text-foreground text-sm font-black">{report.compliance}%</span>
-                          </div>
-                        </td>
-                        <td className="p-4 text-muted-foreground font-medium">
+          <CardContent className="p-0 sm:p-6">
+            {/* Mobile Card View */}
+            <div className="block md:hidden space-y-2 p-2 sm:p-3">
+              {reports.length === 0 ? (
+                <div className="text-center py-8 sm:py-12">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="bg-accent/30 p-4 sm:p-6 rounded-xl sm:rounded-2xl inline-block">
+                      <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto" />
+                    </div>
+                    <p className="text-foreground font-black text-base sm:text-lg">אין נתונים להצגה</p>
+                    <p className="text-muted-foreground text-xs sm:text-sm">לא נמצאו דוחות לתקופה הנבחרת</p>
+                  </div>
+                </div>
+              ) : (
+                reports.map((report, index) => (
+                  <Card key={report.id} className="bg-gradient-to-br from-card to-accent/10 border-2 border-border rounded-lg sm:rounded-xl p-2.5 sm:p-3 space-y-1.5 sm:space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm sm:text-base font-black text-foreground truncate flex-1 mr-2">{report.name}</h3>
+                      <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black flex-shrink-0 ${
+                        report.status === 'active' 
+                          ? 'bg-green-500/20 text-green-500 border border-green-500/30' 
+                          : 'bg-gray-500/20 text-gray-500 border border-gray-500/30'
+                      }`}>
+                        {report.status === 'active' ? 'פעיל' : 'לא פעיל'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] sm:text-xs text-muted-foreground font-medium truncate">{report.planName}</div>
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                      <div>
+                        <span className="text-muted-foreground">אימונים (סה"כ): </span>
+                        <span className="font-bold text-foreground">{report.totalWorkouts}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">אימונים (שבוע): </span>
+                        <span className="font-bold text-foreground">{report.workoutsThisWeek}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">אימונים (חודש): </span>
+                        <span className="font-bold text-foreground">{report.workoutsThisMonth}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">התאמה: </span>
+                        <span className="font-bold text-foreground">{report.compliance}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">משקל ממוצע: </span>
+                        <span className="font-bold text-foreground">
                           {report.averageWeight ? `${report.averageWeight.toFixed(1)} ק"ג` : "אין"}
-                        </td>
-                        <td className="p-4">
-                          {report.weightChange !== null ? (
-                            <div className="flex items-center gap-1.5">
-                              {report.weightChange > 0 ? (
-                                <TrendingUp className="h-4 w-4 text-red-500" />
-                              ) : report.weightChange < 0 ? (
-                                <TrendingDown className="h-4 w-4 text-green-500" />
-                              ) : null}
-                              <span className={`font-bold ${report.weightChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
-                                {report.weightChange > 0 ? '+' : ''}{report.weightChange.toFixed(1)} ק"ג
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">אין</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-muted-foreground font-medium">
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">נפח כולל: </span>
+                        <span className="font-bold text-foreground">
                           {report.totalVolume > 0 ? `${report.totalVolume.toFixed(0)} ק"ג` : "אין"}
-                        </td>
-                        <td className="p-4 text-muted-foreground font-medium">{formatDate(report.lastWorkout)}</td>
-                        <td className="p-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => exportTraineeReport(report)}
-                            className="border-2 border-border text-foreground hover:bg-accent font-bold rounded-lg transition-all active:scale-95"
-                          >
-                            <Download className="h-4 w-4 ml-2" />
-                            ייצא דוח
-                          </Button>
+                        </span>
+                      </div>
+                    </div>
+                    {report.weightChange !== null && (
+                      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs">
+                        <span className="text-muted-foreground">שינוי משקל: </span>
+                        {report.weightChange > 0 ? (
+                          <TrendingUp className="h-3 w-3 text-red-500" />
+                        ) : report.weightChange < 0 ? (
+                          <TrendingDown className="h-3 w-3 text-green-500" />
+                        ) : null}
+                        <span className={`font-bold ${report.weightChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                          {report.weightChange > 0 ? '+' : ''}{report.weightChange.toFixed(1)} ק"ג
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-[11px] sm:text-xs text-muted-foreground">
+                      אימון אחרון: {formatDate(report.lastWorkout)}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => exportTraineeReport(report)}
+                      className="w-full border-2 border-border text-foreground hover:bg-accent font-bold rounded-lg transition-all active:scale-95 text-[11px] sm:text-xs h-7 sm:h-8"
+                    >
+                      <Download className="h-3 w-3 ml-1.5 sm:ml-2" />
+                      ייצא דוח
+                    </Button>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border-2 border-border">
+              <div className="min-w-[800px]">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-border bg-accent/30">
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">שם</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">תוכנית</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">סטטוס</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">אימונים (סה"כ)</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">אימונים (שבוע)</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">אימונים (חודש)</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">התאמה</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">משקל ממוצע</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">שינוי משקל</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">נפח כולל</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">אימון אחרון</th>
+                      <th className="text-right p-2 sm:p-4 text-xs sm:text-sm font-black text-foreground uppercase tracking-wider whitespace-nowrap">פעולות</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="text-center py-16">
+                          <div className="space-y-4">
+                            <div className="bg-accent/30 p-8 rounded-3xl inline-block">
+                              <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
+                            </div>
+                            <p className="text-foreground font-black text-xl">אין נתונים להצגה</p>
+                            <p className="text-muted-foreground">לא נמצאו דוחות לתקופה הנבחרת</p>
+                          </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      reports.map((report, index) => (
+                        <tr key={report.id} className="border-b border-border hover:bg-accent/30 transition-all animate-in fade-in slide-in-from-bottom-1 duration-300" style={{ animationDelay: `${index * 30}ms` }}>
+                          <td className="p-2 sm:p-4 text-foreground font-black text-sm sm:text-base">{report.name}</td>
+                          <td className="p-2 sm:p-4 text-muted-foreground font-medium text-xs sm:text-sm">{report.planName}</td>
+                          <td className="p-2 sm:p-4">
+                            <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-black ${
+                              report.status === 'active' 
+                                ? 'bg-green-500/20 text-green-500 border border-green-500/30' 
+                                : 'bg-gray-500/20 text-gray-500 border border-gray-500/30'
+                            }`}>
+                              {report.status === 'active' ? 'פעיל' : 'לא פעיל'}
+                            </span>
+                          </td>
+                          <td className="p-2 sm:p-4 text-foreground font-bold text-sm sm:text-base">{report.totalWorkouts}</td>
+                          <td className="p-2 sm:p-4 text-foreground font-bold text-sm sm:text-base">{report.workoutsThisWeek}</td>
+                          <td className="p-2 sm:p-4 text-foreground font-bold text-sm sm:text-base">{report.workoutsThisMonth}</td>
+                          <td className="p-2 sm:p-4">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <div className="flex-1 bg-accent rounded-full h-2 sm:h-2.5 max-w-[50px] sm:max-w-[70px]">
+                                <div 
+                                  className={`h-2 sm:h-2.5 rounded-full transition-all ${
+                                    report.compliance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
+                                    report.compliance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
+                                    'bg-gradient-to-r from-red-500 to-red-400'
+                                  }`}
+                                  style={{ width: `${Math.min(100, report.compliance)}%` }}
+                                />
+                              </div>
+                              <span className="text-foreground text-xs sm:text-sm font-black">{report.compliance}%</span>
+                            </div>
+                          </td>
+                          <td className="p-2 sm:p-4 text-muted-foreground font-medium text-xs sm:text-sm">
+                            {report.averageWeight ? `${report.averageWeight.toFixed(1)} ק"ג` : "אין"}
+                          </td>
+                          <td className="p-2 sm:p-4">
+                            {report.weightChange !== null ? (
+                              <div className="flex items-center gap-1 sm:gap-1.5">
+                                {report.weightChange > 0 ? (
+                                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                                ) : report.weightChange < 0 ? (
+                                  <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
+                                ) : null}
+                                <span className={`font-bold text-xs sm:text-sm ${report.weightChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                  {report.weightChange > 0 ? '+' : ''}{report.weightChange.toFixed(1)} ק"ג
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs sm:text-sm">אין</span>
+                            )}
+                          </td>
+                          <td className="p-2 sm:p-4 text-muted-foreground font-medium text-xs sm:text-sm">
+                            {report.totalVolume > 0 ? `${report.totalVolume.toFixed(0)} ק"ג` : "אין"}
+                          </td>
+                          <td className="p-2 sm:p-4 text-muted-foreground font-medium text-xs sm:text-sm">{formatDate(report.lastWorkout)}</td>
+                          <td className="p-2 sm:p-4">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => exportTraineeReport(report)}
+                              className="border-2 border-border text-foreground hover:bg-accent font-bold rounded-lg transition-all active:scale-95 text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                            >
+                              <Download className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+                              <span className="hidden sm:inline">ייצא דוח</span>
+                              <span className="sm:hidden">ייצא</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

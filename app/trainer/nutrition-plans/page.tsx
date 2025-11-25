@@ -215,39 +215,42 @@ function NutritionPlansContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-5 lg:p-6" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <div className="min-h-screen bg-background" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header - Connected to top header */}
+        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Nutrition 🍎</p>
-              <h1 className="text-4xl font-black text-foreground">ניהול תוכניות תזונה</h1>
-              <p className="text-muted-foreground text-sm mt-2">מאגר תזונה מקצועי למתאמנים</p>
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Nutrition 🍎</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">ניהול תוכניות תזונה</h1>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-2">מאגר תזונה מקצועי למתאמנים</p>
             </div>
-            <Link href="/trainer/nutrition-plans/new">
-              <Button className="h-12 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95">
-                <Plus className="h-5 w-5 ml-2" />
-                צור תוכנית תזונה חדשה
+            <Link href="/trainer/nutrition-plans/new" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto h-10 sm:h-12 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base">
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+                <span className="hidden sm:inline">צור תוכנית תזונה חדשה</span>
+                <span className="sm:hidden">תוכנית חדשה</span>
               </Button>
             </Link>
           </div>
         </div>
 
+        {/* Content with padding */}
+        <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Enhanced Search Bar */}
         <div className="relative">
-          <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Search className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חפש תוכנית תזונה..."
-            className="bg-card border-2 border-border text-foreground pr-12 h-12 rounded-xl font-medium focus:border-primary transition-all"
+            className="bg-card border-2 border-border text-foreground pr-10 sm:pr-12 h-10 sm:h-12 rounded-lg sm:rounded-xl font-medium focus:border-primary transition-all text-sm sm:text-base"
           />
         </div>
 
         {/* Enhanced Nutrition Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
           {filteredPlans.length === 0 ? (
             <div className="col-span-full text-center py-16">
               <div className="space-y-4">
@@ -264,38 +267,38 @@ function NutritionPlansContent() {
             filteredPlans.map((plan, index) => (
               <Card 
                 key={plan.id} 
-                className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
+                className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl sm:rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <CardHeader>
-                  <CardTitle className="text-foreground text-xl font-black">{plan.planName}</CardTitle>
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-foreground text-lg sm:text-xl font-black truncate">{plan.planName}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                   {/* Enhanced Calorie Target */}
-                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 border-2 border-primary/20">
-                    <p className="text-sm text-muted-foreground mb-2 font-bold uppercase tracking-wider">יעד קלורי:</p>
-                    <p className="text-3xl font-black text-primary">{plan.calorieTarget} קק"ל</p>
+                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-primary/20">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 font-bold uppercase tracking-wider">יעד קלורי:</p>
+                    <p className="text-2xl sm:text-3xl font-black text-primary">{plan.calorieTarget} קק"ל</p>
                   </div>
 
                   {/* Enhanced Pie Chart and Macros */}
-                  <div className="flex items-center gap-4 bg-accent/20 rounded-xl p-4">
+                  <div className="flex items-center gap-3 sm:gap-4 bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4">
                     <PieChartComponent 
                       protein={plan.protein} 
                       carbs={plan.carbs} 
                       fat={plan.fat} 
                     />
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-lg bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
-                        <span className="text-sm text-foreground font-bold">חלבון: {plan.protein}%</span>
+                    <div className="flex-1 space-y-1.5 sm:space-y-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
+                        <span className="text-xs sm:text-sm text-foreground font-bold">חלבון: {plan.protein}%</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 shadow-sm"></div>
-                        <span className="text-sm text-foreground font-bold">פחמימות: {plan.carbs}%</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 shadow-sm"></div>
+                        <span className="text-xs sm:text-sm text-foreground font-bold">פחמימות: {plan.carbs}%</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-lg bg-gradient-to-r from-red-500 to-red-400 shadow-sm"></div>
-                        <span className="text-sm text-foreground font-bold">שומן: {plan.fat}%</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-red-500 to-red-400 shadow-sm"></div>
+                        <span className="text-xs sm:text-sm text-foreground font-bold">שומן: {plan.fat}%</span>
                       </div>
                     </div>
                   </div>
@@ -305,15 +308,15 @@ function NutritionPlansContent() {
                     <Link href={`/trainer/nutrition-plans/${plan.traineeId}/edit`} className="flex-1">
                       <Button
                         variant="outline"
-                        className="w-full h-11 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+                        className="w-full h-10 sm:h-11 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-xs sm:text-sm"
                       >
-                        <Edit className="h-4 w-4 ml-2" />
+                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
                         ערוך
                       </Button>
                     </Link>
                     <Button
                       variant="outline"
-                      className="h-11 border-2 border-red-500/30 text-red-500 hover:bg-red-500/10 font-black rounded-xl transition-all active:scale-95"
+                      className="h-10 sm:h-11 w-10 sm:w-11 border-2 border-red-500/30 text-red-500 hover:bg-red-500/10 font-black rounded-lg sm:rounded-xl transition-all active:scale-95 p-0"
                       onClick={() => {
                         if (confirm("האם אתה בטוח שברצונך למחוק תוכנית תזונה זו?")) {
                           // TODO: Delete nutrition plan
@@ -321,13 +324,14 @@ function NutritionPlansContent() {
                         }
                       }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))
           )}
+        </div>
         </div>
       </div>
     </div>

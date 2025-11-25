@@ -367,33 +367,34 @@ function WorkoutPlanEditorContent() {
       {/* Center Editor */}
       <main className="flex-1 overflow-y-auto">
         {/* Enhanced Top Bar */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-card to-card/95 backdrop-blur-lg border-b-2 border-border px-5 py-4 flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-3">
-            <Link href={`/trainer/trainee/${traineeId}`}>
-              <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-card to-card/95 backdrop-blur-lg border-b-2 border-border px-3 sm:px-4 lg:px-5 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-3 shadow-lg">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <Link href={`/trainer/trainee/${traineeId}`} className="flex-shrink-0">
+              <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
             </Link>
-            <div>
-              <p className="text-primary font-bold text-xs uppercase tracking-wider">FitLog Editor 📋</p>
-              <h1 className="text-2xl font-black text-foreground">עורך תוכניות אימון</h1>
+            <div className="min-w-0 flex-1">
+              <p className="text-primary font-bold text-[10px] sm:text-xs uppercase tracking-wider">FitLog Editor 📋</p>
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-foreground truncate">עורך תוכניות אימון</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <Button
               onClick={handleSavePlan}
               disabled={saving}
-              className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+              className="h-9 sm:h-11 px-3 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-xs sm:text-sm"
             >
               {saving ? (
                 <>
-                  <Loader2 className="h-5 w-5 ml-2 animate-spin" />
-                  שומר...
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
+                  <span className="hidden sm:inline">שומר...</span>
                 </>
               ) : (
                 <>
-                  <Save className="h-5 w-5 ml-2" />
-                  שמור תוכנית
+                  <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+                  <span className="hidden sm:inline">שמור תוכנית</span>
+                  <span className="sm:hidden">שמור</span>
                 </>
               )}
             </Button>
@@ -401,28 +402,28 @@ function WorkoutPlanEditorContent() {
         </div>
 
           {/* Enhanced Plan Structure */}
-          <div className="p-5 lg:p-6 space-y-6">
+          <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
             {/* Plan Name Section */}
-            <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg border-2 border-border">
-              <label className="text-sm text-muted-foreground mb-3 block font-bold uppercase tracking-wider">שם התוכנית:</label>
+            <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-xl sm:rounded-[2rem] p-4 sm:p-6 shadow-lg border-2 border-border">
+              <label className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 block font-bold uppercase tracking-wider">שם התוכנית:</label>
               <Input
                 value={workoutPlan?.name || ""}
                 onChange={(e) => setWorkoutPlan({ ...workoutPlan, name: e.target.value })}
-                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-bold text-lg focus:border-primary transition-all"
+                className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-bold text-base sm:text-lg focus:border-primary transition-all"
                 placeholder="שם התוכנית"
               />
             </div>
 
             {/* Routines Section */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {routines.length > 0 && (
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-primary/20 p-2 rounded-xl">
-                    <Plus className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className="bg-primary/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
-                  <h2 className="text-xl font-black text-foreground">רוטינות אימון</h2>
-                  <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/30">
-                    <span className="text-primary font-black text-sm">{routines.length}</span>
+                  <h2 className="text-lg sm:text-xl font-black text-foreground">רוטינות אימון</h2>
+                  <div className="bg-primary/10 px-2 sm:px-3 py-1 rounded-lg border border-primary/30">
+                    <span className="text-primary font-black text-xs sm:text-sm">{routines.length}</span>
                   </div>
                 </div>
               )}
@@ -459,9 +460,9 @@ function WorkoutPlanEditorContent() {
               
               <Button
                 onClick={handleAddRoutine}
-                className="w-full h-14 bg-gradient-to-r from-accent/50 to-accent/30 border-2 border-dashed border-border hover:border-primary/50 text-foreground hover:bg-accent/60 font-black rounded-2xl transition-all active:scale-98"
+                className="w-full h-12 sm:h-14 bg-gradient-to-r from-accent/50 to-accent/30 border-2 border-dashed border-border hover:border-primary/50 text-foreground hover:bg-accent/60 font-black rounded-xl sm:rounded-2xl transition-all active:scale-98 text-sm sm:text-base"
               >
-                <Plus className="h-5 w-5 ml-2" />
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
                 הוסף רוטינה חדשה
               </Button>
             </div>

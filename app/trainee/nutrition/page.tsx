@@ -4,11 +4,12 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Apple, Beef, Home, BarChart3, Users, Target, Settings, Edit, Dumbbell } from "lucide-react";
+import { ArrowLeft, Loader2, Apple, Beef, Home, BarChart3, Users, Target, Settings, Edit, Dumbbell, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getNutritionMenu, getNutritionSwaps } from "@/lib/db";
+import { getNutritionMenu, getNutritionSwaps, getDailyNutritionLog, upsertDailyNutritionLog } from "@/lib/db";
+import { Input } from "@/components/ui/input";
 import type { NutritionMenu } from "@/lib/types";
 import { 
   FoodItem, 
@@ -33,6 +34,11 @@ function NutritionCalculatorContent() {
   const [nutritionMenu, setNutritionMenu] = useState<NutritionMenu | null>(null);
   const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFoodLog, setShowFoodLog] = useState(false);
+  const [dailyLog, setDailyLog] = useState<any>(null);
+  const [logFood, setLogFood] = useState<FoodItem | null>(null);
+  const [logAmount, setLogAmount] = useState("");
+  const [savingLog, setSavingLog] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -46,7 +52,7 @@ function NutritionCalculatorContent() {
     try {
       setLoading(true);
       // Load data in parallel
-      const [menu, swaps] = await Promise.all([
+      const [menu, swaps, log] = await Promise.all([
         getNutritionMenu(user.id).catch((err) => {
           console.error('Error loading nutrition menu:', err);
           return { meals: [] };
@@ -62,10 +68,12 @@ function NutritionCalculatorContent() {
           // Show user-friendly error
           alert(`שגיאה בטעינת המזונות: ${err.message || 'לא ניתן לטעון את המזונות. אנא בדוק את הגדרות RLS.'}`);
           return []; // Return empty array if error
-        })
+        }),
+        getDailyNutritionLog(user.id).catch(() => null)
       ]);
       
       setNutritionMenu(menu || { meals: [] });
+      setDailyLog(log);
       
       // Convert swaps to FoodItem format
       const formattedSwaps = Array.isArray(swaps) ? swaps.map(convertSwapToFoodItem) : [];
@@ -103,6 +111,78 @@ function NutritionCalculatorContent() {
     }
   }, [sourceFood]);
 
+  const handleAddToLog = async () => {
+    if (!logFood || !logAmount || !user?.id) return;
+
+    try {
+      setSavingLog(true);
+      const amount = parseFloat(logAmount);
+      if (isNaN(amount) || amount <= 0) {
+        alert('אנא הזן כמות תקינה');
+        return;
+      }
+
+      // Calculate macros for the amount
+      const macros = calculateMacros(logFood, amount);
+      
+      console.log('Adding to log:', {
+        food: logFood.name,
+        amount,
+        macros
+      });
+      
+      // Get current log or create new
+      const currentLog = dailyLog || {
+        total_protein: 0,
+        total_carbs: 0,
+        total_fat: 0,
+        total_calories: 0
+      };
+
+      // Add to existing totals
+      const updatedLog = await upsertDailyNutritionLog(
+        user.id,
+        new Date().toISOString().split('T')[0],
+        {
+          total_protein: (currentLog.total_protein || 0) + macros.protein,
+          total_carbs: (currentLog.total_carbs || 0) + macros.carbs,
+          total_fat: (currentLog.total_fat || 0) + macros.fat,
+          total_calories: (currentLog.total_calories || 0) + macros.calories
+        }
+      );
+
+      console.log('Log updated successfully:', updatedLog);
+
+      setDailyLog(updatedLog);
+      setShowFoodLog(false);
+      setLogFood(null);
+      setLogAmount("");
+      
+      // Show success message
+      const successDiv = document.createElement('div');
+      successDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-green-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in zoom-in duration-300 font-bold text-center';
+      successDiv.innerHTML = '✅ האוכל נוסף ללוג היומי!';
+      document.body.appendChild(successDiv);
+      setTimeout(() => successDiv.remove(), 2000);
+    } catch (error: any) {
+      console.error('Error adding to log:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      
+      // Show detailed error
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4 duration-300 font-bold text-center';
+      errorDiv.innerHTML = `❌ שגיאה: ${error.message || 'לא ניתן להוסיף אוכל ללוג'}`;
+      document.body.appendChild(errorDiv);
+      setTimeout(() => errorDiv.remove(), 4000);
+    } finally {
+      setSavingLog(false);
+    }
+  };
+
   // Calculate swap when both foods are selected
   useEffect(() => {
     if (sourceFood && sourceAmount && targetFood && sourceFood.category === targetFood.category) {
@@ -137,39 +217,49 @@ function NutritionCalculatorContent() {
 
   return (
     <div className="min-h-screen" dir="rtl">
-      {/* Enhanced Header with FitLog Style */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden sticky top-0 z-10">
+      {/* Enhanced Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2.5rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
         {/* Animated Background blobs */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/30 rounded-full blur-2xl -z-10 -translate-x-1/2 translate-y-1/2" />
         
-        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-primary to-primary/80 p-2.5 rounded-2xl shadow-lg">
-              <Apple className="w-6 h-6 text-background" />
+        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="bg-gradient-to-br from-primary to-primary/80 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
+              <Apple className="w-5 h-5 sm:w-6 sm:h-6 text-background" />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-foreground tracking-tight">מחשבון המרות</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">מחשבון המרות</h1>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Nutrition Calculator</p>
             </div>
           </div>
           
-          <Link href="/trainee/dashboard">
-            <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          <Link href="/trainee/dashboard" className="flex-shrink-0">
+            <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </Link>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-5 space-y-6">
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-5 space-y-4 sm:space-y-6">
         {/* Nutrition Menu Card */}
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <NutritionMenuCard menu={nutritionMenu} variant="dark" />
         </div>
 
+        {/* Add to Daily Log Button */}
+        <Button
+          onClick={() => setShowFoodLog(true)}
+          className="w-full h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-500"
+          style={{ animationDelay: '50ms' }}
+        >
+          <Plus className="h-5 w-5 ml-2" />
+          הוסף אוכל ללוג היומי
+        </Button>
+
         {/* Food Comparison Cards */}
-        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
           <FoodSelectorCard
             title="מקור:"
             foodName={sourceFood?.name || null}
@@ -188,8 +278,8 @@ function NutritionCalculatorContent() {
 
         {/* Nutritional Breakdown */}
         {sourceMacros && targetMacros && (
-          <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in zoom-in duration-500" style={{ animationDelay: '200ms' }}>
-            <CardContent className="p-6 space-y-5">
+          <Card className="bg-card border-border shadow-md rounded-2xl sm:rounded-[2rem] animate-in zoom-in duration-500" style={{ animationDelay: '200ms' }}>
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
               {/* Protein */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -685,6 +775,128 @@ function NutritionCalculatorContent() {
                     </div>
                   );
                 })()
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Add to Log Modal */}
+      {showFoodLog && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setShowFoodLog(false)}>
+          <Card className="bg-card border-border shadow-2xl w-full max-w-md rounded-[2rem] animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-green-500/10 to-green-600/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-500/20 p-2 rounded-xl">
+                    <Plus className="w-5 h-5 text-green-500" />
+                  </div>
+                  <CardTitle className="text-foreground font-black text-xl">הוסף אוכל ללוג</CardTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowFoodLog(false)}
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5 p-6">
+              {!logFood ? (
+                <>
+                  <p className="text-muted-foreground text-sm font-medium text-center">בחר מזון מהרשימה:</p>
+                  <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                    {foodDatabase.map((food) => (
+                      <button
+                        key={food.name}
+                        onClick={() => setLogFood(food)}
+                        className="w-full text-right p-4 bg-accent/20 hover:bg-accent/40 border-2 border-border hover:border-primary/50 rounded-xl font-bold text-foreground transition-all active:scale-98"
+                      >
+                        {food.name}
+                        <span className="text-xs text-muted-foreground block mt-1 font-medium">
+                          {food.category === 'carbs' ? 'פחמימות' : food.category === 'protein' ? 'חלבון' : food.category === 'fat' ? 'שומן' : food.category === 'bread' ? 'לחם' : food.category}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="bg-accent/30 rounded-2xl p-4 border-2 border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-1">מזון נבחר:</p>
+                    <p className="text-xl font-black text-foreground">{logFood.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {logFood.proteinPer100g}g חלבון | {logFood.carbsPer100g}g פחמימות | {logFood.fatPer100g}g שומן (ל-100גרם)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground font-bold mb-2 block">כמות (גרם):</label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={logAmount}
+                      onChange={(e) => setLogAmount(e.target.value)}
+                      placeholder="100"
+                      className="w-full h-14 text-2xl font-black bg-background border-2 border-border focus:border-primary text-foreground text-center rounded-xl"
+                      autoFocus
+                    />
+                  </div>
+
+                  {logAmount && parseFloat(logAmount) > 0 && (
+                    <div className="bg-primary/10 rounded-2xl p-4 border-2 border-primary/30">
+                      <p className="text-xs text-muted-foreground font-medium mb-2">ערכים תזונתיים:</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center">
+                          <p className="text-lg font-black text-primary">
+                            {calculateMacros(logFood, parseFloat(logAmount)).protein.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">חלבון</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-black text-primary">
+                            {calculateMacros(logFood, parseFloat(logAmount)).carbs.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">פחמימות</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-black text-primary">
+                            {calculateMacros(logFood, parseFloat(logAmount)).fat.toFixed(1)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">שומן</p>
+                        </div>
+                      </div>
+                      <div className="text-center mt-3 pt-3 border-t border-border">
+                        <p className="text-2xl font-black text-foreground">
+                          {calculateMacros(logFood, parseFloat(logAmount)).calories.toFixed(0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">קלוריות</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => {
+                        setLogFood(null);
+                        setLogAmount("");
+                      }}
+                      variant="outline"
+                      className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-bold rounded-xl"
+                    >
+                      שנה מזון
+                    </Button>
+                    <Button
+                      onClick={handleAddToLog}
+                      disabled={!logAmount || parseFloat(logAmount) <= 0 || savingLog}
+                      className="flex-1 h-12 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
+                    >
+                      {savingLog ? <Loader2 className="h-5 w-5 animate-spin" /> : "הוסף ללוג"}
+                    </Button>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

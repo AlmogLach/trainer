@@ -197,44 +197,46 @@ function TraineeManagementPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-5 lg:p-6 pb-24 lg:pb-6" dir="rtl">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <div className="min-h-screen bg-background pb-24 lg:pb-6" dir="rtl">
+      <div className="max-w-6xl mx-auto">
+        {/* Enhanced Header - Connected to top header */}
+        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="relative z-10 flex items-center gap-4">
+          <div className="relative z-10 flex items-center gap-3 sm:gap-4">
             <Link href="/trainer/trainees">
-              <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
             </Link>
-            <div className="flex-1">
-              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Trainer 👤</p>
-              <h2 className="text-4xl font-black text-foreground">פרופיל מתאמן</h2>
-              <p className="text-muted-foreground text-sm mt-1">{trainee.name}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Trainer 👤</p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground truncate">פרופיל מתאמן</h2>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-1 truncate">{trainee.name}</p>
             </div>
           </div>
         </div>
 
+        {/* Content with padding */}
+        <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Trainee Profile Section */}
-        <Card className="bg-card border-border shadow-lg rounded-[2rem]">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/20 p-2.5 rounded-2xl">
-                <Scale className="h-6 w-6 text-primary" />
+        <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-primary/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+                <Scale className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <CardTitle className="text-2xl font-black text-foreground">מידע אישי</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl font-black text-foreground">מידע אישי</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-start gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
               {/* Enhanced Profile Picture */}
-              <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-4xl flex-shrink-0 border-4 border-primary/30 shadow-lg">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-2xl sm:text-4xl flex-shrink-0 border-4 border-primary/30 shadow-lg mx-auto sm:mx-0">
                 {trainee.name.charAt(0)}
               </div>
               
               {/* Profile Details */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full">
                 <div className="flex items-center gap-3 bg-accent/30 rounded-xl p-3 border border-border/50">
                   <div className="bg-primary/20 p-2 rounded-lg">
                     <Mail className="h-4 w-4 text-primary" />
@@ -277,16 +279,16 @@ function TraineeManagementPageContent() {
         </Card>
 
         {/* Enhanced Biometric Data Section */}
-        <Card className="bg-card border-border shadow-lg rounded-[2rem]">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2.5 rounded-2xl">
-                <TrendingUp className="h-6 w-6 text-blue-500" />
+        <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-blue-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
               </div>
-              <CardTitle className="text-2xl font-black text-foreground">נתונים ביומטריים</CardTitle>
+              <CardTitle className="text-xl sm:text-2xl font-black text-foreground">נתונים ביומטריים</CardTitle>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <div>
               <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
                 <Scale className="h-5 w-5 text-primary" />
@@ -308,24 +310,24 @@ function TraineeManagementPageContent() {
         </Card>
 
         {/* Enhanced Recent Workouts Section */}
-        <Card className="bg-card border-border shadow-lg rounded-[2rem]">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-500/20 p-2.5 rounded-2xl">
-                  <Dumbbell className="h-6 w-6 text-orange-500" />
+        <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-orange-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+                  <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
                 </div>
-                <CardTitle className="text-2xl font-black text-foreground">אימונים אחרונים</CardTitle>
+                <CardTitle className="text-xl sm:text-2xl font-black text-foreground">אימונים אחרונים</CardTitle>
               </div>
               {workoutLogs.length > 0 && (
-                <div className="bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-500/30">
-                  <span className="text-orange-500 font-black text-lg">{workoutLogs.length}</span>
-                  <span className="text-muted-foreground text-sm mr-1">אימונים</span>
+                <div className="bg-orange-500/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-orange-500/30">
+                  <span className="text-orange-500 font-black text-base sm:text-lg">{workoutLogs.length}</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm mr-1">אימונים</span>
                 </div>
               )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               {workoutLogs.length === 0 ? (
                 <div className="text-center py-16 space-y-4">
@@ -465,6 +467,7 @@ function TraineeManagementPageContent() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

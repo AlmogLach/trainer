@@ -47,22 +47,22 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
   };
 
   return (
-    <Card className="bg-card border-2 border-primary shadow-lg rounded-[2rem]">
-      <CardHeader>
+    <Card className="bg-card border-2 border-primary shadow-lg rounded-2xl sm:rounded-[2rem]">
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-foreground text-2xl font-black">הוסף מתאמן חדש</CardTitle>
+          <CardTitle className="text-foreground text-xl sm:text-2xl font-black">הוסף מתאמן חדש</CardTitle>
           <Button
             variant="ghost"
             size="icon"
             onClick={onCancel}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl flex-shrink-0"
             disabled={adding}
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 sm:p-6">
         {error && (
           <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-500 text-sm font-bold">
             {error}
@@ -114,15 +114,15 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
           </p>
         </div>
         
-        <div className="flex gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <Button
             onClick={handleSubmit}
             disabled={!name || !email || !password || adding}
-            className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+            className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
           >
             {adding ? (
               <>
-                <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+                <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-2 animate-spin" />
                 מוסיף...
               </>
             ) : (
@@ -132,7 +132,7 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
           <Button
             variant="outline"
             onClick={onCancel}
-            className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+            className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
             disabled={adding}
           >
             ביטול
@@ -168,49 +168,49 @@ export function CredentialsDisplay({ email, password, onClose }: CredentialsDisp
   };
 
   return (
-    <Card className="bg-card border-2 border-green-500 shadow-lg rounded-[2rem] mt-4">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-foreground text-2xl font-black">פרטי התחברות למתאמן החדש</CardTitle>
+    <Card className="bg-card border-2 border-green-500 shadow-lg rounded-2xl sm:rounded-[2rem] mt-4">
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-foreground text-lg sm:text-2xl font-black">פרטי התחברות למתאמן החדש</CardTitle>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl flex-shrink-0"
           >
             <X className="h-5 w-5" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="p-6 bg-gradient-to-br from-accent/30 to-accent/20 rounded-2xl border-2 border-border">
-          <p className="text-sm text-muted-foreground mb-2 font-bold uppercase">אימייל:</p>
-          <p className="text-foreground font-mono text-xl font-black mb-4">{email}</p>
-          <p className="text-sm text-muted-foreground mb-2 font-bold uppercase">סיסמה:</p>
-          <p className="text-foreground font-mono text-xl font-black">{password}</p>
+      <CardContent className="space-y-4 p-4 sm:p-6">
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-accent/30 to-accent/20 rounded-xl sm:rounded-2xl border-2 border-border">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2 font-bold uppercase">אימייל:</p>
+          <p className="text-foreground font-mono text-base sm:text-xl font-black mb-4 break-all">{email}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-2 font-bold uppercase">סיסמה:</p>
+          <p className="text-foreground font-mono text-base sm:text-xl font-black break-all">{password}</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={handleWhatsAppShare}
-            className="flex-1 h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
+            className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-lg sm:rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 text-sm sm:text-base"
           >
-            <MessageSquare className="h-5 w-5 ml-2" />
+            <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
             שלח בוואטסאפ
           </Button>
           <Button
             onClick={handleCopyCredentials}
             variant="outline"
-            className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+            className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
           >
             {copied ? (
               <>
-                <Check className="h-5 w-5 ml-2" />
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                 הועתק!
               </>
             ) : (
               <>
-                <Copy className="h-5 w-5 ml-2" />
+                <Copy className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                 העתק
               </>
             )}

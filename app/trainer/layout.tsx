@@ -109,7 +109,7 @@ export default function TrainerLayout({
       {/* Main Content */}
       <div className="flex-1 lg:mr-64 transition-all duration-200">
         {/* Enhanced Header */}
-        <header className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border sticky top-0 z-20 pt-safe shadow-lg backdrop-blur-sm">
+        <header className="bg-gradient-to-r from-card to-card/95 border-b-0 border-border sticky top-0 z-20 pt-safe shadow-lg backdrop-blur-sm rounded-b-none">
           <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button

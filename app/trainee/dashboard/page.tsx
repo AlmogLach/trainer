@@ -130,85 +130,101 @@ export default function TraineeDashboard() {
 
   // התוכן הראשי משופר
   return (
-    <div className="p-5 space-y-6 animate-in fade-in duration-500 max-w-2xl mx-auto">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <div className="animate-in fade-in duration-500 max-w-2xl mx-auto">
+      {/* Welcome Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
         <div className="relative z-10">
-          <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">ברוך הבא 👋</p>
-          <h2 className="text-3xl font-black text-foreground">הסקירה היומית שלך</h2>
-          <p className="text-muted-foreground text-sm mt-2">כל מה שאתה צריך לדעת היום</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider">ברוך הבא 👋</p>
+            <div className="bg-orange-500/20 p-1.5 rounded-lg">
+              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+            </div>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-foreground flex items-center gap-2">
+            הסקירה היומית שלך
+            <svg className="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
+            </svg>
+          </h2>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-2">כל מה שאתה צריך לדעת היום</p>
         </div>
       </div>
 
-      {/* Today's Workout Section */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <DailyWorkoutCard 
-          workoutPlan={workoutPlan}
-          currentRoutine={currentRoutine}
-        />
-      </div>
+      {/* Content with padding */}
+      <div className="px-3 sm:px-4 lg:px-5 py-4 sm:py-6 space-y-4 sm:space-y-6">
 
-      {/* Nutrition Log Section */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
-        <NutritionSummary 
-          nutritionLog={nutritionLog}
-          targets={nutritionTargets}
-        />
-      </div>
+        {/* Today's Workout Section */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <DailyWorkoutCard 
+            workoutPlan={workoutPlan}
+            currentRoutine={currentRoutine}
+          />
+        </div>
 
-      {/* Body Data Section */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
-        <BodyDataCard
-          weightHistory={weightHistory}
-          onAddWeight={() => setShowWeightInput(true)}
-        />
-      </div>
+        {/* Nutrition Log Section */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
+          <NutritionSummary 
+            nutritionLog={nutritionLog}
+            targets={nutritionTargets}
+          />
+        </div>
 
-      {/* Enhanced Achievements Section */}
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '300ms' }}>
-        <Card className="bg-gradient-to-br from-card via-card to-accent/10 border-border shadow-lg overflow-hidden rounded-[2rem] relative">
-          {/* Background decoration */}
-          <div className="absolute top-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl -z-10" />
-          
-          <CardHeader className="relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 p-2.5 rounded-2xl">
-                <Trophy className="h-6 w-6 text-yellow-500" />
-              </div>
-              <CardTitle className="text-foreground text-xl font-black">הישגים חדשים</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="flex gap-3">
-                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 hover:rotate-6 transition-all cursor-pointer relative">
-                  <div className="absolute inset-0 bg-white/20 rounded-2xl animate-pulse" />
-                  <Medal className="h-10 w-10 text-white relative z-10" />
+        {/* Body Data Section */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
+          <BodyDataCard
+            weightHistory={weightHistory}
+            onAddWeight={() => setShowWeightInput(true)}
+          />
+        </div>
+
+        {/* Enhanced Achievements Section */}
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '300ms' }}>
+          <Card className="bg-gradient-to-br from-card via-card to-accent/10 border-2 border-border shadow-lg overflow-hidden rounded-2xl sm:rounded-[2rem] relative">
+            {/* Background decoration */}
+            <div className="absolute top-0 left-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl -z-10" />
+            
+            <CardHeader className="relative z-10 p-4 sm:p-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+                  <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500" />
                 </div>
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 hover:rotate-6 transition-all cursor-pointer relative">
-                  <div className="absolute inset-0 bg-white/20 rounded-2xl animate-pulse" style={{ animationDelay: '500ms' }} />
-                  <Trophy className="h-10 w-10 text-white relative z-10" />
-                </div>
+                <CardTitle className="text-foreground text-lg sm:text-xl font-black">הישגים חדשים</CardTitle>
               </div>
-              <div className="flex-1 space-y-3">
-                <div className="flex items-center gap-3 bg-accent/30 rounded-xl p-3 border border-border/50">
-                  <div className="bg-primary/20 p-1.5 rounded-lg">
-                    <Trophy className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent className="relative z-10 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex gap-3 sm:gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl relative">
+                    <div className="absolute inset-0 bg-white/20 rounded-xl sm:rounded-2xl animate-pulse" />
+                    <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-white relative z-10" />
                   </div>
-                  <span className="text-foreground font-bold">שיא חדש בבנץ' פרס</span>
-                </div>
-                <div className="flex items-center gap-3 bg-accent/30 rounded-xl p-3 border border-border/50">
-                  <div className="bg-primary/20 p-1.5 rounded-lg">
-                    <Trophy className="h-4 w-4 text-primary" />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl relative">
+                    <div className="absolute inset-0 bg-white/20 rounded-xl sm:rounded-2xl animate-pulse" style={{ animationDelay: '500ms' }} />
+                    <Medal className="h-8 w-8 sm:h-10 sm:w-10 text-white relative z-10" />
                   </div>
-                  <span className="text-foreground font-bold">התקדמות בסקוואט</span>
+                </div>
+                <div className="flex-1 space-y-2 sm:space-y-3 w-full sm:w-auto">
+                  <div className="flex items-center gap-2 sm:gap-3 bg-accent/30 rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-border/50">
+                    <div className="bg-primary/20 p-1 sm:p-1.5 rounded-lg">
+                      <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                    </div>
+                    <span className="text-foreground font-bold text-sm sm:text-base">שיא חדש בבנץ' פרס</span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 bg-accent/30 rounded-lg sm:rounded-xl p-2.5 sm:p-3 border border-border/50">
+                    <div className="bg-primary/20 p-1 sm:p-1.5 rounded-lg">
+                      <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                    </div>
+                    <span className="text-foreground font-bold text-sm sm:text-base">התקדמות בסקוואט</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Weight Input Modal */}
@@ -220,3 +236,5 @@ export default function TraineeDashboard() {
     </div>
   );
 }
+
+

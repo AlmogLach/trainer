@@ -198,17 +198,19 @@ function TrainerSettingsContent() {
   };
 
   return (
-    <main className="p-5 lg:p-6 space-y-6" dir="rtl">
-      {/* Enhanced Header */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <main className="space-y-4 sm:space-y-6" dir="rtl">
+      {/* Enhanced Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
         <div className="relative z-10">
-          <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Settings ⚙️</p>
-          <h2 className="text-4xl font-black text-foreground">הגדרות מאמן</h2>
-          <p className="text-muted-foreground text-sm mt-2">נהל את החשבון וההעדפות שלך</p>
+          <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Settings ⚙️</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">הגדרות מאמן</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-2">נהל את החשבון וההעדפות שלך</p>
         </div>
       </div>
 
+      {/* Content with padding */}
+      <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Enhanced Success/Error Messages */}
       {success && (
         <Card className="bg-green-500/10 border-2 border-green-500/30 shadow-lg rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
@@ -237,23 +239,23 @@ function TrainerSettingsContent() {
       )}
 
       {/* Enhanced Profile Section */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-500/20 p-2.5 rounded-2xl">
-              <User className="h-6 w-6 text-blue-500" />
+      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-blue-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+              <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
             </div>
-            <CardTitle className="text-foreground text-2xl font-black">פרופיל</CardTitle>
+            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">פרופיל</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 border-2 border-primary/30 flex items-center justify-center shadow-lg">
-              <User className="h-10 w-10 text-primary" />
+        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 border-2 border-primary/30 flex items-center justify-center shadow-lg flex-shrink-0">
+              <User className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
             </div>
-            <div className="flex-1">
-              <p className="text-2xl font-black text-foreground">{user?.name || "מאמן"}</p>
-              <p className="text-sm text-muted-foreground font-medium mt-1">{user?.email || ""}</p>
+            <div className="flex-1 text-center sm:text-right min-w-0">
+              <p className="text-xl sm:text-2xl font-black text-foreground truncate">{user?.name || "מאמן"}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1 truncate">{user?.email || ""}</p>
             </div>
             <Button
               onClick={() => {
@@ -261,26 +263,27 @@ function TrainerSettingsContent() {
                 setError(null);
                 setSuccess(null);
               }}
-              className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+              className="w-full sm:w-auto h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
             >
-              <Edit className="h-5 w-5 ml-2" />
-              ערוך פרופיל
+              <Edit className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+              <span className="hidden sm:inline">ערוך פרופיל</span>
+              <span className="sm:hidden">ערוך</span>
             </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Enhanced Account Settings */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-500/20 p-2.5 rounded-2xl">
-              <Lock className="h-6 w-6 text-purple-500" />
+      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-purple-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+              <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
             </div>
-            <CardTitle className="text-foreground text-2xl font-black">הגדרות חשבון</CardTitle>
+            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">הגדרות חשבון</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 p-4 sm:p-6">
           <Button
             onClick={() => {
               setShowChangePassword(true);
@@ -288,13 +291,13 @@ function TrainerSettingsContent() {
               setSuccess(null);
             }}
             variant="outline"
-            className="w-full justify-start bg-accent/30 hover:bg-accent border-2 border-border text-foreground h-auto py-4 rounded-xl transition-all active:scale-98"
+            className="w-full justify-start bg-accent/30 hover:bg-accent border-2 border-border text-foreground h-auto py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all active:scale-98"
           >
-            <div className="bg-purple-500/20 p-2 rounded-lg ml-3">
-              <Lock className="h-5 w-5 text-purple-500" />
+            <div className="bg-purple-500/20 p-1.5 sm:p-2 rounded-lg ml-2 sm:ml-3">
+              <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
             </div>
             <div className="text-right">
-              <p className="font-black">שינוי סיסמה</p>
+              <p className="font-black text-sm sm:text-base">שינוי סיסמה</p>
               <p className="text-xs text-muted-foreground font-medium">עדכן את סיסמת החשבון שלך</p>
             </div>
           </Button>
@@ -302,34 +305,34 @@ function TrainerSettingsContent() {
       </Card>
 
       {/* Enhanced General Settings */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-500/20 p-2.5 rounded-2xl">
-              <Globe className="h-6 w-6 text-orange-500" />
+      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-orange-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+              <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
             </div>
-            <CardTitle className="text-foreground text-2xl font-black">הגדרות כלליות</CardTitle>
+            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">הגדרות כלליות</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between bg-accent/20 rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2 rounded-lg">
-                <Bell className="h-5 w-5 text-blue-500" />
+        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+          <div className="flex items-center justify-between bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-blue-500/20 p-1.5 sm:p-2 rounded-lg">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
               </div>
-              <span className="text-foreground text-sm font-bold">התראות</span>
+              <span className="text-foreground text-xs sm:text-sm font-bold">התראות</span>
             </div>
             <ToggleSwitch
               checked={generalSettings.notifications}
               onChange={(checked) => saveGeneralSettings({ ...generalSettings, notifications: checked })}
             />
           </div>
-          <div className="flex items-center justify-between bg-accent/20 rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-500/20 p-2 rounded-lg">
-                <Mail className="h-5 w-5 text-purple-500" />
+          <div className="flex items-center justify-between bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-purple-500/20 p-1.5 sm:p-2 rounded-lg">
+                <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
               </div>
-              <span className="text-foreground text-sm font-bold">התראות אימייל</span>
+              <span className="text-foreground text-xs sm:text-sm font-bold">התראות אימייל</span>
             </div>
             <ToggleSwitch
               checked={generalSettings.emailNotifications}
@@ -368,21 +371,21 @@ function TrainerSettingsContent() {
       </Card>
 
       {/* Enhanced Logout Button */}
-      <Card className="bg-gradient-to-r from-red-500/10 to-red-500/5 border-2 border-red-500/30 shadow-lg rounded-2xl">
-        <CardContent className="pt-6">
+      <Card className="bg-gradient-to-r from-red-500/10 to-red-500/5 border-2 border-red-500/30 shadow-lg rounded-xl sm:rounded-2xl">
+        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
           <Button
             onClick={handleLogout}
             disabled={loading}
-            className="w-full h-14 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 text-lg"
+            className="w-full h-12 sm:h-14 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black rounded-lg sm:rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 text-base sm:text-lg"
           >
             {loading ? (
               <>
-                <Loader2 className="h-6 w-6 ml-2 animate-spin" />
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 ml-1.5 sm:ml-2 animate-spin" />
                 מתנתק...
               </>
             ) : (
               <>
-                <LogOut className="h-6 w-6 ml-2" />
+                <LogOut className="h-5 w-5 sm:h-6 sm:w-6 ml-1.5 sm:ml-2" />
                 התנתק מהמערכת
               </>
             )}
@@ -392,18 +395,18 @@ function TrainerSettingsContent() {
 
       {/* Enhanced Version */}
       <div className="text-center">
-        <div className="inline-block bg-accent/30 px-6 py-3 rounded-xl border border-border">
-          <p className="text-muted-foreground text-sm font-bold">FitLog גרסה 1.2.0</p>
+        <div className="inline-block bg-accent/30 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-border">
+          <p className="text-muted-foreground text-xs sm:text-sm font-bold">FitLog גרסה 1.2.0</p>
         </div>
       </div>
 
       {/* Enhanced Edit Profile Modal */}
       {showEditProfile && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-xl sm:rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground text-2xl font-black">ערוך פרופיל</CardTitle>
+                <CardTitle className="text-foreground text-xl sm:text-2xl font-black">ערוך פרופיל</CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -414,13 +417,13 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg sm:rounded-xl"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
               {error && (
                 <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-xl text-red-500 text-sm font-bold">
                   {error}
@@ -446,20 +449,20 @@ function TrainerSettingsContent() {
                   placeholder="הזן אימייל"
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button
                   onClick={handleEditProfile}
                   disabled={loading || !editedName || !editedEmail}
-                  className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                  className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
                       שומר...
                     </>
                   ) : (
                     <>
-                      <Save className="h-5 w-5 ml-2" />
+                      <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
                       שמור
                     </>
                   )}
@@ -473,7 +476,7 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+                  className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
                 >
                   ביטול
                 </Button>
@@ -485,11 +488,11 @@ function TrainerSettingsContent() {
 
       {/* Enhanced Change Password Modal */}
       {showChangePassword && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
-            <CardHeader>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-xl sm:rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground text-2xl font-black">שינוי סיסמה</CardTitle>
+                <CardTitle className="text-foreground text-xl sm:text-2xl font-black">שינוי סיסמה</CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -501,52 +504,52 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg sm:rounded-xl"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
               {error && (
-                <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-xl text-red-500 text-sm font-bold">
+                <div className="p-3 sm:p-4 bg-red-500/10 border-2 border-red-500/30 rounded-lg sm:rounded-xl text-red-500 text-xs sm:text-sm font-bold">
                   {error}
                 </div>
               )}
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">סיסמה חדשה</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">סיסמה חדשה</label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                  className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-medium focus:border-primary transition-all text-sm sm:text-base"
                   placeholder="הזן סיסמה חדשה (לפחות 6 תווים)"
                 />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">אישור סיסמה</label>
+                <label className="text-xs sm:text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">אישור סיסמה</label>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                  className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-medium focus:border-primary transition-all text-sm sm:text-base"
                   placeholder="הזן שוב את הסיסמה החדשה"
                 />
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button
                   onClick={handleChangePassword}
                   disabled={loading || !newPassword || !confirmPassword}
-                  className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                  className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
                       מעדכן...
                     </>
                   ) : (
                     <>
-                      <Save className="h-5 w-5 ml-2" />
+                      <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
                       עדכן סיסמה
                     </>
                   )}
@@ -561,7 +564,7 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+                  className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
                 >
                   ביטול
                 </Button>
@@ -570,6 +573,7 @@ function TrainerSettingsContent() {
           </Card>
         </div>
       )}
+      </div>
     </main>
   );
 }

@@ -231,27 +231,27 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       {/* Header with Logo */}
-      <div className="pt-8 pb-4 px-4 text-center">
-        <h1 className="text-2xl font-bold text-foreground">
+      <div className="pt-6 sm:pt-8 pb-3 sm:pb-4 px-3 sm:px-4 text-center">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           FitLog
         </h1>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-4">
         <Card className="w-full max-w-md shadow-2xl border-border bg-card">
-          <CardHeader className="text-center space-y-2 pb-6">
-            <CardTitle className="text-3xl font-bold text-foreground">
+          <CardHeader className="text-center space-y-2 pb-4 sm:pb-6 p-4 sm:p-6">
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-foreground">
               כניסה
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Role Selector */}
-            <div className="flex gap-3 p-1 bg-muted/50 rounded-lg">
+            <div className="flex gap-2 sm:gap-3 p-1 bg-muted/50 rounded-lg">
               <Button
                 type="button"
                 variant={role === "trainer" ? "default" : "ghost"}
-                className={`flex-1 h-11 font-medium transition-all ${
+                className={`flex-1 h-10 sm:h-11 font-medium transition-all text-sm sm:text-base ${
                   role === "trainer" 
                     ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
                     : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -261,13 +261,13 @@ export default function LoginPage() {
                   setError(null);
                 }}
               >
-                <User className="h-4 w-4 ml-2" />
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
                 מאמן
               </Button>
               <Button
                 type="button"
                 variant={role === "trainee" ? "default" : "ghost"}
-                className={`flex-1 h-11 font-medium transition-all ${
+                className={`flex-1 h-10 sm:h-11 font-medium transition-all text-sm sm:text-base ${
                   role === "trainee" 
                     ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md" 
                     : "text-muted-foreground hover:text-foreground hover:bg-background/50"
@@ -277,29 +277,29 @@ export default function LoginPage() {
                   setError(null);
                 }}
               >
-                <Dumbbell className="h-4 w-4 ml-2" />
+                <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
                 מתאמן
               </Button>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               {/* Error Message */}
               {error && (
-                <div className="p-4 bg-destructive/10 border-2 border-destructive/20 rounded-lg text-destructive-foreground text-sm whitespace-pre-line">
+                <div className="p-3 sm:p-4 bg-destructive/10 border-2 border-destructive/20 rounded-lg text-destructive-foreground text-xs sm:text-sm whitespace-pre-line">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive mt-0.5 flex-shrink-0" />
                     <div className="flex-1">{error}</div>
                   </div>
                 </div>
               )}
               
               {/* Email Input */}
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-semibold text-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-foreground">
                   דוא"ל
                 </label>
                 <div className="relative">
-                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Mail className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -310,19 +310,19 @@ export default function LoginPage() {
                     }}
                     placeholder="Email"
                     required
-                    className="pr-10 h-12 text-base bg-secondary/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                    className="pr-9 sm:pr-10 h-11 sm:h-12 text-sm sm:text-base bg-secondary/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
                     disabled={loading}
                   />
                 </div>
               </div>
               
               {/* Password Input */}
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-foreground">
+              <div className="space-y-1.5 sm:space-y-2">
+                <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-foreground">
                   סיסמה
                 </label>
                 <div className="relative">
-                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Lock className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -333,19 +333,19 @@ export default function LoginPage() {
                     }}
                     placeholder="••••••••"
                     required
-                    className="pr-10 pl-10 h-12 text-base bg-secondary/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                    className="pr-9 sm:pr-10 pl-9 sm:pl-10 h-11 sm:h-12 text-sm sm:text-base bg-secondary/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
                     disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     tabIndex={-1}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                   </button>
                 </div>
@@ -354,12 +354,12 @@ export default function LoginPage() {
               {/* Submit Button */}
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+                className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-5 w-5 ml-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
                     מתחבר...
                   </>
                 ) : (
@@ -373,13 +373,13 @@ export default function LoginPage() {
               <div>
                 <Link 
                   href="#" 
-                  className="text-sm text-muted-foreground hover:text-primary hover:underline transition-colors"
+                  className="text-xs sm:text-sm text-muted-foreground hover:text-primary hover:underline transition-colors"
                 >
                   שכחת סיסמה?
                 </Link>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   רוצה להצטרף למערכת?{" "}
                   <Link 
                     href="/auth/register" 
@@ -392,18 +392,18 @@ export default function LoginPage() {
             </div>
 
             {/* Social Login Buttons */}
-            <div className="space-y-3 pt-4 border-t border-border">
+            <div className="space-y-3 pt-3 sm:pt-4 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-12 text-base font-medium bg-transparent border-input text-foreground hover:bg-accent hover:border-accent-foreground transition-all"
+                className="w-full h-11 sm:h-12 text-sm sm:text-base font-medium bg-transparent border-input text-foreground hover:bg-accent hover:border-accent-foreground transition-all"
                 onClick={() => {
                   alert('התחברות עם Google - יתווסף בהמשך');
                 }}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 bg-white rounded flex items-center justify-center">
-                    <span className="text-[#4285F4] font-bold text-xs">G</span>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-white rounded flex items-center justify-center">
+                    <span className="text-[#4285F4] font-bold text-[10px] sm:text-xs">G</span>
                   </div>
                   התחבר עם Google
                 </div>

@@ -234,66 +234,67 @@ function WorkoutSummaryContent() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Enhanced Header */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden">
+      {/* Enhanced Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2.5rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-        <div className="max-w-2xl mx-auto flex items-center gap-3 relative z-10">
-          <Link href="/trainee/workout">
-            <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-              <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+        <div className="max-w-2xl mx-auto flex items-center gap-2 sm:gap-3 relative z-10">
+          <Link href="/trainee/workout" className="flex-shrink-0">
+            <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </Link>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black text-foreground tracking-tight">סיכום אימון</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">סיכום אימון</h1>
             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Workout Summary</p>
           </div>
-          <div className="bg-green-500/20 p-2.5 rounded-2xl">
-            <Trophy className="w-6 h-6 text-green-500" />
+          <div className="bg-green-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl flex-shrink-0">
+            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-5 space-y-6 pb-6">
+      {/* Content with padding */}
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-5 py-4 sm:py-6 space-y-4 sm:space-y-6 pb-6">
         {/* Workout Summary Card */}
-        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <CardContent className="p-6 space-y-4">
+        <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-muted-foreground font-medium">משך כולל:</p>
-              <p className="text-foreground font-black text-lg">{summary.duration}</p>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">משך כולל:</p>
+              <p className="text-foreground font-black text-base sm:text-lg">{summary.duration}</p>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-muted-foreground font-medium">משקל כולל שהורם:</p>
-              <p className="text-foreground font-black text-lg">{summary.totalWeight.toLocaleString()} ק"ג</p>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">משקל כולל שהורם:</p>
+              <p className="text-foreground font-black text-base sm:text-lg">{summary.totalWeight.toLocaleString()} ק"ג</p>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-muted-foreground font-medium">נפח אימון:</p>
-              <div className="flex items-center gap-3">
-                <p className="text-foreground font-black">{summary.volume}</p>
-                <div className="relative w-16 h-16">
-                  <svg className="w-16 h-16 transform -rotate-90">
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">נפח אימון:</p>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <p className="text-foreground font-black text-sm sm:text-base">{summary.volume}</p>
+                <div className="relative w-12 h-12 sm:w-16 sm:h-16">
+                  <svg className="w-12 h-12 sm:w-16 sm:h-16 transform -rotate-90">
                     <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
+                      cx="24"
+                      cy="24"
+                      r="20"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="6"
+                      strokeWidth="4"
                       className="text-accent"
                     />
                     <circle
-                      cx="32"
-                      cy="32"
-                      r="28"
+                      cx="24"
+                      cy="24"
+                      r="20"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="6"
-                      strokeDasharray={`${(summary.volumePercent / 100) * 176} 176`}
+                      strokeWidth="4"
+                      strokeDasharray={`${(summary.volumePercent / 100) * 125.6} 125.6`}
                       strokeLinecap="round"
                       className="text-primary"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs text-foreground font-black">{summary.volumePercent}%</span>
+                    <span className="text-[10px] sm:text-xs text-foreground font-black">{summary.volumePercent}%</span>
                   </div>
                 </div>
               </div>

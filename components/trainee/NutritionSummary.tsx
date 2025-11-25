@@ -24,11 +24,11 @@ export function NutritionSummary({ nutritionLog, targets }: NutritionSummaryProp
     : (nutritionData.protein * 4 + nutritionData.carbs * 4 + nutritionData.fat * 9);
 
   return (
-    <Card className="bg-card border-border shadow-md">
-      <CardHeader>
-        <CardTitle className="text-foreground text-lg">יומן תזונה</CardTitle>
+    <Card className="bg-gradient-to-br from-card via-card to-accent/10 border-2 border-border rounded-2xl sm:rounded-[2rem] shadow-lg">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-foreground text-lg sm:text-xl font-black">יומן תזונה</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6 pt-0">
         <NutritionDonutChart
           data={nutritionData}
           targets={targets}

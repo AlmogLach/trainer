@@ -298,94 +298,97 @@ function TrainerDashboardContent() {
 
 
   return (
-    <main className="p-5 lg:p-6 space-y-6 max-w-7xl mx-auto">
-          {/* Enhanced Header */}
-          <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <main className="max-w-7xl mx-auto">
+          {/* Enhanced Header - Connected to top header */}
+          <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
             <div className="relative z-10">
-              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Trainer 💪</p>
-              <h2 className="text-4xl font-black text-foreground">דשבורד מאמן</h2>
-              <p className="text-muted-foreground text-sm mt-2">ניהול ומעקב אחר כל המתאמנים שלך</p>
+              <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Trainer 💪</p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">דשבורד מאמן</h2>
+              <p className="text-muted-foreground text-xs sm:text-sm mt-2">ניהול ומעקב אחר כל המתאמנים שלך</p>
             </div>
           </div>
 
-          {/* Enhanced Statistics Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+          {/* Content with padding */}
+          <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+
+            {/* Enhanced Statistics Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-xl sm:rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full blur-2xl" />
-              <CardContent className="p-6 relative z-10">
-                <div className="flex flex-col gap-3">
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground font-bold uppercase">מתאמנים פעילים</p>
-                    <div className="bg-primary/20 p-2 rounded-xl">
-                      <Users className="h-5 w-5 text-primary" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-bold uppercase">מתאמנים פעילים</p>
+                    <div className="bg-primary/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                      <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                     </div>
                   </div>
-                  <p className="text-4xl font-black text-foreground">{stats.activeTrainees}</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">{stats.activeTrainees}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-xl sm:rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
               <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl" />
-              <CardContent className="p-6 relative z-10">
-                <div className="flex flex-col gap-3">
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground font-bold uppercase">אימונים היום</p>
-                    <div className="bg-blue-500/20 p-2 rounded-xl">
-                      <Calendar className="h-5 w-5 text-blue-500" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-bold uppercase">אימונים היום</p>
+                    <div className="bg-blue-500/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                     </div>
                   </div>
-                  <p className="text-4xl font-black text-foreground">
-                    {stats.workoutsToday.completed}<span className="text-2xl text-muted-foreground">/{stats.workoutsToday.total}</span>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">
+                    {stats.workoutsToday.completed}<span className="text-lg sm:text-xl lg:text-2xl text-muted-foreground">/{stats.workoutsToday.total}</span>
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-xl sm:rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
               <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full blur-2xl" />
-              <CardContent className="p-6 relative z-10">
-                <div className="flex flex-col gap-3">
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground font-bold uppercase">ציות ממוצע</p>
-                    <div className="bg-green-500/20 p-2 rounded-xl">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-bold uppercase">ציות ממוצע</p>
+                    <div className="bg-green-500/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                     </div>
                   </div>
-                  <p className="text-4xl font-black text-green-500">{stats.averageCompliance}%</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-500">{stats.averageCompliance}%</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-xl sm:rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
               <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl" />
-              <CardContent className="p-6 relative z-10">
-                <div className="flex flex-col gap-3">
+              <CardContent className="p-4 sm:p-6 relative z-10">
+                <div className="flex flex-col gap-2 sm:gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground font-bold uppercase">התראות</p>
-                    <div className="bg-red-500/20 p-2 rounded-xl">
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-bold uppercase">התראות</p>
+                    <div className="bg-red-500/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                      <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                     </div>
                   </div>
-                  <p className="text-4xl font-black text-red-500">{stats.alerts}</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black text-red-500">{stats.alerts}</p>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Command Center */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-card border-border shadow-lg rounded-[2rem] flex flex-col">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/20 p-2 rounded-xl">
-                    <Users className="h-5 w-5 text-primary" />
+            {/* Command Center */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem] flex flex-col">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="bg-primary/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
-                  <CardTitle className="text-foreground text-xl font-black">פעילות אחרונה</CardTitle>
+                  <CardTitle className="text-foreground text-lg sm:text-xl font-black">פעילות אחרונה</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 flex-1">
+              <CardContent className="space-y-3 sm:space-y-4 flex-1 p-4 sm:p-6">
                 {loading ? (
                   <div className="flex justify-center py-12">
                     <div className="text-center space-y-3">
@@ -452,47 +455,47 @@ function TrainerDashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border shadow-lg rounded-[2rem]">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-500/20 p-2 rounded-xl">
-                    <FileText className="h-5 w-5 text-blue-500" />
+            <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="bg-blue-500/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                   </div>
-                  <CardTitle className="text-foreground text-xl font-black">דוחות מהירים</CardTitle>
+                  <CardTitle className="text-foreground text-lg sm:text-xl font-black">דוחות מהירים</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-4 sm:p-6">
                 <Button 
                   onClick={exportWeeklyReport}
-                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98"
+                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-4 sm:py-5 group rounded-xl sm:rounded-2xl transition-all active:scale-98"
                 >
-                  <div className="bg-primary/20 p-3 rounded-xl ml-3 group-hover:bg-primary/30 transition-colors">
-                    <FileText className="h-6 w-6 text-primary" />
+                  <div className="bg-primary/20 p-2 sm:p-3 rounded-lg sm:rounded-xl ml-2 sm:ml-3 group-hover:bg-primary/30 transition-colors">
+                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                   </div>
                   <div className="text-right flex-1">
-                    <p className="font-black text-base">דו"ח שבועי</p>
+                    <p className="font-black text-sm sm:text-base">דו"ח שבועי</p>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">ייצא דוח שבועי של כל המתאמנים</p>
                   </div>
                 </Button>
                 <Button 
                   onClick={exportPerformanceReport}
-                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98"
+                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-4 sm:py-5 group rounded-xl sm:rounded-2xl transition-all active:scale-98"
                 >
-                  <div className="bg-blue-500/20 p-3 rounded-xl ml-3 group-hover:bg-blue-500/30 transition-colors">
-                    <BarChart3 className="h-6 w-6 text-blue-500" />
+                  <div className="bg-blue-500/20 p-2 sm:p-3 rounded-lg sm:rounded-xl ml-2 sm:ml-3 group-hover:bg-blue-500/30 transition-colors">
+                    <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
                   </div>
                   <div className="text-right flex-1">
-                    <p className="font-black text-base">ביצועים</p>
+                    <p className="font-black text-sm sm:text-base">ביצועים</p>
                     <p className="text-xs text-muted-foreground font-medium mt-0.5">ייצא דוח ביצועים מפורט</p>
                   </div>
                 </Button>
                 <Link href="/trainer/reports" className="block">
-                  <Button className="w-full bg-gradient-to-r from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 text-foreground border-2 border-purple-500/30 justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98">
-                    <div className="bg-purple-500/20 p-3 rounded-xl ml-3 group-hover:bg-purple-500/30 transition-colors">
-                      <FileText className="h-6 w-6 text-purple-500" />
+                  <Button className="w-full bg-gradient-to-r from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 text-foreground border-2 border-purple-500/30 justify-start h-auto py-4 sm:py-5 group rounded-xl sm:rounded-2xl transition-all active:scale-98">
+                    <div className="bg-purple-500/20 p-2 sm:p-3 rounded-lg sm:rounded-xl ml-2 sm:ml-3 group-hover:bg-purple-500/30 transition-colors">
+                      <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
                     </div>
                     <div className="text-right flex-1">
-                      <p className="font-black text-base">דוחות מפורטים</p>
+                      <p className="font-black text-sm sm:text-base">דוחות מפורטים</p>
                       <p className="text-xs text-muted-foreground font-medium mt-0.5">עבור לדף הדוחות המלא</p>
                     </div>
                   </Button>
@@ -501,8 +504,8 @@ function TrainerDashboardContent() {
             </Card>
           </div>
 
-          {/* Workout Status Table - Only visible on larger screens */}
-          <Card className="bg-card border-border shadow-sm hidden lg:block">
+            {/* Workout Status Table - Only visible on larger screens */}
+            <Card className="bg-card border-border shadow-sm hidden lg:block">
             <CardHeader>
               <CardTitle className="text-foreground">סטטוס אימונים</CardTitle>
             </CardHeader>
@@ -574,6 +577,7 @@ function TrainerDashboardContent() {
               </div>
             </CardContent>
           </Card>
+          </div>
     </main>
   );
 }

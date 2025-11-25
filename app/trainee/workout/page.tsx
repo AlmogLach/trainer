@@ -599,28 +599,28 @@ function WorkoutPageContent() {
   return (
     <div className="min-h-full bg-background pb-32" dir="rtl">
       
-      {/* Header */}
-      <div className="bg-gradient-to-br from-primary/10 to-primary/5 px-6 py-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary p-2.5 rounded-xl">
-              <Dumbbell className="w-6 h-6 text-white" />
+      {/* Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl px-4 sm:px-6 py-4 sm:py-6">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="bg-primary p-2 sm:p-2.5 rounded-lg sm:rounded-xl">
+              <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-foreground">FitLog</h1>
-              <p className="text-xs text-muted-foreground">Workout Tracker</p>
+              <h1 className="text-lg sm:text-xl font-black text-foreground">FitLog</h1>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Workout Tracker</p>
             </div>
           </div>
           
           <Link href="/trainee/dashboard">
-            <Button variant="outline" size="icon" className="rounded-xl">
-              <ArrowRight className="h-5 w-5" />
+            <Button variant="outline" size="icon" className="rounded-lg sm:rounded-xl h-9 w-9 sm:h-10 sm:w-10">
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </Link>
         </div>
 
         {/* Workout Info */}
-        <div className="bg-card rounded-2xl p-4 border-2 border-border">
+        <div className="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-border">
           <div className="flex items-center justify-between mb-3">
             <div onClick={() => setShowRoutineSelector(!showRoutineSelector)} className="cursor-pointer flex-1">
               <span className="text-xs text-primary font-bold uppercase mb-1 block">אימון היום</span>
@@ -680,6 +680,8 @@ function WorkoutPageContent() {
         </div>
       </div>
 
+      {/* Content with padding */}
+      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Routine Selector */}
       {showRoutineSelector && (
          <div 
@@ -721,7 +723,7 @@ function WorkoutPageContent() {
       )}
 
       {/* Exercises */}
-      <div className="px-5 space-y-4 max-w-2xl mx-auto">
+      <div className="space-y-4 max-w-2xl mx-auto">
         {exercises.map((exercise, index) => {
           const data = exercisesData[exercise.id] || { 
              heaviestWeight: "", heaviestReps: "", heaviestRir: "1", totalSetsDone: 0, isComplete: false 
@@ -776,7 +778,7 @@ function WorkoutPageContent() {
             </Button>
         </div>
       </div>
-
+      </div>
     </div>
   );
 }

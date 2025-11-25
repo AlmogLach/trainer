@@ -92,46 +92,49 @@ function TraineesManagementContent() {
   };
 
   return (
-    <main className="p-5 lg:p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Enhanced Header */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+    <main className="max-w-7xl mx-auto">
+      {/* Enhanced Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
         <div className="relative z-10">
-          <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Trainer 👥</p>
-          <h2 className="text-4xl font-black text-foreground">ניהול מתאמנים</h2>
-          <p className="text-muted-foreground text-sm mt-2">נהל את כל המתאמנים שלך במקום אחד</p>
+          <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Trainer 👥</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">ניהול מתאמנים</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-2">נהל את כל המתאמנים שלך במקום אחד</p>
         </div>
       </div>
 
-      {/* Trainees Management Section */}
-      <Card className="bg-card border-border shadow-lg rounded-[2rem]">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/20 p-2.5 rounded-2xl">
-                <Plus className="h-6 w-6 text-primary" />
+      {/* Content with padding */}
+      <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+
+        {/* Trainees Management Section */}
+        <Card className="bg-card border-border shadow-lg rounded-2xl sm:rounded-[2rem]">
+        <CardHeader className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="bg-primary/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
+                <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <CardTitle className="text-foreground text-2xl font-black">המתאמנים שלי</CardTitle>
+              <CardTitle className="text-foreground text-xl sm:text-2xl font-black">המתאמנים שלי</CardTitle>
             </div>
             {trainees.length > 0 && (
-              <div className="bg-primary/10 px-4 py-2 rounded-xl border border-primary/30">
-                <span className="text-primary font-black text-lg">{trainees.length}</span>
-                <span className="text-muted-foreground text-sm mr-1">מתאמנים</span>
+              <div className="bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-primary/30">
+                <span className="text-primary font-black text-base sm:text-lg">{trainees.length}</span>
+                <span className="text-muted-foreground text-xs sm:text-sm mr-1">מתאמנים</span>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 space-y-4">
+            <div className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-                <Loader2 className="h-12 w-12 animate-spin text-primary relative z-10" />
+                <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-primary relative z-10" />
               </div>
-              <p className="text-muted-foreground font-medium">טוען מתאמנים...</p>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">טוען מתאמנים...</p>
             </div>
           ) : trainees.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {trainees.map((trainee, index) => (
                 <div 
                   key={trainee.id}
@@ -143,19 +146,19 @@ function TraineesManagementContent() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 space-y-6">
-              <div className="bg-accent/30 p-8 rounded-3xl inline-block">
-                <Plus className="h-16 w-16 text-muted-foreground mx-auto" />
+            <div className="text-center py-12 sm:py-16 space-y-4 sm:space-y-6">
+              <div className="bg-accent/30 p-6 sm:p-8 rounded-2xl sm:rounded-3xl inline-block">
+                <Plus className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mx-auto" />
               </div>
               <div className="space-y-2">
-                <p className="text-foreground font-black text-xl">אין מתאמנים עדיין</p>
-                <p className="text-muted-foreground">התחל להוסיף מתאמנים כדי לנהל את האימונים שלהם</p>
+                <p className="text-foreground font-black text-lg sm:text-xl">אין מתאמנים עדיין</p>
+                <p className="text-muted-foreground text-sm sm:text-base px-4">התחל להוסיף מתאמנים כדי לנהל את האימונים שלהם</p>
               </div>
               <Button 
                 onClick={() => setShowAddTraineeForm(true)}
-                className="h-12 px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="h-11 sm:h-12 px-6 sm:px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl sm:rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
               >
-                <Plus className="ml-2 h-5 w-5" />
+                <Plus className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 הוסף מתאמן חדש
               </Button>
             </div>
@@ -187,15 +190,15 @@ function TraineesManagementContent() {
 
       {/* Enhanced Add Trainee Button (when form is not shown) */}
       {!showAddTraineeForm && trainees.length > 0 && (
-        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-2 border-dashed border-primary/30 shadow-lg rounded-[2rem] hover:border-primary/50 transition-all">
-          <CardContent className="pt-6">
+        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-2 border-dashed border-primary/30 shadow-lg rounded-2xl sm:rounded-[2rem] hover:border-primary/50 transition-all">
+          <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
             <Button 
-              className="w-full h-20 text-lg bg-transparent hover:bg-primary/10 text-foreground border-2 border-transparent hover:border-primary/20 font-black rounded-2xl transition-all active:scale-98"
+              className="w-full h-16 sm:h-20 text-base sm:text-lg bg-transparent hover:bg-primary/10 text-foreground border-2 border-transparent hover:border-primary/20 font-black rounded-xl sm:rounded-2xl transition-all active:scale-98"
               onClick={() => setShowAddTraineeForm(true)}
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/20 p-3 rounded-xl">
-                  <Plus className="h-6 w-6 text-primary" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="bg-primary/20 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <span>הוסף מתאמן חדש</span>
               </div>
@@ -203,6 +206,7 @@ function TraineesManagementContent() {
           </CardContent>
         </Card>
       )}
+      </div>
     </main>
   );
 }

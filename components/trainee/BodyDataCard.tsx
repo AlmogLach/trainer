@@ -43,54 +43,71 @@ export function BodyDataCard({ weightHistory, onAddWeight }: BodyDataCardProps) 
   const weightPath = generateWeightPath(weightHistory);
 
   return (
-    <Card className="bg-card border-border shadow-md">
-      <CardHeader>
-        <CardTitle className="text-foreground text-lg">נתוני גוף</CardTitle>
+    <Card className="bg-gradient-to-br from-card via-card to-accent/10 border-2 border-border rounded-2xl sm:rounded-[2rem] shadow-lg">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-foreground text-lg sm:text-xl font-black">נתוני גוף</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-6">
-          {/* Weight Graph */}
-          <div className="flex items-center justify-center">
-            {weightHistory.length > 1 ? (
-              <div className="w-full h-16 relative">
-                <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                  <polyline
-                    points={weightPath}
-                    fill="none"
-                    className="stroke-primary"
-                    strokeWidth="2"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <div className="w-full h-16 flex items-center justify-center text-muted-foreground text-xs">
-                <p className="text-center">נדרשות 2 שקילות לגרף</p>
-              </div>
-            )}
-          </div>
-
+      <CardContent className="p-4 sm:p-6 pt-0">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {/* Morning Weight */}
           <div className="flex flex-col justify-center">
             {morningWeight ? (
               <>
-                <p className="text-sm text-muted-foreground mb-1">משקל הבוקר:</p>
-                <p className="text-2xl font-bold text-foreground">{morningWeight} ק"ג</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 font-medium">משקל הבוקר:</p>
+                <p className="text-2xl sm:text-3xl font-black text-foreground">{morningWeight} ק"ג</p>
               </>
             ) : (
               <>
-                <p className="text-sm text-muted-foreground mb-1">משקל הבוקר:</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 font-medium">משקל הבוקר:</p>
                 <p className="text-lg text-muted-foreground">אין נתונים</p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onAddWeight}
-                  className="mt-2 border-input text-muted-foreground hover:bg-accent"
+                  className="mt-2 border-input text-muted-foreground hover:bg-accent text-xs sm:text-sm h-8 sm:h-9"
                 >
-                  <Plus className="h-4 w-4 ml-1" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                   הוסף משקל
                 </Button>
               </>
+            )}
+          </div>
+
+          {/* Weight Graph */}
+          <div className="flex items-center justify-center">
+            {weightHistory.length > 1 ? (
+              <div className="w-full h-20 sm:h-24 relative">
+                <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <polyline
+                    points={weightPath}
+                    fill="none"
+                    className="stroke-primary"
+                    strokeWidth="3"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  {/* Add green dots for data points */}
+                  {chartData.map((point, i) => {
+                    const maxW = Math.max(...chartData.map(w => w.weight));
+                    const minW = Math.min(...chartData.map(w => w.weight));
+                    const range = maxW - minW || 1;
+                    const x = (i / (chartData.length - 1)) * 100;
+                    const y = 40 - ((point.weight - minW) / range) * 40;
+                    return (
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r="2"
+                        className="fill-primary"
+                      />
+                    );
+                  })}
+                </svg>
+              </div>
+            ) : (
+              <div className="w-full h-20 sm:h-24 flex items-center justify-center text-muted-foreground text-xs">
+                <p className="text-center">נדרשות 2 שקילות לגרף</p>
+              </div>
             )}
           </div>
         </div>

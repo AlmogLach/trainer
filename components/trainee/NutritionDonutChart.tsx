@@ -43,115 +43,92 @@ export function NutritionDonutChart({
   const carbsOffset = -(fluidsDash + proteinDash + fatDash);
 
   const caloriesProgress = (totalCalories / targetCalories) * circumference;
+  const caloriesPercent = Math.min(Math.round((totalCalories / targetCalories) * 100), 100);
+  const totalMacros = data.protein + data.fat + data.carbs;
+  const targetMacros = targets.protein + targets.fat + targets.carbs;
+  const macroPercent = Math.min(Math.round((totalMacros / targetMacros) * 100), 100);
 
   return (
-    <div className="grid grid-cols-2 gap-6">
-      {/* Donut Chart */}
-      <div className="flex items-center justify-center">
-        <div className="relative w-32 h-32">
-          <svg className="w-32 h-32 transform -rotate-90">
-            {/* Background circle */}
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-muted"
-              strokeWidth="12"
-            />
-            {/* Fluids */}
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-primary"
-              strokeWidth="12"
-              strokeDasharray={`${Math.min(fluidsDash, circumference)} ${circumference}`}
-              strokeDashoffset={fluidsOffset}
-            />
-            {/* Protein */}
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-blue-500"
-              strokeWidth="12"
-              strokeDasharray={`${Math.min(proteinDash, circumference)} ${circumference}`}
-              strokeDashoffset={proteinOffset}
-            />
-            {/* Fat */}
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-red-500"
-              strokeWidth="12"
-              strokeDasharray={`${Math.min(fatDash, circumference)} ${circumference}`}
-              strokeDashoffset={fatOffset}
-            />
-            {/* Carbs */}
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-orange-500"
-              strokeWidth="12"
-              strokeDasharray={`${Math.min(carbsDash, circumference)} ${circumference}`}
-              strokeDashoffset={carbsOffset}
-            />
-          </svg>
+    <div className="space-y-4">
+      {/* Two Large Progress Circles */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Calories Circle - Green */}
+        <div className="flex-1 flex flex-col items-center">
+          <div className="relative w-24 h-24 sm:w-32 sm:h-32">
+            <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90">
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                fill="none"
+                className="stroke-muted/30"
+                strokeWidth="8"
+              />
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                fill="none"
+                className="stroke-primary"
+                strokeWidth="8"
+                strokeDasharray={`${Math.min(caloriesProgress, circumference * 0.75)} ${circumference * 0.75}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl sm:text-2xl font-black text-primary">{caloriesPercent}%</span>
+            </div>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-2 text-center">קק"ל נצרך</p>
         </div>
-        <div className="mr-4 space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 rounded-full bg-primary"></div>
-            <span className="text-muted-foreground">נוזלים</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span className="text-muted-foreground">חלבון</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-muted-foreground">שומן</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span className="text-muted-foreground">פחמימות</span>
+
+        {/* Macros Circle - Blue */}
+        <div className="flex-1 flex flex-col items-center">
+          <div className="relative w-24 h-24 sm:w-32 sm:h-32">
+            <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90">
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                fill="none"
+                className="stroke-muted/30"
+                strokeWidth="8"
+              />
+              <circle
+                cx="48"
+                cy="48"
+                r="42"
+                fill="none"
+                className="stroke-blue-500"
+                strokeWidth="8"
+                strokeDasharray={`${Math.min((macroPercent / 100) * circumference * 0.75, circumference * 0.75)} ${circumference * 0.75}`}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xl sm:text-2xl font-black text-blue-500">{macroPercent}%</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Calorie Gauge */}
-      <div className="flex flex-col items-center justify-center">
-        <div className="relative w-32 h-32">
-          <svg className="w-32 h-32 transform -rotate-90">
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-muted"
-              strokeWidth="12"
-            />
-            <circle
-              cx="64"
-              cy="64"
-              r="56"
-              fill="none"
-              className="stroke-primary"
-              strokeWidth="12"
-              strokeDasharray={`${Math.min(caloriesProgress, circumference)} ${circumference}`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-foreground">{remainingCalories}</span>
-            <span className="text-xs text-muted-foreground">קק"ל חסר</span>
-          </div>
+      {/* Macros List */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-primary"></div>
+          <span className="text-sm text-foreground font-bold">נוזלים</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+          <span className="text-sm text-foreground font-bold">חלבון</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <span className="text-sm text-foreground font-bold">שומן</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+          <span className="text-sm text-foreground font-bold">פחמימות</span>
         </div>
       </div>
     </div>

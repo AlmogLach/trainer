@@ -36,6 +36,8 @@ function ProgressTrackingContent() {
   const [weightError, setWeightError] = useState<string | null>(null);
   const [savingWeight, setSavingWeight] = useState(false);
   const [progressPhotos, setProgressPhotos] = useState<Array<{ id: string; date: string; url: string }>>([]);
+  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogWithDetails[]>([]);
+  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -56,6 +58,7 @@ function ProgressTrackingContent() {
       ]);
       
       setWeightHistory(weights);
+      setWorkoutLogs(logs);
       
       // Find bench press exercises (search for variations)
       const benchPressData: Array<{ date: string; oneRM: number }> = [];
@@ -226,36 +229,36 @@ function ProgressTrackingContent() {
 
   return (
     <div className="min-h-screen" dir="rtl">
-      {/* Enhanced Header with FitLog Style */}
-      <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden sticky top-0 z-10">
+      {/* Enhanced Header - Connected to top header */}
+      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2.5rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
         {/* Animated Background blobs */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/30 rounded-full blur-2xl -z-10 -translate-x-1/2 translate-y-1/2" />
         
-        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-primary to-primary/80 p-2.5 rounded-2xl shadow-lg">
-              <TrendingUp className="w-6 h-6 text-background" />
+        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <div className="bg-gradient-to-br from-primary to-primary/80 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-background" />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-foreground tracking-tight">מעקב התקדמות</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">מעקב התקדמות</h1>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Progress Tracking</p>
             </div>
           </div>
           
-          <Link href="/trainee/dashboard">
-            <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          <Link href="/trainee/dashboard" className="flex-shrink-0">
+            <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             </div>
           </Link>
         </div>
       </div>
 
-      <main className="max-w-2xl mx-auto px-5 space-y-6">
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-5 space-y-5 sm:space-y-6">
         {/* Body Weight Section */}
         <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-500/20 p-2 rounded-xl">
                   <Target className="w-5 h-5 text-blue-500" />
@@ -284,8 +287,8 @@ function ProgressTrackingContent() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="bg-accent/20 rounded-2xl p-4 mb-4">
+          <CardContent className="pt-0 pb-6">
+            <div className="bg-accent/20 rounded-2xl p-4 mb-6">
               <SimpleLineChart
                 data={filteredWeightData.map(item => ({ date: item.date, value: item.weight }))}
                 currentValue={currentWeight}
@@ -304,8 +307,8 @@ function ProgressTrackingContent() {
 
         {/* Bench Press 1RM Section */}
         <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between flex-wrap gap-3">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="bg-orange-500/20 p-2 rounded-xl">
                   <Dumbbell className="w-5 h-5 text-orange-500" />
@@ -325,8 +328,8 @@ function ProgressTrackingContent() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="bg-accent/20 rounded-2xl p-4 mb-4">
+          <CardContent className="pt-0 pb-6">
+            <div className="bg-accent/20 rounded-2xl p-4 mb-6">
               <SimpleLineChart
                 data={filteredBenchPressData.map(item => ({ date: item.date, value: item.oneRM }))}
                 currentValue={currentBenchPress}
@@ -335,13 +338,89 @@ function ProgressTrackingContent() {
             </div>
             <Button
               variant="outline"
+              onClick={() => setShowWorkoutHistory(!showWorkoutHistory)}
               className="w-full h-12 border-2 border-border text-foreground hover:bg-accent/50 font-bold rounded-2xl transition-all active:scale-95"
             >
               <BarChart3 className="h-5 w-5 ml-2" />
-              היסטוריית ביצועים
+              {showWorkoutHistory ? "הסתר היסטוריית אימונים" : "הצג היסטוריית אימונים"}
             </Button>
           </CardContent>
         </Card>
+
+        {/* Workout History Section */}
+        {showWorkoutHistory && (
+          <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="bg-green-500/20 p-2 rounded-xl">
+                  <Dumbbell className="w-5 h-5 text-green-500" />
+                </div>
+                <CardTitle className="text-xl font-black text-foreground">היסטוריית אימונים</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {workoutLogs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-muted-foreground font-medium">אין אימונים להצגה</p>
+                </div>
+              ) : (
+                workoutLogs.slice(0, 10).map((log) => {
+                  const totalVolume = log.set_logs?.reduce((sum, set) => {
+                    return sum + (set.weight_kg * set.reps);
+                  }, 0) || 0;
+                  
+                  const totalSets = log.set_logs?.length || 0;
+                  const uniqueExercises = new Set(log.set_logs?.map(s => s.exercise_id)).size;
+
+                  return (
+                    <div 
+                      key={log.id}
+                      className="bg-accent/20 border-2 border-border rounded-2xl p-4 hover:border-primary/50 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-black text-foreground text-lg">
+                            {log.routine?.name || 'אימון'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            {new Date(log.date).toLocaleDateString('he-IL', { 
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                        {log.completed && (
+                          <div className="bg-green-500/20 p-2 rounded-lg">
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-background/50 rounded-xl p-3 text-center">
+                          <p className="text-xs text-muted-foreground font-medium mb-1">תרגילים</p>
+                          <p className="text-lg font-black text-foreground">{uniqueExercises}</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-3 text-center">
+                          <p className="text-xs text-muted-foreground font-medium mb-1">סטים</p>
+                          <p className="text-lg font-black text-foreground">{totalSets}</p>
+                        </div>
+                        <div className="bg-background/50 rounded-xl p-3 text-center">
+                          <p className="text-xs text-muted-foreground font-medium mb-1">נפח</p>
+                          <p className="text-lg font-black text-primary">{totalVolume.toLocaleString()}</p>
+                          <p className="text-[10px] text-muted-foreground">kg</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Progress Photos Section */}
         <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>

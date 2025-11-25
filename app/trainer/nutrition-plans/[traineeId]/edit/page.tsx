@@ -265,8 +265,8 @@ function EditNutritionPlanContent() {
       <div className="max-w-7xl mx-auto flex gap-6">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+        {/* Enhanced Header - Connected to top header */}
+        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
           <div className="relative z-10 flex items-center gap-4">
             <Link href="/trainer/nutrition-plans">
@@ -281,6 +281,8 @@ function EditNutritionPlanContent() {
           </div>
         </div>
 
+        {/* Content with padding */}
+        <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Enhanced Basic Info Card */}
         <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
           <CardHeader>
@@ -422,6 +424,7 @@ function EditNutritionPlanContent() {
             setSelectedMealForFood(null);
           }}
         />
+        </div>
       </div>
       </div>
     </div>
