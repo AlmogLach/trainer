@@ -84,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 cacheUser(currentUser);
               }
             })
-            .catch((error) => {
-              console.error('Error loading user from DB:', error);
+            .catch(() => {
+              // Silently fail - use cached user
             });
           return;
         }
@@ -119,12 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               cacheUser(currentUser);
             }
           })
-          .catch((error) => {
-            console.error('Error loading user from DB:', error);
+          .catch(() => {
             // Keep temp user - app continues to work
           });
-      } catch (error) {
-        console.error('Error in initAuth:', error);
+      } catch {
         if (mounted) {
           setUser(null);
           setLoading(false);
@@ -194,8 +192,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           })
-          .catch((error) => {
-            console.error('Error loading user from DB:', error);
+          .catch(() => {
+            // Silently fail
           });
       }
     });

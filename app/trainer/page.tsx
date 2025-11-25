@@ -65,9 +65,15 @@ function TrainerDashboardContent() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="mt-2 text-muted-foreground">טוען משתמש...</p>
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען משתמש...</p>
+            <p className="text-sm text-muted-foreground mt-1">מאמת הרשאות</p>
+          </div>
         </div>
       </div>
     );
@@ -76,12 +82,19 @@ function TrainerDashboardContent() {
   // Show login prompt if not authenticated
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">נדרש התחברות</h1>
-          <p className="text-muted-foreground mb-4">יש להתחבר כדי לגשת לדף זה</p>
-          <Link href="/auth/login" className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 font-semibold">
-            התחברות
+      <div className="min-h-screen bg-background flex items-center justify-center p-6" dir="rtl">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="bg-primary/10 p-6 rounded-3xl border-2 border-primary/30 inline-block">
+            <Users className="h-16 w-16 text-primary mx-auto" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-black text-foreground">נדרש התחברות</h1>
+            <p className="text-muted-foreground text-base">יש להתחבר כדי לגשת לדף המאמן</p>
+          </div>
+          <Link href="/auth/login">
+            <Button className="h-12 px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">
+              התחברות
+            </Button>
           </Link>
         </div>
       </div>
@@ -285,59 +298,77 @@ function TrainerDashboardContent() {
 
 
   return (
-    <main className="p-4 lg:p-6 space-y-6 pb-24 lg:pb-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-foreground">דשבורד מאמן</h2>
+    <main className="p-5 lg:p-6 space-y-6 max-w-7xl mx-auto">
+          {/* Enhanced Header */}
+          <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+            <div className="relative z-10">
+              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Trainer 💪</p>
+              <h2 className="text-4xl font-black text-foreground">דשבורד מאמן</h2>
+              <p className="text-muted-foreground text-sm mt-2">ניהול ומעקב אחר כל המתאמנים שלך</p>
+            </div>
           </div>
 
-          {/* Statistics Cards */}
+          {/* Enhanced Statistics Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col gap-2">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full blur-2xl" />
+              <CardContent className="p-6 relative z-10">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">מתאמנים פעילים</p>
-                    <Users className="h-5 w-5 text-primary" />
+                    <p className="text-sm text-muted-foreground font-bold uppercase">מתאמנים פעילים</p>
+                    <div className="bg-primary/20 p-2 rounded-xl">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">{stats.activeTrainees}</p>
+                  <p className="text-4xl font-black text-foreground">{stats.activeTrainees}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col gap-2">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl" />
+              <CardContent className="p-6 relative z-10">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">אימונים היום</p>
-                    <Calendar className="h-5 w-5 text-blue-500" />
+                    <p className="text-sm text-muted-foreground font-bold uppercase">אימונים היום</p>
+                    <div className="bg-blue-500/20 p-2 rounded-xl">
+                      <Calendar className="h-5 w-5 text-blue-500" />
+                    </div>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">
-                    {stats.workoutsToday.completed}/{stats.workoutsToday.total}
+                  <p className="text-4xl font-black text-foreground">
+                    {stats.workoutsToday.completed}<span className="text-2xl text-muted-foreground">/{stats.workoutsToday.total}</span>
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col gap-2">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full blur-2xl" />
+              <CardContent className="p-6 relative z-10">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">ציות ממוצע</p>
-                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    <p className="text-sm text-muted-foreground font-bold uppercase">ציות ממוצע</p>
+                    <div className="bg-green-500/20 p-2 rounded-xl">
+                      <TrendingUp className="h-5 w-5 text-green-500" />
+                    </div>
                   </div>
-                  <p className="text-3xl font-bold text-foreground">{stats.averageCompliance}%</p>
+                  <p className="text-4xl font-black text-green-500">{stats.averageCompliance}%</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col gap-2">
+            <Card className="bg-gradient-to-br from-card to-accent/10 border-border shadow-lg rounded-[1.5rem] overflow-hidden relative group hover:shadow-xl transition-all">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-2xl" />
+              <CardContent className="p-6 relative z-10">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">התראות</p>
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    <p className="text-sm text-muted-foreground font-bold uppercase">התראות</p>
+                    <div className="bg-red-500/20 p-2 rounded-xl">
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                    </div>
                   </div>
-                  <p className="text-3xl font-bold text-destructive">{stats.alerts}</p>
+                  <p className="text-4xl font-black text-red-500">{stats.alerts}</p>
                 </div>
               </CardContent>
             </Card>
@@ -345,103 +376,124 @@ function TrainerDashboardContent() {
 
           {/* Command Center */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-card border-border shadow-sm flex flex-col">
+            <Card className="bg-card border-border shadow-lg rounded-[2rem] flex flex-col">
               <CardHeader>
-                <CardTitle className="text-foreground">פעילות אחרונה</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/20 p-2 rounded-xl">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-foreground text-xl font-black">פעילות אחרונה</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4 flex-1">
                 {loading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <div className="flex justify-center py-12">
+                    <div className="text-center space-y-3">
+                      <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+                      <p className="text-sm text-muted-foreground font-medium">טוען מתאמנים...</p>
+                    </div>
                   </div>
                 ) : traineesWithStatus.length > 0 ? (
                   <div className="space-y-3">
-                    {traineesWithStatus.slice(0, 3).map((trainee) => (
+                    {traineesWithStatus.slice(0, 3).map((trainee, index) => (
                       <Link 
                         href={`/trainer/trainee/${trainee.id}`} 
                         key={trainee.id}
-                        className="block bg-accent/30 rounded-lg p-4 border border-border hover:bg-accent/50 transition-colors"
+                        className="block bg-gradient-to-r from-accent/30 to-accent/20 rounded-2xl p-4 border-2 border-border hover:border-primary/30 hover:from-accent/40 hover:to-accent/30 transition-all active:scale-98 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-sm border-2 border-primary/30">
                               {trainee.name.charAt(0)}
                             </div>
-                            <p className="font-semibold text-foreground">{trainee.name}</p>
+                            <p className="font-black text-foreground text-base">{trainee.name}</p>
                           </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="flex justify-between items-end">
                           <div>
-                            <p className="text-sm text-muted-foreground">{trainee.planName}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-sm text-foreground font-bold">{trainee.planName}</p>
+                            <p className="text-xs text-muted-foreground mt-1 font-medium">
                               אימון אחרון: {formatDate(trainee.lastWorkout)}
                             </p>
                           </div>
-                          <div className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          <div className={`px-3 py-1.5 rounded-xl text-xs font-black border-2 ${
                             trainee.compliance >= 90 
-                              ? 'bg-green-500/20 text-green-500' 
+                              ? 'bg-green-500/10 text-green-500 border-green-500/30' 
                               : trainee.compliance >= 70
-                              ? 'bg-yellow-500/20 text-yellow-500'
-                              : 'bg-destructive/20 text-destructive'
+                              ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'
+                              : 'bg-red-500/10 text-red-500 border-red-500/30'
                           }`}>
-                            {trainee.compliance}% ציות
+                            {trainee.compliance}%
                           </div>
                         </div>
                       </Link>
                     ))}
-                    <Link href="/trainer/trainees" className="block text-center text-sm text-primary hover:underline pt-2">
-                      צפה בכל המתאמנים
+                    <Link href="/trainer/trainees" className="block">
+                      <Button className="w-full mt-2 bg-primary/10 hover:bg-primary/20 text-primary border-2 border-primary/30 font-black rounded-xl h-10 transition-all active:scale-95">
+                        צפה בכל המתאמנים
+                      </Button>
                     </Link>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                    <p className="text-muted-foreground mb-4">אין מתאמנים פעילים</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center py-12 space-y-4">
+                    <div className="bg-accent/30 p-6 rounded-3xl">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto" />
+                    </div>
+                    <p className="text-muted-foreground font-medium">אין מתאמנים פעילים</p>
                     <Link href="/trainer/trainees">
-                      <Button variant="outline">הוסף מתאמן חדש</Button>
+                      <Button className="h-10 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95">
+                        הוסף מתאמן חדש
+                      </Button>
                     </Link>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="bg-card border-border shadow-sm">
+            <Card className="bg-card border-border shadow-lg rounded-[2rem]">
               <CardHeader>
-                <CardTitle className="text-foreground">דוחות מהירים</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="bg-blue-500/20 p-2 rounded-xl">
+                    <FileText className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <CardTitle className="text-foreground text-xl font-black">דוחות מהירים</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button 
                   onClick={exportWeeklyReport}
-                  className="w-full bg-accent/30 hover:bg-accent text-foreground border border-border justify-start h-auto py-4 group"
+                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98"
                 >
-                  <div className="bg-primary/10 p-2 rounded-md ml-3 group-hover:bg-primary/20 transition-colors">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="bg-primary/20 p-3 rounded-xl ml-3 group-hover:bg-primary/30 transition-colors">
+                    <FileText className="h-6 w-6 text-primary" />
                   </div>
                   <div className="text-right flex-1">
-                    <p className="font-semibold">דו"ח שבועי</p>
-                    <p className="text-xs text-muted-foreground">ייצא דוח שבועי של כל המתאמנים</p>
+                    <p className="font-black text-base">דו"ח שבועי</p>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">ייצא דוח שבועי של כל המתאמנים</p>
                   </div>
                 </Button>
                 <Button 
                   onClick={exportPerformanceReport}
-                  className="w-full bg-accent/30 hover:bg-accent text-foreground border border-border justify-start h-auto py-4 group"
+                  className="w-full bg-gradient-to-r from-accent/40 to-accent/30 hover:from-accent/50 hover:to-accent/40 text-foreground border-2 border-border justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98"
                 >
-                  <div className="bg-blue-500/10 p-2 rounded-md ml-3 group-hover:bg-blue-500/20 transition-colors">
-                    <BarChart3 className="h-5 w-5 text-blue-500" />
+                  <div className="bg-blue-500/20 p-3 rounded-xl ml-3 group-hover:bg-blue-500/30 transition-colors">
+                    <BarChart3 className="h-6 w-6 text-blue-500" />
                   </div>
                   <div className="text-right flex-1">
-                    <p className="font-semibold">ביצועים</p>
-                    <p className="text-xs text-muted-foreground">ייצא דוח ביצועים מפורט</p>
+                    <p className="font-black text-base">ביצועים</p>
+                    <p className="text-xs text-muted-foreground font-medium mt-0.5">ייצא דוח ביצועים מפורט</p>
                   </div>
                 </Button>
                 <Link href="/trainer/reports" className="block">
-                  <Button className="w-full bg-accent/30 hover:bg-accent text-foreground border border-border justify-start h-auto py-4 group">
-                    <div className="bg-purple-500/10 p-2 rounded-md ml-3 group-hover:bg-purple-500/20 transition-colors">
-                      <FileText className="h-5 w-5 text-purple-500" />
+                  <Button className="w-full bg-gradient-to-r from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 text-foreground border-2 border-purple-500/30 justify-start h-auto py-5 group rounded-2xl transition-all active:scale-98">
+                    <div className="bg-purple-500/20 p-3 rounded-xl ml-3 group-hover:bg-purple-500/30 transition-colors">
+                      <FileText className="h-6 w-6 text-purple-500" />
                     </div>
                     <div className="text-right flex-1">
-                      <p className="font-semibold">דוחות מפורטים</p>
-                      <p className="text-xs text-muted-foreground">עבור לדף הדוחות המלא</p>
+                      <p className="font-black text-base">דוחות מפורטים</p>
+                      <p className="text-xs text-muted-foreground font-medium mt-0.5">עבור לדף הדוחות המלא</p>
                     </div>
                   </Button>
                 </Link>

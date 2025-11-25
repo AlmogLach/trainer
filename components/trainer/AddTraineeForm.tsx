@@ -47,30 +47,30 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
   };
 
   return (
-    <Card className="bg-[#1a2332] border-2 border-[#00ff88]">
+    <Card className="bg-card border-2 border-primary shadow-lg rounded-[2rem]">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white">הוסף מתאמן חדש</CardTitle>
+          <CardTitle className="text-foreground text-2xl font-black">הוסף מתאמן חדש</CardTitle>
           <Button
             variant="ghost"
             size="icon"
             onClick={onCancel}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
             disabled={adding}
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
-          <div className="p-3 bg-red-900/30 border border-red-800 rounded-md text-red-300 text-sm">
+          <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-500 text-sm font-bold">
             {error}
           </div>
         )}
         
         <div>
-          <label className="text-sm font-medium mb-2 block text-gray-300">
+          <label className="text-sm font-bold mb-2 block text-foreground">
             שם המתאמן
           </label>
           <Input
@@ -78,13 +78,13 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
             placeholder="הזן שם"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-[#0f1a2a] border-gray-700 text-white"
+            className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
             disabled={adding}
           />
         </div>
         
         <div>
-          <label className="text-sm font-medium mb-2 block text-gray-300">
+          <label className="text-sm font-bold mb-2 block text-foreground">
             אימייל (שם משתמש)
           </label>
           <Input
@@ -92,13 +92,13 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
             placeholder="example@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-[#0f1a2a] border-gray-700 text-white"
+            className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
             disabled={adding}
           />
         </div>
         
         <div>
-          <label className="text-sm font-medium mb-2 block text-gray-300">
+          <label className="text-sm font-bold mb-2 block text-foreground">
             סיסמה ראשונית
           </label>
           <Input
@@ -106,23 +106,23 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
             placeholder="לפחות 6 תווים"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-[#0f1a2a] border-gray-700 text-white"
+            className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
             disabled={adding}
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground mt-2 font-medium bg-accent/20 p-2 rounded-lg">
             ⚠️ זוהי סיסמה ראשונית. מומלץ שהמתאמן ישנה אותה בכניסה הראשונה.
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3 pt-2">
           <Button
             onClick={handleSubmit}
             disabled={!name || !email || !password || adding}
-            className="flex-1 bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+            className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
           >
             {adding ? (
               <>
-                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                 מוסיף...
               </>
             ) : (
@@ -132,7 +132,7 @@ export function AddTraineeForm({ onAdd, onCancel, adding, error }: AddTraineeFor
           <Button
             variant="outline"
             onClick={onCancel}
-            className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
             disabled={adding}
           >
             ביטול
@@ -168,56 +168,56 @@ export function CredentialsDisplay({ email, password, onClose }: CredentialsDisp
   };
 
   return (
-    <Card className="bg-[#1a2332] border-2 border-[#00ff88] mt-4">
+    <Card className="bg-card border-2 border-green-500 shadow-lg rounded-[2rem] mt-4">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white">פרטי התחברות למתאמן החדש</CardTitle>
+          <CardTitle className="text-foreground text-2xl font-black">פרטי התחברות למתאמן החדש</CardTitle>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="p-4 bg-[#0f1a2a] rounded-md border border-gray-700">
-          <p className="text-sm text-gray-400 mb-2">אימייל:</p>
-          <p className="text-white font-mono text-lg">{email}</p>
-          <p className="text-sm text-gray-400 mb-2 mt-4">סיסמה:</p>
-          <p className="text-white font-mono text-lg">{password}</p>
+        <div className="p-6 bg-gradient-to-br from-accent/30 to-accent/20 rounded-2xl border-2 border-border">
+          <p className="text-sm text-muted-foreground mb-2 font-bold uppercase">אימייל:</p>
+          <p className="text-foreground font-mono text-xl font-black mb-4">{email}</p>
+          <p className="text-sm text-muted-foreground mb-2 font-bold uppercase">סיסמה:</p>
+          <p className="text-foreground font-mono text-xl font-black">{password}</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button
             onClick={handleWhatsAppShare}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
+            className="flex-1 h-12 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
           >
-            <MessageSquare className="h-4 w-4 ml-2" />
+            <MessageSquare className="h-5 w-5 ml-2" />
             שלח בוואטסאפ
           </Button>
           <Button
             onClick={handleCopyCredentials}
             variant="outline"
-            className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
           >
             {copied ? (
               <>
-                <Check className="h-4 w-4 ml-2" />
+                <Check className="h-5 w-5 ml-2" />
                 הועתק!
               </>
             ) : (
               <>
-                <Copy className="h-4 w-4 ml-2" />
+                <Copy className="h-5 w-5 ml-2" />
                 העתק
               </>
             )}
           </Button>
         </div>
         
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-muted-foreground text-center font-medium bg-accent/20 p-3 rounded-xl">
           ⚠️ שמור את הפרטים במקום בטוח. המתאמן יוכל לשנות את הסיסמה בכניסה הראשונה.
         </p>
       </CardContent>

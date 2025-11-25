@@ -6,8 +6,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 const heebo = Heebo({ subsets: ["hebrew", "latin"] });
 
 export const metadata: Metadata = {
-  title: "Universal FitLog",
-  description: "Universal training and nutrition management platform",
+  title: "FitLog",
+  description: "Training and nutrition management platform",
 };
 
 export default function RootLayout({

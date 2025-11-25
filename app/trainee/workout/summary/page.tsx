@@ -4,15 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, CheckCircle2, Trophy, Share2, Home, BarChart3, Users, Target, Settings, Apple, Dumbbell } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Trophy, Share2, Home, BarChart3, Users, Target, Settings, Apple, Dumbbell, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import {
   getActiveWorkoutPlan,
   getRoutinesWithExercises,
-  createWorkoutLog,
-  createSetLog,
   getWorkoutLogs,
 } from "@/lib/db";
 import type { RoutineWithExercises, Exercise } from "@/lib/types";
@@ -181,69 +179,6 @@ function WorkoutSummaryContent() {
     try {
       setSaving(true);
 
-      const { exercises, routine, startTime } = workoutData;
-
-      // Prepare sets to save
-      const setsToSave: Array<{
-        exerciseId: string;
-        setNumber: number;
-        weight: number;
-        reps: number;
-        rir: number;
-      }> = [];
-
-      exercises.forEach((exercise) => {
-        exercise.sets.forEach((set) => {
-          if (set.weight && set.reps) {
-            const weight = parseFloat(set.weight);
-            const reps = parseInt(set.reps);
-            const rir = parseFloat(set.rir) || 0;
-            
-            if (!isNaN(weight) && !isNaN(reps) && weight > 0 && reps > 0) {
-              setsToSave.push({
-                exerciseId: exercise.exerciseId,
-                setNumber: set.setNumber,
-                weight,
-                reps,
-                rir,
-              });
-            }
-          }
-        });
-      });
-
-      if (setsToSave.length === 0) {
-        alert('לא ניתן לשמור אימון ריק.');
-        setSaving(false);
-        return;
-      }
-
-      // Create workout log
-      const now = new Date().toISOString();
-      const workoutLog = await createWorkoutLog({
-        user_id: user.id,
-        routine_id: routine!.id,
-        date: new Date().toISOString().split('T')[0],
-        notes: '',
-        body_weight: null,
-        start_time: startTime,
-        end_time: now,
-        completed: true,
-      });
-
-      // Create set logs
-      for (const setData of setsToSave) {
-        await createSetLog({
-          log_id: workoutLog.id,
-          exercise_id: setData.exerciseId,
-          set_number: setData.setNumber,
-          weight_kg: setData.weight,
-          reps: setData.reps,
-          rir_actual: setData.rir,
-          notes: '',
-        });
-      }
-
       // Clear session storage
       sessionStorage.removeItem('workoutSummaryData');
 
@@ -251,8 +186,8 @@ function WorkoutSummaryContent() {
       router.push('/trainee/dashboard');
 
     } catch (error: any) {
-      console.error('Error saving workout:', error);
-      alert('שגיאה בשמירת האימון: ' + (error.message || 'שגיאה לא ידועה'));
+      console.error('Error navigating:', error);
+      alert('שגיאה במעבר לדף הבית: ' + (error.message || 'שגיאה לא ידועה'));
     } finally {
       setSaving(false);
     }
@@ -260,9 +195,21 @@ function WorkoutSummaryContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center" dir="rtl">
-        <div className="text-center">
-          <p className="text-gray-400">טוען סיכום...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען סיכום...</p>
+            <p className="text-sm text-muted-foreground mt-1">מכין את סיכום האימון</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
@@ -286,38 +233,42 @@ function WorkoutSummaryContent() {
   let colorIndex = 0;
 
   return (
-    <div className="min-h-screen bg-[#0a1628] pb-20" dir="rtl">
-      {/* Header */}
-      <div className="bg-[#1a2332] text-white p-4 sticky top-0 z-10 border-b border-gray-800">
-        <div className="max-w-2xl mx-auto flex items-center">
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+        <div className="max-w-2xl mx-auto flex items-center gap-3 relative z-10">
           <Link href="/trainee/workout">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
+            <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+              <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+            </div>
           </Link>
-          <div className="text-center flex-1">
-            <h1 className="text-xl font-bold">סיכום אימון</h1>
+          <div className="flex-1">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">סיכום אימון</h1>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Workout Summary</p>
           </div>
-          <div className="w-10" />
+          <div className="bg-green-500/20 p-2.5 rounded-2xl">
+            <Trophy className="w-6 h-6 text-green-500" />
+          </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+      <div className="max-w-2xl mx-auto px-5 space-y-6 pb-6">
         {/* Workout Summary Card */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
           <CardContent className="p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-gray-400">משך כולל:</p>
-              <p className="text-white font-semibold text-lg">{summary.duration}</p>
+              <p className="text-muted-foreground font-medium">משך כולל:</p>
+              <p className="text-foreground font-black text-lg">{summary.duration}</p>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-gray-400">משקל כולל שהורם:</p>
-              <p className="text-white font-semibold text-lg">{summary.totalWeight.toLocaleString()} ק"ג</p>
+              <p className="text-muted-foreground font-medium">משקל כולל שהורם:</p>
+              <p className="text-foreground font-black text-lg">{summary.totalWeight.toLocaleString()} ק"ג</p>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-gray-400">נפח אימון:</p>
+              <p className="text-muted-foreground font-medium">נפח אימון:</p>
               <div className="flex items-center gap-3">
-                <p className="text-white font-semibold">{summary.volume}</p>
+                <p className="text-foreground font-black">{summary.volume}</p>
                 <div className="relative w-16 h-16">
                   <svg className="w-16 h-16 transform -rotate-90">
                     <circle
@@ -325,22 +276,24 @@ function WorkoutSummaryContent() {
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#1a2332"
+                      stroke="currentColor"
                       strokeWidth="6"
+                      className="text-accent"
                     />
                     <circle
                       cx="32"
                       cy="32"
                       r="28"
                       fill="none"
-                      stroke="#00ff88"
+                      stroke="currentColor"
                       strokeWidth="6"
                       strokeDasharray={`${(summary.volumePercent / 100) * 176} 176`}
                       strokeLinecap="round"
+                      className="text-primary"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs text-white font-bold">{summary.volumePercent}%</span>
+                    <span className="text-xs text-foreground font-black">{summary.volumePercent}%</span>
                   </div>
                 </div>
               </div>
@@ -350,9 +303,14 @@ function WorkoutSummaryContent() {
 
         {/* Load Distribution Card */}
         {summary.loadDistribution.length > 0 && (
-          <Card className="bg-[#1a2332] border-gray-800">
+          <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '50ms' }}>
             <CardHeader>
-              <CardTitle className="text-white">פילוג עומס</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-500/20 p-2 rounded-xl">
+                  <BarChart3 className="h-5 w-5 text-purple-500" />
+                </div>
+                <CardTitle className="text-foreground font-black">פילוג עומס</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-6">
@@ -448,7 +406,7 @@ function WorkoutSummaryContent() {
             onClick={handleSaveWorkout}
             disabled={saving}
           >
-            {saving ? "שומר..." : "סיום ורישום ביומן"}
+            {saving ? "מעביר..." : "חזרה לדף הבית"}
           </Button>
           
           <div className="text-center">

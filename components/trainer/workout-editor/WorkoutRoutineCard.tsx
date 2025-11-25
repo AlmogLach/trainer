@@ -31,40 +31,62 @@ export function WorkoutRoutineCard({
   );
 
   return (
-    <Card className="bg-[#1a2332] border-gray-800">
+    <Card className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg rounded-2xl">
       <CardHeader
-        className="cursor-pointer"
+        className="cursor-pointer hover:bg-accent/30 transition-all rounded-t-2xl"
         onClick={onToggle}
       >
         <div className="flex items-center justify-between">
-          <CardTitle className="text-white">
-            רוטינה {routine.letter}: {routine.name}
-          </CardTitle>
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-400" />
-          )}
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 p-2.5 rounded-xl">
+              <GripVertical className="h-5 w-5 text-primary" />
+            </div>
+            <CardTitle className="text-foreground text-xl font-black">
+              רוטינה {routine.letter}: {routine.name}
+            </CardTitle>
+            {sortedExercises.length > 0 && (
+              <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/30">
+                <span className="text-primary font-black text-sm">{sortedExercises.length}</span>
+                <span className="text-muted-foreground text-xs mr-1">תרגילים</span>
+              </div>
+            )}
+          </div>
+          <div className="bg-background p-2 rounded-xl border border-border">
+            {isExpanded ? (
+              <ChevronUp className="h-5 w-5 text-primary" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-primary" />
+            )}
+          </div>
         </div>
       </CardHeader>
       {isExpanded && (
-        <CardContent className="space-y-4">
-          {sortedExercises.map((re, index) => (
-            <RoutineExerciseItem
-              key={re.id}
-              exercise={re as RoutineExercise & { exercise?: { id: string; name: string; image_url: string | null } }}
-              index={index}
-              onUpdate={onUpdateExercise}
-              onDelete={onDeleteExercise}
-              onUpdateImage={onUpdateExerciseImage}
-            />
-          ))}
+        <CardContent className="space-y-3 pt-4">
+          {sortedExercises.length === 0 ? (
+            <div className="text-center py-8 space-y-3">
+              <div className="bg-accent/30 p-6 rounded-2xl inline-block">
+                <Plus className="h-12 w-12 text-muted-foreground mx-auto" />
+              </div>
+              <p className="text-muted-foreground font-medium">אין תרגילים ברוטינה זו</p>
+            </div>
+          ) : (
+            sortedExercises.map((re, index) => (
+              <RoutineExerciseItem
+                key={re.id}
+                exercise={re as RoutineExercise & { exercise?: { id: string; name: string; image_url: string | null } }}
+                index={index}
+                onUpdate={onUpdateExercise}
+                onDelete={onDeleteExercise}
+                onUpdateImage={onUpdateExerciseImage}
+              />
+            ))
+          )}
           <Button
             onClick={onAddExercise}
-            className="w-full bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+            className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-98"
           >
-            <Plus className="h-4 w-4 ml-2" />
-            הוסף תרגיל
+            <Plus className="h-5 w-5 ml-2" />
+            הוסף תרגיל לרוטינה
           </Button>
         </CardContent>
       )}

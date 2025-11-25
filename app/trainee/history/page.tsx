@@ -204,17 +204,28 @@ function ProgressTrackingContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" dir="rtl">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-muted-foreground font-medium">טוען נתוני התקדמות...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען נתוני התקדמות...</p>
+            <p className="text-sm text-muted-foreground mt-1">מכין את הגרפים והנתונים</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-20" dir="rtl">
+    <div className="min-h-screen" dir="rtl">
       {/* Enhanced Header with FitLog Style */}
       <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden sticky top-0 z-10">
         {/* Animated Background blobs */}

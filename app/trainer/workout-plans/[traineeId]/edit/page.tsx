@@ -342,40 +342,57 @@ function WorkoutPlanEditorContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center" dir="rtl">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00ff88]" />
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען תוכנית אימון...</p>
+            <p className="text-sm text-muted-foreground mt-1">מכין את עורך התוכניות</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-full" dir="rtl">
+    <div className="flex flex-col lg:flex-row h-full bg-background" dir="rtl">
       {/* Center Editor */}
       <main className="flex-1 overflow-y-auto">
-        {/* Top Bar - Editor specific */}
-        <div className="sticky top-0 z-10 bg-[#0a1628] border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+        {/* Enhanced Top Bar */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-card to-card/95 backdrop-blur-lg border-b-2 border-border px-5 py-4 flex items-center justify-between shadow-lg">
           <div className="flex items-center gap-3">
             <Link href={`/trainer/trainee/${traineeId}`}>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+              <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              </div>
             </Link>
-            <h1 className="text-xl font-bold text-white">עורך תוכניות אימון</h1>
+            <div>
+              <p className="text-primary font-bold text-xs uppercase tracking-wider">FitLog Editor 📋</p>
+              <h1 className="text-2xl font-black text-foreground">עורך תוכניות אימון</h1>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Button
               onClick={handleSavePlan}
               disabled={saving}
-              className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+              className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
             >
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                   שומר...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 ml-2" />
+                  <Save className="h-5 w-5 ml-2" />
                   שמור תוכנית
                 </>
               )}
@@ -383,50 +400,69 @@ function WorkoutPlanEditorContent() {
           </div>
         </div>
 
-          {/* Plan Structure */}
-          <div className="p-4 lg:p-6 space-y-4">
-            <div className="mb-4">
-              <label className="text-sm text-gray-400 mb-2 block">שם התוכנית:</label>
+          {/* Enhanced Plan Structure */}
+          <div className="p-5 lg:p-6 space-y-6">
+            {/* Plan Name Section */}
+            <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg border-2 border-border">
+              <label className="text-sm text-muted-foreground mb-3 block font-bold uppercase tracking-wider">שם התוכנית:</label>
               <Input
                 value={workoutPlan?.name || ""}
                 onChange={(e) => setWorkoutPlan({ ...workoutPlan, name: e.target.value })}
-                className="bg-[#1a2332] border-gray-700 text-white max-w-md"
+                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-bold text-lg focus:border-primary transition-all"
                 placeholder="שם התוכנית"
               />
             </div>
 
-            <div className="space-y-3">
-              {routines.map((routine) => (
-                <WorkoutRoutineCard
+            {/* Routines Section */}
+            <div className="space-y-4">
+              {routines.length > 0 && (
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-primary/20 p-2 rounded-xl">
+                    <Plus className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-black text-foreground">רוטינות אימון</h2>
+                  <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/30">
+                    <span className="text-primary font-black text-sm">{routines.length}</span>
+                  </div>
+                </div>
+              )}
+              
+              {routines.map((routine, index) => (
+                <div 
                   key={routine.id}
-                  routine={routine}
-                  isExpanded={!!expandedRoutines[routine.id]}
-                  onToggle={() => toggleRoutine(routine.id)}
-                  onAddExercise={() => {
-                    setSelectedRoutineForExercise(routine.id);
-                    setShowRightSidebar(true);
-                    // Scroll to top of sidebar on mobile
-                    if (window.innerWidth < 1024) {
-                      setTimeout(() => {
-                        const sidebar = document.querySelector('aside');
-                        if (sidebar) {
-                          sidebar.scrollTop = 0;
-                        }
-                      }, 100);
-                    }
-                  }}
-                  onUpdateExercise={handleUpdateExercise}
-                  onDeleteExercise={handleDeleteExercise}
-                  onUpdateExerciseImage={handleUpdateExerciseImage}
-                />
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <WorkoutRoutineCard
+                    routine={routine}
+                    isExpanded={!!expandedRoutines[routine.id]}
+                    onToggle={() => toggleRoutine(routine.id)}
+                    onAddExercise={() => {
+                      setSelectedRoutineForExercise(routine.id);
+                      setShowRightSidebar(true);
+                      // Scroll to top of sidebar on mobile
+                      if (window.innerWidth < 1024) {
+                        setTimeout(() => {
+                          const sidebar = document.querySelector('aside');
+                          if (sidebar) {
+                            sidebar.scrollTop = 0;
+                          }
+                        }, 100);
+                      }
+                    }}
+                    onUpdateExercise={handleUpdateExercise}
+                    onDeleteExercise={handleDeleteExercise}
+                    onUpdateExerciseImage={handleUpdateExerciseImage}
+                  />
+                </div>
               ))}
               
               <Button
                 onClick={handleAddRoutine}
-                className="w-full bg-[#1a2332] border border-gray-700 text-gray-300 hover:bg-gray-800"
+                className="w-full h-14 bg-gradient-to-r from-accent/50 to-accent/30 border-2 border-dashed border-border hover:border-primary/50 text-foreground hover:bg-accent/60 font-black rounded-2xl transition-all active:scale-98"
               >
-                <Plus className="h-4 w-4 ml-2" />
-                הוסף רוטינה
+                <Plus className="h-5 w-5 ml-2" />
+                הוסף רוטינה חדשה
               </Button>
             </div>
           </div>

@@ -62,12 +62,13 @@ export default function TrainerLayout({
 
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 bg-card border-l border-border fixed right-0 top-0 h-full z-30 shadow-xl">
-        <div className="p-6 border-b border-border">
-          <h2 className="text-xl font-bold text-foreground">
-            Universal <span className="text-primary">FitLog</span>
+      {/* Enhanced Sidebar - Desktop */}
+      <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-card to-card/95 border-l-2 border-border fixed right-0 top-0 h-full z-30 shadow-2xl">
+        <div className="p-6 border-b-2 border-border bg-gradient-to-r from-primary/10 to-primary/5">
+          <h2 className="text-2xl font-black text-foreground">
+            <span className="text-primary">FitLog</span> 💪
           </h2>
+          <p className="text-xs text-muted-foreground mt-1 font-medium">Trainer Dashboard</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
@@ -77,25 +78,29 @@ export default function TrainerLayout({
               <Link
                 key={item.href + item.label}
                 href={item.href}
-                className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
                   active
-                    ? "bg-primary/10 border border-primary/20 text-primary font-medium"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    ? "bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary/30 text-primary font-black shadow-lg shadow-primary/10"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground font-bold"
                 }`}
               >
-                <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
+                <div className={`${active ? 'bg-primary/20 p-1.5 rounded-lg' : ''}`}>
+                  <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
+                </div>
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t-2 border-border">
           <Button
             variant="ghost"
             onClick={handleSignOut}
-            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            className="w-full justify-start text-muted-foreground hover:text-red-500 hover:bg-red-500/10 font-bold rounded-xl transition-all active:scale-95"
           >
-            <LogOut className="h-5 w-5 ml-2" />
+            <div className="bg-red-500/20 p-1.5 rounded-lg ml-2">
+              <LogOut className="h-5 w-5 text-red-500" />
+            </div>
             <span>התנתק</span>
           </Button>
         </div>
@@ -103,33 +108,34 @@ export default function TrainerLayout({
 
       {/* Main Content */}
       <div className="flex-1 lg:mr-64 transition-all duration-200">
-        {/* Header */}
-        <header className="bg-card border-b border-border sticky top-0 z-20 pt-safe">
+        {/* Enhanced Header */}
+        <header className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border sticky top-0 z-20 pt-safe shadow-lg backdrop-blur-sm">
           <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden text-muted-foreground hover:text-foreground"
+                className="lg:hidden text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all active:scale-95"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
               >
                 <Menu className="h-6 w-6" />
               </Button>
-              <h1 className="text-xl font-bold lg:hidden">
-                <span className="text-foreground">Universal </span>
-                <span className="text-primary">FitLog</span>
+              <h1 className="text-xl font-black lg:hidden">
+                <span className="text-primary">FitLog</span> 💪
               </h1>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-                <Mail className="h-5 w-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
-              </Button>
-              <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold border border-primary/20">
+            
+            {/* Enhanced User Profile Section */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex flex-col items-end">
+                <p className="text-sm font-bold text-foreground">
+                  שלום, {user?.name || "מאמן"}! 👋
+                </p>
+                <p className="text-xs text-muted-foreground font-medium">
+                  {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-lg border-2 border-primary/30 shadow-lg hover:scale-105 transition-transform cursor-pointer">
                 {user?.name?.charAt(0) || "U"}
               </div>
             </div>

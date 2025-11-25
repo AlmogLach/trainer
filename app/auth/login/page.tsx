@@ -232,9 +232,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex flex-col" dir="rtl">
       {/* Header with Logo */}
       <div className="pt-8 pb-4 px-4 text-center">
-        <h1 className="text-2xl font-bold">
-          <span className="text-foreground">Universal </span>
-          <span className="text-primary">FitLog</span>
+        <h1 className="text-2xl font-bold text-foreground">
+          FitLog
         </h1>
       </div>
 
@@ -381,12 +380,12 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">
-                  אין לך חשבון?{" "}
+                  רוצה להצטרף למערכת?{" "}
                   <Link 
                     href="/auth/register" 
                     className="text-primary hover:text-primary/80 font-semibold hover:underline transition-colors"
                   >
-                    הירשם
+                    לחץ כאן להרשמה
                   </Link>
                 </p>
               </div>

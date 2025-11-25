@@ -278,204 +278,253 @@ function ReportsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center" dir="rtl">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00ff88]" />
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען דוחות...</p>
+            <p className="text-sm text-muted-foreground mt-1">מכין את הנתונים</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] p-4 lg:p-6" dir="rtl">
+    <div className="min-h-screen bg-background p-5 lg:p-6" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">דוחות</h1>
-            <p className="text-gray-400">סקירה כללית של ביצועי המתאמנים</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2 bg-[#1a2332] p-1 rounded-lg border border-gray-800">
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Reports 📊</p>
+              <h1 className="text-4xl font-black text-foreground">דוחות וסטטיסטיקות</h1>
+              <p className="text-muted-foreground text-sm mt-2">סקירה כללית של ביצועי המתאמנים</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-2 bg-card p-1.5 rounded-xl border-2 border-border shadow-md">
+                <Button
+                  size="sm"
+                  variant={timeFilter === "week" ? "default" : "ghost"}
+                  onClick={() => setTimeFilter("week")}
+                  className={timeFilter === "week" 
+                    ? "bg-primary text-background font-black rounded-lg" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                >
+                  שבוע
+                </Button>
+                <Button
+                  size="sm"
+                  variant={timeFilter === "month" ? "default" : "ghost"}
+                  onClick={() => setTimeFilter("month")}
+                  className={timeFilter === "month" 
+                    ? "bg-primary text-background font-black rounded-lg" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                >
+                  חודש
+                </Button>
+                <Button
+                  size="sm"
+                  variant={timeFilter === "all" ? "default" : "ghost"}
+                  onClick={() => setTimeFilter("all")}
+                  className={timeFilter === "all" 
+                    ? "bg-primary text-background font-black rounded-lg" 
+                    : "text-muted-foreground font-bold hover:bg-accent rounded-lg"}
+                >
+                  הכל
+                </Button>
+              </div>
               <Button
-                size="sm"
-                variant={timeFilter === "week" ? "default" : "ghost"}
-                onClick={() => setTimeFilter("week")}
-                className={timeFilter === "week" ? "bg-[#00ff88] text-black" : "text-gray-400"}
+                onClick={exportReport}
+                className="h-11 px-6 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
               >
-                שבוע
-              </Button>
-              <Button
-                size="sm"
-                variant={timeFilter === "month" ? "default" : "ghost"}
-                onClick={() => setTimeFilter("month")}
-                className={timeFilter === "month" ? "bg-[#00ff88] text-black" : "text-gray-400"}
-              >
-                חודש
-              </Button>
-              <Button
-                size="sm"
-                variant={timeFilter === "all" ? "default" : "ghost"}
-                onClick={() => setTimeFilter("all")}
-                className={timeFilter === "all" ? "bg-[#00ff88] text-black" : "text-gray-400"}
-              >
-                הכל
+                <Download className="h-5 w-5 ml-2" />
+                ייצא ל-CSV
               </Button>
             </div>
-            <Button
-              onClick={exportReport}
-              className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
-            >
-              <Download className="h-4 w-4 ml-2" />
-              ייצא ל-CSV
-            </Button>
           </div>
         </div>
 
-        {/* Summary Cards */}
+        {/* Enhanced Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#1a2332] border-gray-800">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-2 border-blue-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '0ms' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">מתאמנים פעילים</CardTitle>
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">מתאמנים פעילים</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-white">{stats.activeTrainees}</div>
-                <Users className="h-8 w-8 text-[#00ff88]" />
+                <div className="text-4xl font-black text-blue-500">{stats.activeTrainees}</div>
+                <div className="bg-blue-500/20 p-3 rounded-2xl">
+                  <Users className="h-8 w-8 text-blue-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#1a2332] border-gray-800">
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '50ms' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">אימונים היום</CardTitle>
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">אימונים היום</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-3xl font-bold text-white">{stats.workoutsToday.completed}</div>
-                  <div className="text-sm text-gray-400">מתוך {stats.workoutsToday.total}</div>
+                  <div className="text-4xl font-black text-primary">{stats.workoutsToday.completed}</div>
+                  <div className="text-sm text-muted-foreground font-medium">מתוך {stats.workoutsToday.total}</div>
                 </div>
-                <Activity className="h-8 w-8 text-[#00ff88]" />
+                <div className="bg-primary/20 p-3 rounded-2xl">
+                  <Activity className="h-8 w-8 text-primary" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#1a2332] border-gray-800">
+          <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-2 border-purple-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '100ms' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">התאמה ממוצעת</CardTitle>
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">התאמה ממוצעת</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-white">{stats.averageCompliance}%</div>
-                <Target className="h-8 w-8 text-[#00ff88]" />
+                <div className="text-4xl font-black text-purple-500">{stats.averageCompliance}%</div>
+                <div className="bg-purple-500/20 p-3 rounded-2xl">
+                  <Target className="h-8 w-8 text-purple-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-[#1a2332] border-gray-800">
+          <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-2 border-orange-500/20 shadow-lg rounded-2xl hover:shadow-xl transition-all animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '150ms' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">התראות</CardTitle>
+              <CardTitle className="text-sm font-bold text-muted-foreground uppercase tracking-wider">התראות</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-white">{stats.alerts}</div>
-                <AlertTriangle className="h-8 w-8 text-orange-500" />
+                <div className="text-4xl font-black text-orange-500">{stats.alerts}</div>
+                <div className="bg-orange-500/20 p-3 rounded-2xl">
+                  <AlertTriangle className="h-8 w-8 text-orange-500" />
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Reports Table */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        {/* Enhanced Reports Table */}
+        <Card className="bg-card border-2 border-border shadow-lg rounded-[2rem]">
           <CardHeader>
-            <CardTitle className="text-white">דוחות מתאמנים</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/20 p-2.5 rounded-2xl">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-2xl font-black text-foreground">דוחות מתאמנים</CardTitle>
+              {reports.length > 0 && (
+                <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/30">
+                  <span className="text-primary font-black text-sm">{reports.length}</span>
+                  <span className="text-muted-foreground text-xs mr-1">מתאמנים</span>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-xl border-2 border-border">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">שם</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">תוכנית</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">סטטוס</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">אימונים (סה"כ)</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">אימונים (שבוע)</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">אימונים (חודש)</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">התאמה</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">משקל ממוצע</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">שינוי משקל</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">נפח כולל</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">אימון אחרון</th>
-                    <th className="text-right p-4 text-sm font-semibold text-gray-400">פעולות</th>
+                  <tr className="border-b-2 border-border bg-accent/30">
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">שם</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">תוכנית</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">סטטוס</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (סה"כ)</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (שבוע)</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימונים (חודש)</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">התאמה</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">משקל ממוצע</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">שינוי משקל</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">נפח כולל</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">אימון אחרון</th>
+                    <th className="text-right p-4 text-sm font-black text-foreground uppercase tracking-wider">פעולות</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reports.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="text-center p-8 text-gray-400">
-                        אין נתונים להצגה
+                      <td colSpan={12} className="text-center py-16">
+                        <div className="space-y-4">
+                          <div className="bg-accent/30 p-8 rounded-3xl inline-block">
+                            <FileText className="h-16 w-16 text-muted-foreground mx-auto" />
+                          </div>
+                          <p className="text-foreground font-black text-xl">אין נתונים להצגה</p>
+                          <p className="text-muted-foreground">לא נמצאו דוחות לתקופה הנבחרת</p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
-                    reports.map((report) => (
-                      <tr key={report.id} className="border-b border-gray-800 hover:bg-[#0f1a2a] transition-colors">
-                        <td className="p-4 text-white font-semibold">{report.name}</td>
-                        <td className="p-4 text-gray-300">{report.planName}</td>
+                    reports.map((report, index) => (
+                      <tr key={report.id} className="border-b border-border hover:bg-accent/30 transition-all animate-in fade-in slide-in-from-bottom-1 duration-300" style={{ animationDelay: `${index * 30}ms` }}>
+                        <td className="p-4 text-foreground font-black">{report.name}</td>
+                        <td className="p-4 text-muted-foreground font-medium">{report.planName}</td>
                         <td className="p-4">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          <span className={`px-3 py-1.5 rounded-lg text-xs font-black ${
                             report.status === 'active' 
-                              ? 'bg-green-900/30 text-green-400' 
-                              : 'bg-gray-800 text-gray-400'
+                              ? 'bg-green-500/20 text-green-500 border border-green-500/30' 
+                              : 'bg-gray-500/20 text-gray-500 border border-gray-500/30'
                           }`}>
                             {report.status === 'active' ? 'פעיל' : 'לא פעיל'}
                           </span>
                         </td>
-                        <td className="p-4 text-white">{report.totalWorkouts}</td>
-                        <td className="p-4 text-white">{report.workoutsThisWeek}</td>
-                        <td className="p-4 text-white">{report.workoutsThisMonth}</td>
+                        <td className="p-4 text-foreground font-bold">{report.totalWorkouts}</td>
+                        <td className="p-4 text-foreground font-bold">{report.workoutsThisWeek}</td>
+                        <td className="p-4 text-foreground font-bold">{report.workoutsThisMonth}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-gray-800 rounded-full h-2 max-w-[60px]">
+                            <div className="flex-1 bg-accent rounded-full h-2.5 max-w-[70px]">
                               <div 
-                                className={`h-2 rounded-full ${
-                                  report.compliance >= 80 ? 'bg-[#00ff88]' :
-                                  report.compliance >= 50 ? 'bg-yellow-500' :
-                                  'bg-red-500'
+                                className={`h-2.5 rounded-full transition-all ${
+                                  report.compliance >= 80 ? 'bg-gradient-to-r from-green-500 to-green-400' :
+                                  report.compliance >= 50 ? 'bg-gradient-to-r from-yellow-500 to-yellow-400' :
+                                  'bg-gradient-to-r from-red-500 to-red-400'
                                 }`}
                                 style={{ width: `${Math.min(100, report.compliance)}%` }}
                               />
                             </div>
-                            <span className="text-white text-sm">{report.compliance}%</span>
+                            <span className="text-foreground text-sm font-black">{report.compliance}%</span>
                           </div>
                         </td>
-                        <td className="p-4 text-gray-300">
+                        <td className="p-4 text-muted-foreground font-medium">
                           {report.averageWeight ? `${report.averageWeight.toFixed(1)} ק"ג` : "אין"}
                         </td>
                         <td className="p-4">
                           {report.weightChange !== null ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               {report.weightChange > 0 ? (
-                                <TrendingUp className="h-4 w-4 text-red-400" />
+                                <TrendingUp className="h-4 w-4 text-red-500" />
                               ) : report.weightChange < 0 ? (
-                                <TrendingDown className="h-4 w-4 text-green-400" />
+                                <TrendingDown className="h-4 w-4 text-green-500" />
                               ) : null}
-                              <span className={report.weightChange > 0 ? 'text-red-400' : 'text-green-400'}>
+                              <span className={`font-bold ${report.weightChange > 0 ? 'text-red-500' : 'text-green-500'}`}>
                                 {report.weightChange > 0 ? '+' : ''}{report.weightChange.toFixed(1)} ק"ג
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-500">אין</span>
+                            <span className="text-muted-foreground">אין</span>
                           )}
                         </td>
-                        <td className="p-4 text-gray-300">
+                        <td className="p-4 text-muted-foreground font-medium">
                           {report.totalVolume > 0 ? `${report.totalVolume.toFixed(0)} ק"ג` : "אין"}
                         </td>
-                        <td className="p-4 text-gray-300">{formatDate(report.lastWorkout)}</td>
+                        <td className="p-4 text-muted-foreground font-medium">{formatDate(report.lastWorkout)}</td>
                         <td className="p-4">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => exportTraineeReport(report)}
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                            className="border-2 border-border text-foreground hover:bg-accent font-bold rounded-lg transition-all active:scale-95"
                           >
                             <Download className="h-4 w-4 ml-2" />
                             ייצא דוח

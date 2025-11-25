@@ -136,7 +136,7 @@ function NutritionCalculatorContent() {
   const fatCurrent = targetMacros?.fat || 0;
 
   return (
-    <div className="min-h-screen pb-20" dir="rtl">
+    <div className="min-h-screen" dir="rtl">
       {/* Enhanced Header with FitLog Style */}
       <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden sticky top-0 z-10">
         {/* Animated Background blobs */}

@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
-  ArrowLeft, User, Loader2, LogOut, Bell, Globe, HelpCircle, 
-  ChevronLeft, Edit, Home, BarChart3, Users, Target, Settings, Apple, Dumbbell
+  User, Loader2, LogOut, Bell, Globe, HelpCircle, 
+  Edit, Settings as SettingsIcon, Dumbbell, Apple
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +25,7 @@ const ToggleSwitch = ({
 }) => {
   return (
     <div className="flex items-center justify-between">
-      {label && <span className="text-white text-sm">{label}</span>}
+      {label && <span className="text-foreground text-sm font-medium">{label}</span>}
       <button
         type="button"
         role="switch"
@@ -34,7 +33,7 @@ const ToggleSwitch = ({
         onClick={() => onChange(!checked)}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${checked ? 'bg-[#00ff88]' : 'bg-gray-700'}
+          ${checked ? 'bg-primary' : 'bg-accent'}
         `}
       >
         <span
@@ -48,19 +47,17 @@ const ToggleSwitch = ({
   );
 };
 
-function SettingsContent() {
+function SettingsPageContent() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [editedName, setEditedName] = useState(user?.name || "");
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
-  // Settings state - load from localStorage
+  // Settings state
   const [workoutSettings, setWorkoutSettings] = useState({
-    useKg: true, // יחידות מידה (ק"ג)
-    defaultTimer: false, // טיימר ברירת מחדל
-    defaultTimerSeconds: 60,
+    useKg: true,
+    defaultTimer: true,
   });
 
   const [nutritionSettings, setNutritionSettings] = useState({
@@ -72,176 +69,212 @@ function SettingsContent() {
     language: "עברית",
   });
 
-  // Load settings from localStorage on mount
-  useEffect(() => {
-    const savedWorkoutSettings = localStorage.getItem('workoutSettings');
-    const savedNutritionSettings = localStorage.getItem('nutritionSettings');
-    const savedGeneralSettings = localStorage.getItem('generalSettings');
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+  });
 
-    if (savedWorkoutSettings) {
-      setWorkoutSettings(JSON.parse(savedWorkoutSettings));
-    }
-    if (savedNutritionSettings) {
-      setNutritionSettings(JSON.parse(savedNutritionSettings));
-    }
-    if (savedGeneralSettings) {
-      setGeneralSettings(JSON.parse(savedGeneralSettings));
-    }
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Load settings from localStorage
+  useEffect(() => {
+    const savedWorkout = localStorage.getItem("workoutSettings");
+    const savedNutrition = localStorage.getItem("nutritionSettings");
+    const savedGeneral = localStorage.getItem("generalSettings");
+
+    if (savedWorkout) setWorkoutSettings(JSON.parse(savedWorkout));
+    if (savedNutrition) setNutritionSettings(JSON.parse(savedNutrition));
+    if (savedGeneral) setGeneralSettings(JSON.parse(savedGeneral));
   }, []);
 
-  // Save settings to localStorage
-  const saveWorkoutSettings = (newSettings: typeof workoutSettings) => {
-    setWorkoutSettings(newSettings);
-    localStorage.setItem('workoutSettings', JSON.stringify(newSettings));
+  const saveWorkoutSettings = (settings: typeof workoutSettings) => {
+    setWorkoutSettings(settings);
+    localStorage.setItem("workoutSettings", JSON.stringify(settings));
   };
 
-  const saveNutritionSettings = (newSettings: typeof nutritionSettings) => {
-    setNutritionSettings(newSettings);
-    localStorage.setItem('nutritionSettings', JSON.stringify(newSettings));
+  const saveNutritionSettings = (settings: typeof nutritionSettings) => {
+    setNutritionSettings(settings);
+    localStorage.setItem("nutritionSettings", JSON.stringify(settings));
   };
 
-  const saveGeneralSettings = (newSettings: typeof generalSettings) => {
-    setGeneralSettings(newSettings);
-    localStorage.setItem('generalSettings', JSON.stringify(newSettings));
+  const saveGeneralSettings = (settings: typeof generalSettings) => {
+    setGeneralSettings(settings);
+    localStorage.setItem("generalSettings", JSON.stringify(settings));
   };
 
   const handleLogout = async () => {
-    if (confirm('האם אתה בטוח שברצונך להתנתק?')) {
-      setLoading(true);
-      try {
-        await signOut();
-        router.push('/auth/login');
-      } catch (error) {
-        console.error('Error signing out:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    setLoading(true);
+    await signOut();
+    router.push("/auth/login");
   };
 
-  const handleEditProfile = async () => {
-    // TODO: Implement profile update in Supabase
-    // For now, just close the modal
+  const handleSaveProfile = () => {
+    // TODO: Implement profile update
     setShowEditProfile(false);
     alert('עדכון פרופיל יושם בקרוב');
   };
 
+  const handleChangePassword = () => {
+    // TODO: Implement password change
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('הסיסמאות אינן תואמות');
+      return;
+    }
+    setShowChangePassword(false);
+    alert('שינוי סיסמה יושם בקרוב');
+  };
+
   return (
-    <div className="min-h-screen bg-[#0f1a2a] pb-20" dir="rtl">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0f1a2a] border-b border-gray-800 px-4 py-3">
-        <div className="max-w-md mx-auto flex items-center gap-3">
-          <Link href="/trainee/dashboard">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold text-white flex-1">פרופיל והגדרות</h1>
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-br from-card via-card to-accent/10 px-6 pt-6 pb-6 rounded-b-[2.5rem] shadow-lg mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+        <div className="max-w-2xl mx-auto flex items-center gap-3 relative z-10">
+          <div className="bg-gradient-to-br from-primary to-primary/80 p-2.5 rounded-2xl shadow-lg">
+            <SettingsIcon className="w-6 h-6 text-background" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">הגדרות</h1>
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Settings</p>
+          </div>
         </div>
       </div>
 
-      <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-2xl mx-auto px-5 space-y-6 pb-6">
         {/* Profile Section */}
-        <div className="flex flex-col items-center py-6">
-          <div className="w-24 h-24 rounded-full bg-[#1a2332] border-2 border-gray-700 flex items-center justify-center mb-4">
-            <User className="h-12 w-12 text-gray-500" />
-          </div>
-          <h2 className="text-xl font-semibold text-white mb-3">{user?.name || "מתאמן"}</h2>
-          <Button
-            onClick={() => setShowEditProfile(true)}
-            className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
-          >
-            <Edit className="h-4 w-4 ml-2" />
-            ערוך פרופיל
-          </Button>
-        </div>
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-3xl border-2 border-primary/30 shadow-lg">
+                {user?.name?.charAt(0) || "U"}
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-black text-foreground mb-1">{user?.name || "מתאמן"}</h2>
+                <p className="text-sm text-muted-foreground font-medium">{user?.email || "אין אימייל"}</p>
+              </div>
+              <Button
+                onClick={() => setShowEditProfile(true)}
+                className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+              >
+                <Edit className="h-4 w-4 ml-2" />
+                ערוך
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Workout Settings */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '50ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg text-white">הגדרות אימון</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-500/20 p-2 rounded-xl">
+                <Dumbbell className="h-5 w-5 text-orange-500" />
+              </div>
+              <CardTitle className="text-lg font-black text-foreground">הגדרות אימון</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm">יחידות מידה (ק"ג)</span>
+          <CardContent className="space-y-3">
+            <div className="bg-accent/20 rounded-xl p-4 border border-border">
               <ToggleSwitch
                 checked={workoutSettings.useKg}
                 onChange={(checked) => saveWorkoutSettings({ ...workoutSettings, useKg: checked })}
+                label="יחידות מידה (ק״ג)"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white text-sm">טיימר ברירת מחדל (60ש)</span>
+            <div className="bg-accent/20 rounded-xl p-4 border border-border">
               <ToggleSwitch
                 checked={workoutSettings.defaultTimer}
                 onChange={(checked) => saveWorkoutSettings({ ...workoutSettings, defaultTimer: checked })}
+                label="טיימר ברירת מחדל (60ש)"
               />
             </div>
           </CardContent>
         </Card>
 
         {/* Nutrition Settings */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '100ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg text-white">הגדרות תזונה</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="bg-green-500/20 p-2 rounded-xl">
+                <Apple className="h-5 w-5 text-green-500" />
+              </div>
+              <CardTitle className="text-lg font-black text-foreground">הגדרות תזונה</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <button
+            <Button
               onClick={() => {
                 const newTarget = prompt('הזן יעד קלורי יומי:', nutritionSettings.dailyCalorieTarget.toString());
                 if (newTarget && !isNaN(Number(newTarget))) {
                   saveNutritionSettings({ ...nutritionSettings, dailyCalorieTarget: Number(newTarget) });
                 }
               }}
-              className="w-full flex items-center justify-between text-white hover:bg-gray-800 rounded-lg p-2 -mx-2"
+              variant="outline"
+              className="w-full justify-between h-auto py-4 px-4 bg-card hover:bg-accent border-2 border-border rounded-xl transition-all"
             >
-              <span className="text-sm">יעד קלורי יומי ({nutritionSettings.dailyCalorieTarget})</span>
-              <ChevronLeft className="h-5 w-5 text-gray-500" />
-            </button>
+              <span className="text-sm font-bold text-foreground">יעד קלורי יומי</span>
+              <span className="text-primary font-black">{nutritionSettings.dailyCalorieTarget} קק״ל</span>
+            </Button>
           </CardContent>
         </Card>
 
         {/* General Settings */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: '150ms' }}>
           <CardHeader>
-            <CardTitle className="text-lg text-white">כללי</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <button
-              onClick={() => {
-                saveGeneralSettings({ ...generalSettings, notifications: !generalSettings.notifications });
-              }}
-              className="w-full flex items-center justify-between text-white hover:bg-gray-800 rounded-lg p-2 -mx-2"
-            >
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-gray-500" />
-                <span className="text-sm">התראות</span>
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-500/20 p-2 rounded-xl">
+                <SettingsIcon className="h-5 w-5 text-blue-500" />
               </div>
-              <ChevronLeft className="h-5 w-5 text-gray-500" />
-            </button>
-            <button
+              <CardTitle className="text-lg font-black text-foreground">כללי</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="w-full flex items-center justify-between text-foreground bg-accent/20 rounded-xl p-4 border border-border">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/20 p-1.5 rounded-lg">
+                  <Bell className="h-4 w-4 text-primary" />
+                </div>
+                <span className="text-sm font-bold">התראות</span>
+              </div>
+              <ToggleSwitch
+                checked={generalSettings.notifications}
+                onChange={(checked) => saveGeneralSettings({ ...generalSettings, notifications: checked })}
+              />
+            </div>
+            <Button
               onClick={() => {
                 alert('שינוי שפה יושם בקרוב');
               }}
-              className="w-full flex items-center justify-between text-white hover:bg-gray-800 rounded-lg p-2 -mx-2"
+              variant="outline"
+              className="w-full justify-between h-auto py-4 px-4 bg-card hover:bg-accent border-2 border-border rounded-xl transition-all"
             >
-              <div className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-gray-500" />
-                <span className="text-sm">שפה ({generalSettings.language})</span>
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-500/20 p-1.5 rounded-lg">
+                  <Globe className="h-4 w-4 text-purple-500" />
+                </div>
+                <span className="text-sm font-bold text-foreground">שפה</span>
               </div>
-              <ChevronLeft className="h-5 w-5 text-gray-500" />
-            </button>
-            <button
+              <span className="text-sm text-muted-foreground font-bold">{generalSettings.language}</span>
+            </Button>
+            <Button
               onClick={() => {
                 alert('עזרה ותמיכה יושם בקרוב');
               }}
-              className="w-full flex items-center justify-between text-white hover:bg-gray-800 rounded-lg p-2 -mx-2"
+              variant="outline"
+              className="w-full justify-between h-auto py-4 px-4 bg-card hover:bg-accent border-2 border-border rounded-xl transition-all"
             >
-              <div className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5 text-gray-500" />
-                <span className="text-sm">עזרה ותמיכה</span>
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-500/20 p-1.5 rounded-lg">
+                  <HelpCircle className="h-4 w-4 text-amber-500" />
+                </div>
+                <span className="text-sm font-bold text-foreground">עזרה ותמיכה</span>
               </div>
-              <ChevronLeft className="h-5 w-5 text-gray-500" />
-            </button>
+            </Button>
           </CardContent>
         </Card>
 
@@ -249,73 +282,78 @@ function SettingsContent() {
         <Button
           onClick={handleLogout}
           disabled={loading}
-          className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold"
+          className="w-full h-14 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          style={{ animationDelay: '200ms' }}
         >
           {loading ? (
             <>
-              <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+              <Loader2 className="h-5 w-5 ml-2 animate-spin" />
               מתנתק...
             </>
           ) : (
             <>
-              <LogOut className="h-4 w-4 ml-2" />
+              <LogOut className="h-5 w-5 ml-2" />
               התנתק
             </>
           )}
         </Button>
 
         {/* Version */}
-        <div className="text-center text-gray-500 text-sm py-2">
-          גרסה 1.2.0
+        <div className="text-center text-muted-foreground text-sm py-2 font-medium">
+          FitLog גרסה 1.2.0
         </div>
 
         {/* Edit Profile Modal */}
         {showEditProfile && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <Card className="bg-[#1a2332] border-gray-800 w-full max-w-sm">
-              <CardHeader>
-                <CardTitle className="text-white">ערוך פרופיל</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-card rounded-2xl p-6 w-full max-w-md border-2 border-border shadow-2xl animate-in zoom-in-95 duration-200">
+              <h3 className="text-xl font-black text-foreground mb-4">ערוך פרופיל</h3>
+              <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">שם</label>
+                  <label className="text-sm text-muted-foreground mb-2 block font-bold">שם מלא:</label>
                   <Input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
-                    placeholder="הזן שם"
+                    value={profileForm.name}
+                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-2 block font-bold">אימייל:</label>
+                  <Input
+                    type="email"
+                    value={profileForm.email}
+                    onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                    className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
                   <Button
-                    onClick={handleEditProfile}
-                    className="flex-1 bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+                    onClick={handleSaveProfile}
+                    className="flex-1 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl"
                   >
                     שמור
                   </Button>
                   <Button
+                    onClick={() => setShowEditProfile(false)}
                     variant="outline"
-                    onClick={() => {
-                      setShowEditProfile(false);
-                      setEditedName(user?.name || "");
-                    }}
-                    className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+                    className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl"
                   >
                     ביטול
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
       </main>
-
     </div>
   );
 }
 
 export default function SettingsPage() {
-  return <SettingsContent />;
+  return (
+    <ProtectedRoute requiredRole="trainee">
+      <SettingsPageContent />
+    </ProtectedRoute>
+  );
 }
-

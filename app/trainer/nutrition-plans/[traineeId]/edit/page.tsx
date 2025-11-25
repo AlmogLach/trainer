@@ -240,52 +240,75 @@ function EditNutritionPlanContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center" dir="rtl">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00ff88]" />
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
+            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+          </div>
+          <div>
+            <p className="text-xl font-black text-foreground animate-pulse">טוען תוכנית תזונה...</p>
+            <p className="text-sm text-muted-foreground mt-1">מכין את עורך התזונה</p>
+          </div>
+          <div className="flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] p-4 lg:p-6" dir="rtl">
+    <div className="min-h-screen bg-background p-5 lg:p-6" dir="rtl">
       <div className="max-w-7xl mx-auto flex gap-6">
         {/* Main Content */}
         <div className="flex-1 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href="/trainer/nutrition-plans">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-white">ערוך תוכנית תזונה</h1>
+        {/* Enhanced Header */}
+        <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
+          <div className="relative z-10 flex items-center gap-4">
+            <Link href="/trainer/nutrition-plans">
+              <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </Link>
+            <div className="flex-1">
+              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Nutrition Editor 🍎</p>
+              <h1 className="text-4xl font-black text-foreground">ערוך תוכנית תזונה</h1>
+            </div>
           </div>
         </div>
 
-        {/* Basic Info Card */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        {/* Enhanced Basic Info Card */}
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
           <CardHeader>
-            <CardTitle className="text-white">פרטים בסיסיים</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-500/20 p-2.5 rounded-2xl">
+                <Apple className="h-6 w-6 text-blue-500" />
+              </div>
+              <CardTitle className="text-foreground text-2xl font-black">פרטים בסיסיים</CardTitle>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">שם התוכנית:</label>
+              <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">שם התוכנית:</label>
               <Input
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder="לדוגמה: חיטוב מתקדם"
-                className="bg-[#0f1a2a] border-gray-700 text-white"
+                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">יעד קלורי (קק"ל):</label>
+              <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">יעד קלורי (קק"ל):</label>
               <Input
                 type="number"
                 value={calorieTarget}
                 onChange={(e) => setCalorieTarget(parseInt(e.target.value) || 2500)}
-                className="bg-[#0f1a2a] border-gray-700 text-white"
+                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
               />
             </div>
 
@@ -300,19 +323,27 @@ function EditNutritionPlanContent() {
           </CardContent>
         </Card>
 
-        {/* Meals Card */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        {/* Enhanced Meals Card */}
+        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Apple className="h-5 w-5" />
-                ארוחות ומזונות
-              </CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-500/20 p-2.5 rounded-2xl">
+                  <Apple className="h-6 w-6 text-orange-500" />
+                </div>
+                <CardTitle className="text-foreground text-2xl font-black">ארוחות ומזונות</CardTitle>
+                {meals.length > 0 && (
+                  <div className="bg-orange-500/10 px-3 py-1 rounded-lg border border-orange-500/30">
+                    <span className="text-orange-500 font-black text-sm">{meals.length}</span>
+                    <span className="text-muted-foreground text-xs mr-1">ארוחות</span>
+                  </div>
+                )}
+              </div>
               <Button
                 onClick={addMeal}
-                className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+                className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4 ml-2" />
+                <Plus className="h-5 w-5 ml-2" />
                 הוסף ארוחה
               </Button>
             </div>
@@ -337,21 +368,21 @@ function EditNutritionPlanContent() {
           </CardContent>
         </Card>
 
-        {/* Save Button */}
+        {/* Enhanced Save Button */}
         <div className="flex gap-4">
           <Button
             onClick={handleSave}
             disabled={saving || !planName.trim()}
-            className="flex-1 bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+            className="flex-1 h-14 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 text-lg"
           >
             {saving ? (
               <>
-                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                <Loader2 className="h-6 w-6 ml-2 animate-spin" />
                 שומר...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 ml-2" />
+                <Save className="h-6 w-6 ml-2" />
                 שמור שינויים
               </>
             )}
@@ -359,7 +390,7 @@ function EditNutritionPlanContent() {
           <Link href="/trainer/nutrition-plans">
             <Button
               variant="outline"
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="h-14 px-8 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
             >
               ביטול
             </Button>
