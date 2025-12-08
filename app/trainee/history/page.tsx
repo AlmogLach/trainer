@@ -1,576 +1,373 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { 
-  ArrowLeft, Loader2, Plus, X, CheckCircle2, Calendar, TrendingUp,
-  Home, BarChart3, Users, Target, Settings, Image as ImageIcon, Apple, Dumbbell
-} from "lucide-react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useState, useEffect, useMemo } from "react";
+import { Share2, Clock, Flame, Crown, Star, TrendingUp, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getWorkoutLogs, getBodyWeightHistory, saveBodyWeight } from "@/lib/db";
-import type { WorkoutLogWithDetails } from "@/lib/types";
-import { SimpleLineChart } from "@/components/ui/SimpleLineChart";
-import { isBenchPressExercise } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import { getWorkoutLogs } from "@/lib/db";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
-// Calculate 1RM using Brzycki formula
-function calculate1RM(weight: number, reps: number): number {
-  if (reps <= 0 || weight <= 0) return 0;
-  if (reps === 1) return weight;
-  return weight / (1.0278 - 0.0278 * reps);
-}
-
-function ProgressTrackingContent() {
+export default function ProgressPage() {
   const { user } = useAuth();
-  const pathname = usePathname();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleDateString('en-US', { month: 'short' }));
+  const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [weightHistory, setWeightHistory] = useState<Array<{ date: string; weight: number }>>([]);
-  const [benchPressHistory, setBenchPressHistory] = useState<Array<{ date: string; oneRM: number }>>([]);
-  const [timeFilter, setTimeFilter] = useState<"month" | "3months" | "6months" | "year">("month");
-  const [showWeightInput, setShowWeightInput] = useState(false);
-  const [bodyWeight, setBodyWeight] = useState("");
-  const [weightError, setWeightError] = useState<string | null>(null);
-  const [savingWeight, setSavingWeight] = useState(false);
-  const [progressPhotos, setProgressPhotos] = useState<Array<{ id: string; date: string; url: string }>>([]);
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLogWithDetails[]>([]);
-  const [showWorkoutHistory, setShowWorkoutHistory] = useState(false);
 
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // Load workout logs
   useEffect(() => {
-    if (user?.id) {
-      loadProgressData();
+    if (!user?.id) {
+      setLoading(false);
+      return;
     }
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const logs = await getWorkoutLogs(user.id, 365); // Last year
+        setWorkoutLogs(logs || []);
+      } catch (err) {
+        console.error("Error loading progress data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [user?.id]);
 
-  const loadProgressData = async () => {
-    if (!user?.id) return;
+  // Calculate stats for selected month
+  const monthStats = useMemo(() => {
+    const monthIndex = months.indexOf(selectedMonth);
+    if (monthIndex === -1) return null;
 
-    try {
-      setLoading(true);
-      
-      // Load data in parallel for better performance
-      const [weights, logs] = await Promise.all([
-        getBodyWeightHistory(user.id),
-        getWorkoutLogs(user.id)
-      ]);
-      
-      setWeightHistory(weights);
-      setWorkoutLogs(logs);
-      
-      // Find bench press exercises (search for variations)
-      const benchPressData: Array<{ date: string; oneRM: number }> = [];
-      
-      logs.forEach(log => {
-        log.set_logs?.forEach(setLog => {
-          const exerciseName = setLog.exercise?.name;
-          const muscleGroup = setLog.exercise?.muscle_group;
-          
-          if (isBenchPressExercise(exerciseName, muscleGroup) && setLog.weight_kg && setLog.reps) {
-            const oneRM = calculate1RM(setLog.weight_kg, setLog.reps);
-            benchPressData.push({
-              date: log.date,
-              oneRM: oneRM
-            });
-          }
-        });
+    const currentYear = new Date().getFullYear();
+    const monthStart = new Date(currentYear, monthIndex, 1);
+    const monthEnd = new Date(currentYear, monthIndex + 1, 0, 23, 59, 59);
+
+    const monthLogs = workoutLogs.filter(log => {
+      const logDate = new Date(log.date || log.start_time);
+      return logDate >= monthStart && logDate <= monthEnd && log.completed;
+    });
+
+    // Calculate workout sets (number of completed workouts)
+    const workoutSets = monthLogs.length;
+
+    // Calculate total time
+    const totalSeconds = monthLogs.reduce((total, log: any) => {
+      if (log.duration_seconds) {
+        return total + log.duration_seconds;
+      } else if (log.start_time && log.end_time) {
+        const start = new Date(log.start_time).getTime();
+        const end = new Date(log.end_time).getTime();
+        return total + ((end - start) / 1000);
+      }
+      return total + (45 * 60); // Default 45 minutes
+    }, 0);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const totalTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    // Calculate burned calories (~9 calories per minute)
+    const totalMinutes = totalSeconds / 60;
+    const burnedCalories = Math.round(totalMinutes * 9).toString();
+
+    // Calculate collected points (10 points per workout)
+    const collectedPoints = (workoutSets * 10).toLocaleString();
+
+    // Calculate distance (estimate: ~0.1 km per minute of workout)
+    const distanceKm = Math.round((totalMinutes * 0.1) * 10) / 10;
+
+    // Calculate steps (estimate: ~120 steps per minute)
+    const steps = Math.round(totalMinutes * 120);
+
+    // Average heart rate (estimate based on workout intensity)
+    const heartRate = workoutSets > 0 ? 105 : 72;
+
+    // Calculate distance graph data (weekly breakdown)
+    const weeksInMonth = Math.ceil(monthEnd.getDate() / 7);
+    const distanceGraphData = Array.from({ length: weeksInMonth }, (_, i) => {
+      const weekStart = new Date(currentYear, monthIndex, i * 7 + 1);
+      const weekEnd = new Date(currentYear, monthIndex, Math.min((i + 1) * 7, monthEnd.getDate()));
+      const weekLogs = monthLogs.filter(log => {
+        const logDate = new Date(log.date || log.start_time);
+        return logDate >= weekStart && logDate <= weekEnd;
       });
-
-      // Group by date and take max 1RM for each date
-      const groupedByDate = new Map<string, number>();
-      benchPressData.forEach(item => {
-        const existing = groupedByDate.get(item.date);
-        if (!existing || item.oneRM > existing) {
-          groupedByDate.set(item.date, item.oneRM);
+      const weekMinutes = weekLogs.reduce((total, log: any) => {
+        if (log.duration_seconds) return total + (log.duration_seconds / 60);
+        if (log.start_time && log.end_time) {
+          const start = new Date(log.start_time).getTime();
+          const end = new Date(log.end_time).getTime();
+          return total + ((end - start) / (1000 * 60));
         }
-      });
+        return total + 45;
+      }, 0);
+      return { x: i, y: Math.round((weekMinutes * 0.1) * 10) / 10 };
+    });
 
-      const sortedBenchPress = Array.from(groupedByDate.entries())
-        .map(([date, oneRM]) => ({ date, oneRM }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-      setBenchPressHistory(sortedBenchPress);
-
-      // TODO: Load progress photos from storage
-      // For now, using mock data
-      setProgressPhotos([]);
-
-    } catch (error) {
-      console.error('Error loading progress data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleWeightSubmit = async () => {
-    if (!user?.id || !bodyWeight) return;
-
-    setWeightError(null);
-    setSavingWeight(true);
-
-    try {
-      const weight = parseFloat(bodyWeight);
-      if (isNaN(weight) || weight <= 0) {
-        setWeightError('אנא הזן משקל תקין (מספר חיובי)');
-        setSavingWeight(false);
-        return;
+    // Last month distance for comparison
+    const lastMonthIndex = monthIndex === 0 ? 11 : monthIndex - 1;
+    const lastMonthYear = monthIndex === 0 ? currentYear - 1 : currentYear;
+    const lastMonthStart = new Date(lastMonthYear, lastMonthIndex, 1);
+    const lastMonthEnd = new Date(lastMonthYear, lastMonthIndex + 1, 0, 23, 59, 59);
+    const lastMonthLogs = workoutLogs.filter(log => {
+      const logDate = new Date(log.date || log.start_time);
+      return logDate >= lastMonthStart && logDate <= lastMonthEnd && log.completed;
+    });
+    const lastMonthMinutes = lastMonthLogs.reduce((total, log: any) => {
+      if (log.duration_seconds) return total + (log.duration_seconds / 60);
+      if (log.start_time && log.end_time) {
+        const start = new Date(log.start_time).getTime();
+        const end = new Date(log.end_time).getTime();
+        return total + ((end - start) / (1000 * 60));
       }
+      return total + 45;
+    }, 0);
+    const lastMonthDistance = Math.round((lastMonthMinutes * 0.1) * 10) / 10;
 
-      if (weight > 500) {
-        setWeightError('המשקל שהוזן לא סביר. אנא בדוק את הערך.');
-        setSavingWeight(false);
-        return;
-      }
-
-      await saveBodyWeight(user.id, weight);
-      
-      setShowWeightInput(false);
-      setBodyWeight("");
-      setWeightError(null);
-      await loadProgressData();
-    } catch (error: any) {
-      console.error('Error saving weight:', error);
-      setWeightError(error.message || 'שגיאה בשמירת המשקל');
-    } finally {
-      setSavingWeight(false);
-    }
-  };
-
-  // Filter data based on time filter
-  const getFilteredWeightData = () => {
-    const now = new Date();
-    let cutoffDate = new Date();
-    
-    switch (timeFilter) {
-      case "month":
-        cutoffDate.setMonth(now.getMonth() - 1);
-        break;
-      case "3months":
-        cutoffDate.setMonth(now.getMonth() - 3);
-        break;
-      case "6months":
-        cutoffDate.setMonth(now.getMonth() - 6);
-        break;
-      case "year":
-        cutoffDate.setFullYear(now.getFullYear() - 1);
-        break;
-    }
-
-    return weightHistory
-      .filter(item => new Date(item.date) >= cutoffDate)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-  const getFilteredBenchPressData = () => {
-    const now = new Date();
-    let cutoffDate = new Date();
-    
-    switch (timeFilter) {
-      case "month":
-        cutoffDate.setMonth(now.getMonth() - 1);
-        break;
-      case "3months":
-        cutoffDate.setMonth(now.getMonth() - 3);
-        break;
-      case "6months":
-        cutoffDate.setMonth(now.getMonth() - 6);
-        break;
-      case "year":
-        cutoffDate.setFullYear(now.getFullYear() - 1);
-        break;
-    }
-
-    return benchPressHistory
-      .filter(item => new Date(item.date) >= cutoffDate)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  };
-
-
-  const filteredWeightData = getFilteredWeightData();
-  const filteredBenchPressData = getFilteredBenchPressData();
-  const currentWeight = weightHistory.length > 0 ? weightHistory[0].weight : null;
-  const currentBenchPress = benchPressHistory.length > 0 
-    ? benchPressHistory[benchPressHistory.length - 1].oneRM 
-    : null;
-
-  const getTimeFilterLabel = () => {
-    switch (timeFilter) {
-      case "month": return "חודש אחרון";
-      case "3months": return "3 חודשים";
-      case "6months": return "6 חודשים";
-      case "year": return "שנה";
-      default: return "חודש אחרון";
-    }
-  };
+    return {
+      workoutSets,
+      totalTime,
+      burnedCalories,
+      collectedPoints,
+      distanceKm,
+      lastMonthDistance,
+      steps,
+      heartRate,
+      distanceGraphData,
+    };
+  }, [workoutLogs, selectedMonth, months]);
 
   if (loading) {
+    return <LoadingSpinner fullScreen text="טוען דוח התקדמות..." size="lg" />;
+  }
+
+  if (!monthStats) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground animate-pulse">טוען נתוני התקדמות...</p>
-            <p className="text-sm text-muted-foreground mt-1">מכין את הגרפים והנתונים</p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
-        </div>
+      <div className="relative bg-[#1A1D2E] w-full min-h-screen flex items-center justify-center">
+        <p className="text-[#9CA3AF]">אין נתונים זמינים</p>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen" dir="rtl">
-      {/* Enhanced Header - Connected to top header */}
-      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2.5rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
-        {/* Animated Background blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/30 rounded-full blur-2xl -z-10 -translate-x-1/2 translate-y-1/2" />
-        
-        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10 gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <div className="bg-gradient-to-br from-primary to-primary/80 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-background" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">מעקב התקדמות</h1>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Progress Tracking</p>
-            </div>
-          </div>
-          
-          <Link href="/trainee/dashboard" className="flex-shrink-0">
-            <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </div>
+  const { workoutSets, totalTime, burnedCalories, collectedPoints, distanceKm, lastMonthDistance, steps, heartRate, distanceGraphData } = monthStats;
+
+  const handleShare = () => {
+    if (navigator.share && monthStats) {
+      navigator.share({
+        title: "דוח התקדמות",
+        text: `ההתקדמות שלי ל-${selectedMonth}: ${workoutSets} סטי אימון, ${totalTime} זמן כולל`,
+      }).catch(console.error);
+    }
+  };
+
+    return (
+    <div className="relative bg-[#1A1D2E] w-full min-h-screen">
+      {/* Main Content */}
+      <div className="w-full overflow-y-auto pb-24">
+        <div className="w-full max-w-[393px] mx-auto px-5 pt-12">
+          <div className="flex flex-col items-start w-full gap-6">
+            
+            {/* Header with Title and Share Icon */}
+            <div className="w-full flex items-center justify-between">
+              <h1 className="text-[28px] font-outfit font-bold text-white">דוח התקדמות</h1>
+              <button
+                onClick={handleShare}
+                className="w-10 h-10 bg-[#2D3142] rounded-full flex items-center justify-center hover:bg-[#3D4058] transition-colors"
+              >
+                <Share2 className="w-5 h-5 text-white" />
+              </button>
       </div>
 
-      <main className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-5 space-y-5 sm:space-y-6">
-        {/* Body Weight Section */}
-        <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-500/20 p-2 rounded-xl">
-                  <Target className="w-5 h-5 text-blue-500" />
-                </div>
-                <CardTitle className="text-xl font-black text-foreground">משקל גוף</CardTitle>
-              </div>
-              <div className="flex items-center gap-3">
-                {currentWeight && (
-                  <div className="bg-primary/10 px-4 py-2 rounded-xl border border-primary/30">
-                    <span className="text-2xl font-black text-primary">
-                      {currentWeight.toFixed(1)}
-                    </span>
-                    <span className="text-xs text-muted-foreground mr-1">kg</span>
-                  </div>
-                )}
-                <select
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value as any)}
-                  className="bg-background border-2 border-border text-foreground text-sm rounded-xl px-3 py-2 font-bold focus:border-primary outline-none transition-all"
+            {/* Month Tabs */}
+            <div className="w-full flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+              {months.map((month) => (
+                <button
+                  key={month}
+                  onClick={() => setSelectedMonth(month)}
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl text-sm font-outfit font-semibold transition-all flex-shrink-0",
+                    selectedMonth === month
+                      ? "bg-[#5B7FFF] text-white"
+                      : "bg-[#2D3142] text-[#9CA3AF] hover:text-white hover:bg-[#3D4058]"
+                  )}
                 >
-                  <option value="month">חודש אחרון</option>
-                  <option value="3months">3 חודשים</option>
-                  <option value="6months">6 חודשים</option>
-                  <option value="year">שנה</option>
-                </select>
+                  {month}
+                </button>
+              ))}
+            </div>
+
+            {/* Top Stats Section */}
+            <div className="w-full flex gap-4">
+              {/* Large Circle - Workout Sets */}
+              <div className="flex-shrink-0 w-36 h-36 rounded-full bg-gradient-to-br from-[#EF4444] to-[#DC2626] flex flex-col items-center justify-center shadow-lg shadow-red-500/30">
+                <div className="text-white text-4xl font-outfit font-bold">{workoutSets}</div>
+                <div className="text-white text-sm font-outfit font-medium mt-1">סטי אימון</div>
+              </div>
+
+              {/* Right Stats */}
+              <div className="flex-1 flex flex-col gap-3">
+                {/* Total Time */}
+                <div className="flex items-center gap-3 bg-[#2D3142] rounded-xl p-3">
+                  <div className="w-11 h-11 bg-[#4CAF50] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-5 h-5 text-white" />
+              </div>
+                  <div className="flex flex-col">
+                    <div className="text-white text-lg font-outfit font-bold">{totalTime}</div>
+                    <div className="text-[#9CA3AF] text-xs font-outfit font-medium">זמן כולל</div>
+            </div>
+            </div>
+
+                {/* Burned Calories */}
+                <div className="flex items-center gap-3 bg-[#2D3142] rounded-xl p-3">
+                  <div className="w-11 h-11 bg-[#FF8A00] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Flame className="w-5 h-5 text-white" />
+              </div>
+                  <div className="flex flex-col">
+                    <div className="text-white text-lg font-outfit font-bold">{burnedCalories} cal</div>
+                    <div className="text-[#9CA3AF] text-xs font-outfit font-medium">נשרף</div>
+            </div>
+            </div>
+
+                {/* Collected Points */}
+                <div className="flex items-center gap-3 bg-[#2D3142] rounded-xl p-3">
+                  <div className="w-11 h-11 bg-[#9C27B0] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Crown className="w-5 h-5 text-white" />
+              </div>
+                  <div className="flex flex-col">
+                    <div className="text-white text-lg font-outfit font-bold">{collectedPoints}</div>
+                    <div className="text-[#9CA3AF] text-xs font-outfit font-medium">נקודות</div>
+            </div>
+            </div>
+      </div>
+              </div>
+
+            {/* Distance Covered Section */}
+            <div className="w-full bg-gradient-to-br from-[#4CAF50] to-[#45A049] rounded-2xl p-5 shadow-lg">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-white" />
+                <div className="text-white text-sm font-outfit font-bold uppercase tracking-wide">אתה על המסלול</div>
+                </div>
+              <div className="mb-4">
+                <div className="text-white text-xl font-outfit font-bold mb-1">
+                  {distanceKm} km
+              </div>
+                <div className="text-white/90 text-sm font-outfit font-medium">
+                  מרחק שנכסה ב-{selectedMonth}
+                  </div>
+                <div className="text-white/70 text-sm font-outfit font-normal mt-1">
+                  לעומת {lastMonthDistance}ק"מ בתאריך זה בחודש שעבר
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-6">
-            <div className="bg-accent/20 rounded-2xl p-4 mb-6">
-              <SimpleLineChart
-                data={filteredWeightData.map(item => ({ date: item.date, value: item.weight }))}
-                currentValue={currentWeight}
-                unit="kg"
-              />
-            </div>
-            <Button
-              onClick={() => setShowWeightInput(true)}
-              className="w-full h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
-            >
-              <Plus className="h-5 w-5 ml-2" />
-              הוסף שקילה
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Bench Press 1RM Section */}
-        <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '100ms' }}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-500/20 p-2 rounded-xl">
-                  <Dumbbell className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-black text-foreground">כוח - לחיצת חזה</CardTitle>
-                  <p className="text-xs text-muted-foreground font-medium mt-0.5">One Rep Max (1RM)</p>
-                </div>
-              </div>
-              {currentBenchPress && (
-                <div className="bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-500/30">
-                  <span className="text-2xl font-black text-orange-500">
-                    {currentBenchPress.toFixed(1)}
-                  </span>
-                  <span className="text-xs text-muted-foreground mr-1">kg</span>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="pt-0 pb-6">
-            <div className="bg-accent/20 rounded-2xl p-4 mb-6">
-              <SimpleLineChart
-                data={filteredBenchPressData.map(item => ({ date: item.date, value: item.oneRM }))}
-                currentValue={currentBenchPress}
-                unit="kg"
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowWorkoutHistory(!showWorkoutHistory)}
-              className="w-full h-12 border-2 border-border text-foreground hover:bg-accent/50 font-bold rounded-2xl transition-all active:scale-95"
-            >
-              <BarChart3 className="h-5 w-5 ml-2" />
-              {showWorkoutHistory ? "הסתר היסטוריית אימונים" : "הצג היסטוריית אימונים"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Workout History Section */}
-        {showWorkoutHistory && (
-          <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="bg-green-500/20 p-2 rounded-xl">
-                  <Dumbbell className="w-5 h-5 text-green-500" />
-                </div>
-                <CardTitle className="text-xl font-black text-foreground">היסטוריית אימונים</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {workoutLogs.length === 0 ? (
-                <div className="text-center py-8">
-                  <Dumbbell className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                  <p className="text-muted-foreground font-medium">אין אימונים להצגה</p>
-                </div>
-              ) : (
-                workoutLogs.slice(0, 10).map((log) => {
-                  const totalVolume = log.set_logs?.reduce((sum, set) => {
-                    return sum + (set.weight_kg * set.reps);
-                  }, 0) || 0;
-                  
-                  const totalSets = log.set_logs?.length || 0;
-                  const uniqueExercises = new Set(log.set_logs?.map(s => s.exercise_id)).size;
-
-                  return (
-                    <div 
-                      key={log.id}
-                      className="bg-accent/20 border-2 border-border rounded-2xl p-4 hover:border-primary/50 transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-black text-foreground text-lg">
-                            {log.routine?.name || 'אימון'}
-                          </h3>
-                          <p className="text-sm text-muted-foreground font-medium">
-                            {new Date(log.date).toLocaleDateString('he-IL', { 
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </p>
-                        </div>
-                        {log.completed && (
-                          <div className="bg-green-500/20 p-2 rounded-lg">
-                            <CheckCircle2 className="h-5 w-5 text-green-500" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-background/50 rounded-xl p-3 text-center">
-                          <p className="text-xs text-muted-foreground font-medium mb-1">תרגילים</p>
-                          <p className="text-lg font-black text-foreground">{uniqueExercises}</p>
-                        </div>
-                        <div className="bg-background/50 rounded-xl p-3 text-center">
-                          <p className="text-xs text-muted-foreground font-medium mb-1">סטים</p>
-                          <p className="text-lg font-black text-foreground">{totalSets}</p>
-                        </div>
-                        <div className="bg-background/50 rounded-xl p-3 text-center">
-                          <p className="text-xs text-muted-foreground font-medium mb-1">נפח</p>
-                          <p className="text-lg font-black text-primary">{totalVolume.toLocaleString()}</p>
-                          <p className="text-[10px] text-muted-foreground">kg</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Progress Photos Section */}
-        <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '200ms' }}>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="bg-purple-500/20 p-2 rounded-xl">
-                <ImageIcon className="w-5 h-5 text-purple-500" />
-              </div>
-              <CardTitle className="text-xl font-black text-foreground">תמונות התקדמות</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              {progressPhotos.length === 0 ? (
-                <>
-                  <div className="flex-1 aspect-[3/4] bg-accent/20 border-2 border-border rounded-2xl flex items-center justify-center">
-                    <div className="text-center">
-                      <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                      <span className="text-xs text-muted-foreground font-medium">אין תמונות</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 aspect-[3/4] bg-accent/20 border-2 border-border rounded-2xl flex items-center justify-center">
-                    <div className="text-center">
-                      <ImageIcon className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                      <span className="text-xs text-muted-foreground font-medium">אין תמונות</span>
-                    </div>
-                  </div>
-                  <div className="flex-1 aspect-[3/4] bg-accent/10 border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
-                    <Plus className="h-8 w-8 text-primary mb-2" />
-                    <span className="text-xs text-primary font-bold">הוסף תמונה</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {progressPhotos.slice(0, 2).map((photo) => (
-                    <div key={photo.id} className="flex-1 aspect-[3/4] bg-accent/20 border-2 border-border rounded-2xl overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-br from-accent/50 to-accent/20 flex items-center justify-center">
-                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                      </div>
-                      <div className="p-2 text-xs text-muted-foreground font-medium text-center">
-                        {new Date(photo.date).toLocaleDateString('he-IL')}
-                      </div>
-                    </div>
-                  ))}
-                  <div className="flex-1 aspect-[3/4] bg-accent/10 border-2 border-dashed border-primary/30 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
-                    <Plus className="h-8 w-8 text-primary mb-2" />
-                    <span className="text-xs text-primary font-bold">הוסף תמונה</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <Button
-              className="w-full h-12 mt-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-black rounded-2xl shadow-lg shadow-purple-500/20 transition-all active:scale-95"
-            >
-              <Plus className="h-5 w-5 ml-2" />
-              הוסף תמונה
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Weight Input Modal */}
-        {showWeightInput && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <Card className="bg-card border-border shadow-2xl w-full max-w-sm rounded-[2rem] animate-in zoom-in-95 slide-in-from-top-4 duration-300">
-              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/10 to-primary/5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/20 p-2 rounded-xl">
-                      <Target className="w-5 h-5 text-primary" />
-                    </div>
-                    <CardTitle className="text-foreground font-black text-xl">הוסף שקילה</CardTitle>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setShowWeightInput(false);
-                      setBodyWeight("");
-                      setWeightError(null);
-                    }}
-                    className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-5 p-6">
-                {weightError && (
-                  <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 text-sm font-bold flex items-center gap-2">
-                    <span className="text-lg">⚠️</span>
-                    {weightError}
-                  </div>
-                )}
-                <div className="bg-accent/30 rounded-2xl p-6 border-2 border-border/50">
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={bodyWeight}
-                    onChange={(e) => {
-                      setBodyWeight(e.target.value);
-                      setWeightError(null);
-                    }}
-                    placeholder="0.0"
-                    className="w-full px-4 py-6 text-4xl font-black bg-background border-2 border-transparent focus:border-primary text-foreground text-center rounded-2xl"
-                    autoFocus
-                    disabled={savingWeight}
+              
+              {/* Line Graph */}
+              <div className="w-full h-32 relative bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="overflow-visible">
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="white" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="white" stopOpacity="1" />
+                    </linearGradient>
+                  </defs>
+                  <polyline
+                    points={distanceGraphData.map((d, i) => {
+                      const x = (i / (distanceGraphData.length - 1)) * 100;
+                      const y = 100 - (d.y / 25) * 100;
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
-                  <p className="text-center text-muted-foreground text-sm font-medium mt-3">קילוגרם (kg)</p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleWeightSubmit}
-                    className="flex-1 h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
-                    disabled={!bodyWeight || savingWeight}
-                  >
-                    {savingWeight ? (
-                      <>
-                        <Loader2 className="h-5 w-5 ml-2 animate-spin" />
-                        שומר...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 ml-2" />
-                        שמור
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowWeightInput(false);
-                      setBodyWeight("");
-                      setWeightError(null);
-                    }}
-                    className="flex-1 h-14 border-2 border-border text-foreground hover:bg-accent/50 font-bold rounded-2xl transition-all active:scale-95"
-                    disabled={savingWeight}
-                  >
-                    ביטול
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </main>
+                  {/* Markers */}
+                  {distanceGraphData.map((d, i) => {
+                    const x = (i / (distanceGraphData.length - 1)) * 100;
+                    const y = 100 - (d.y / 25) * 100;
+                  return (
+                      <circle
+                        key={i}
+                        cx={x}
+                        cy={y}
+                        r="4"
+                        fill="white"
+                        stroke="rgba(255,255,255,0.5)"
+                        strokeWidth="2"
+                      />
+                  );
+                  })}
+                </svg>
+                      </div>
+                    </div>
 
+            {/* Bottom Stats Section */}
+            <div className="w-full grid grid-cols-2 gap-4">
+              {/* Steps Card */}
+              <div className="bg-[#2D3142] rounded-2xl p-4 flex flex-col items-center gap-4">
+                <div className="text-[#9CA3AF] text-sm font-outfit font-medium">צעדים</div>
+                <div className="relative w-28 h-28">
+                  <svg className="w-28 h-28 transform -rotate-90">
+                    <circle
+                      cx="56"
+                      cy="56"
+                      r="48"
+                      fill="none"
+                      stroke="#3D4058"
+                      strokeWidth="10"
+                    />
+                    <circle
+                      cx="56"
+                      cy="56"
+                      r="48"
+                      fill="none"
+                      stroke="#5B7FFF"
+                      strokeWidth="10"
+                      strokeDasharray={`${(steps / 250000) * 301.6} 301.6`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="text-[#5B7FFF] text-xl font-outfit font-bold">{steps.toLocaleString()}</div>
+                    <div className="text-[#9CA3AF] text-xs font-outfit font-medium mt-1">צעדים</div>
+                                </div>
+                              </div>
+                          </div>
+
+              {/* Heart Rate Card */}
+              <div className="bg-[#2D3142] rounded-2xl p-4 flex flex-col gap-3">
+                <div className="text-[#9CA3AF] text-sm font-outfit font-medium">דופק</div>
+                {/* Heart rate line graph */}
+                <div className="flex-1 flex items-center justify-center" style={{ height: '80px' }}>
+                  <svg width="100%" height="100%" viewBox="0 0 100 60" className="overflow-visible">
+                    <defs>
+                      <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#5B7FFF" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#5B7FFF" stopOpacity="1" />
+                      </linearGradient>
+                    </defs>
+                    <polyline
+                      points="0,45 15,35 25,30 35,25 45,20 55,15 65,20 75,25 85,15 100,20"
+                      fill="none"
+                      stroke="url(#heartGradient)"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+              </div>
+                <div className="flex flex-col items-center">
+                  <div className="text-[#5B7FFF] text-2xl font-outfit font-bold">{heartRate}</div>
+                    <div className="text-[#9CA3AF] text-xs font-outfit font-medium">פעימות לדקה</div>
+            </div>
+                    </div>
+                  </div>
+
+                    </div>
+                  </div>
+                </div>
     </div>
   );
-}
-
-export default function ProgressTrackingPage() {
-  return <ProgressTrackingContent />;
 }

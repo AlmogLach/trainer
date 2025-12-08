@@ -343,127 +343,90 @@ function WorkoutPlanEditorContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground animate-pulse">טוען תוכנית אימון...</p>
-            <p className="text-sm text-muted-foreground mt-1">מכין את עורך התוכניות</p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-full bg-background" dir="rtl">
+    <div className="flex flex-col lg:flex-row h-full" dir="rtl">
       {/* Center Editor */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Enhanced Top Bar */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-card to-card/95 backdrop-blur-lg border-b-2 border-border px-3 sm:px-4 lg:px-5 py-3 sm:py-4 flex items-center justify-between gap-2 sm:gap-3 shadow-lg">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <Link href={`/trainer/trainee/${traineeId}`} className="flex-shrink-0">
-              <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </div>
+      <main className="flex-1 overflow-y-auto pb-32">
+        {/* Top Bar - Editor specific */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href={`/trainer/trainee/${traineeId}`}>
+              <Button variant="ghost" size="icon" className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
             </Link>
-            <div className="min-w-0 flex-1">
-              <p className="text-primary font-bold text-[10px] sm:text-xs uppercase tracking-wider">FitLog Editor 📋</p>
-              <h1 className="text-lg sm:text-xl lg:text-2xl font-black text-foreground truncate">עורך תוכניות אימון</h1>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">עורך תוכניות אימון</h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3">
             <Button
               onClick={handleSavePlan}
               disabled={saving}
-              className="h-9 sm:h-11 px-3 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-xs sm:text-sm"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
             >
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
-                  <span className="hidden sm:inline">שומר...</span>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  שומר...
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
-                  <span className="hidden sm:inline">שמור תוכנית</span>
-                  <span className="sm:hidden">שמור</span>
+                  <Save className="h-4 w-4 ml-2" />
+                  שמור תוכנית
                 </>
               )}
             </Button>
           </div>
         </div>
 
-          {/* Enhanced Plan Structure */}
-          <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
-            {/* Plan Name Section */}
-            <div className="bg-gradient-to-br from-card via-card to-accent/10 rounded-xl sm:rounded-[2rem] p-4 sm:p-6 shadow-lg border-2 border-border">
-              <label className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 block font-bold uppercase tracking-wider">שם התוכנית:</label>
+          {/* Plan Structure */}
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <div className="mb-4">
+              <label className="text-sm text-gray-600 dark:text-slate-400 mb-2 block">שם התוכנית:</label>
               <Input
                 value={workoutPlan?.name || ""}
                 onChange={(e) => setWorkoutPlan({ ...workoutPlan, name: e.target.value })}
-                className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-bold text-base sm:text-lg focus:border-primary transition-all"
+                className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white max-w-md"
                 placeholder="שם התוכנית"
               />
             </div>
 
-            {/* Routines Section */}
             <div className="space-y-3 sm:space-y-4">
-              {routines.length > 0 && (
-                <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                  <div className="bg-primary/20 p-1.5 sm:p-2 rounded-lg sm:rounded-xl">
-                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-black text-foreground">רוטינות אימון</h2>
-                  <div className="bg-primary/10 px-2 sm:px-3 py-1 rounded-lg border border-primary/30">
-                    <span className="text-primary font-black text-xs sm:text-sm">{routines.length}</span>
-                  </div>
-                </div>
-              )}
-              
-              {routines.map((routine, index) => (
-                <div 
+              {routines.map((routine) => (
+                <WorkoutRoutineCard
                   key={routine.id}
-                  className="animate-in fade-in slide-in-from-bottom-2 duration-300"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <WorkoutRoutineCard
-                    routine={routine}
-                    isExpanded={!!expandedRoutines[routine.id]}
-                    onToggle={() => toggleRoutine(routine.id)}
-                    onAddExercise={() => {
-                      setSelectedRoutineForExercise(routine.id);
-                      setShowRightSidebar(true);
-                      // Scroll to top of sidebar on mobile
-                      if (window.innerWidth < 1024) {
-                        setTimeout(() => {
-                          const sidebar = document.querySelector('aside');
-                          if (sidebar) {
-                            sidebar.scrollTop = 0;
-                          }
-                        }, 100);
-                      }
-                    }}
-                    onUpdateExercise={handleUpdateExercise}
-                    onDeleteExercise={handleDeleteExercise}
-                    onUpdateExerciseImage={handleUpdateExerciseImage}
-                  />
-                </div>
+                  routine={routine}
+                  isExpanded={!!expandedRoutines[routine.id]}
+                  onToggle={() => toggleRoutine(routine.id)}
+                  onAddExercise={() => {
+                    setSelectedRoutineForExercise(routine.id);
+                    setShowRightSidebar(true);
+                    // Scroll to top of sidebar on mobile
+                    if (window.innerWidth < 1024) {
+                      setTimeout(() => {
+                        const sidebar = document.querySelector('aside');
+                        if (sidebar) {
+                          sidebar.scrollTop = 0;
+                        }
+                      }, 100);
+                    }
+                  }}
+                  onUpdateExercise={handleUpdateExercise}
+                  onDeleteExercise={handleDeleteExercise}
+                  onUpdateExerciseImage={handleUpdateExerciseImage}
+                />
               ))}
               
               <Button
                 onClick={handleAddRoutine}
-                className="w-full h-12 sm:h-14 bg-gradient-to-r from-accent/50 to-accent/30 border-2 border-dashed border-border hover:border-primary/50 text-foreground hover:bg-accent/60 font-black rounded-xl sm:rounded-2xl transition-all active:scale-98 text-sm sm:text-base"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800"
               >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
-                הוסף רוטינה חדשה
+                <Plus className="h-4 w-4 ml-2" />
+                הוסף רוטינה
               </Button>
             </div>
           </div>

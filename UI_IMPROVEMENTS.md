@@ -15,3 +15,5 @@ Key improvements:
     -   **Sliders**: Custom styled RIR slider.
 
 The app should now feel much more native and polished on mobile devices.
+
+

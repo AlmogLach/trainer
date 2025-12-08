@@ -314,3 +314,4 @@ export const ModernExerciseCard = ({
     </motion.div>
   );
 };
+

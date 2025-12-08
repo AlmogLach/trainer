@@ -157,3 +157,5 @@ ALTER TABLE exercise_library DISABLE ROW LEVEL SECURITY;
 2. פתח: `http://localhost:3000/trainer`
 3. הכל אמור לעבוד! 🚀
 
+
+

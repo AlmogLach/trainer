@@ -34,51 +34,51 @@ export function FoodHistorySidebar({
 
   return (
     <aside className={`
-      flex flex-col bg-[#1a2332] border-l border-gray-800
-      fixed lg:relative inset-y-0 left-0 z-30 lg:z-auto
+      flex flex-col bg-white dark:bg-slate-900/50 border-l border-gray-200 dark:border-slate-800
+      fixed lg:relative inset-y-0 left-0 z-30 lg:z-auto w-full lg:w-80
     `}>
-      <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-          <History className="h-5 w-5" />
+      <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <History className="h-4 w-4 sm:h-5 sm:w-5" />
           היסטוריית מזונות
         </h2>
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden text-white hover:bg-gray-800"
+          className="lg:hidden text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl"
           onClick={onClose}
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </div>
       
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-slate-800">
         <div className="relative">
           <Input
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="חפש מזון..."
-            className="bg-[#0f1a2a] border-gray-700 text-white"
+            className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-[#00ff88]" />
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
           </div>
         ) : (
           <>
             {selectedMealId && mealName && (
-              <div className="mb-3 p-3 bg-[#00ff88]/20 border border-[#00ff88]/50 rounded-lg">
-                <p className="text-xs text-[#00ff88] font-semibold mb-1">מוסיף לארוחה:</p>
-                <p className="text-sm text-white">{mealName}</p>
+              <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">מוסיף לארוחה:</p>
+                <p className="text-sm text-gray-900 dark:text-white font-medium">{mealName}</p>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={onCancelSelection}
-                  className="mt-2 text-xs text-gray-400 hover:text-white h-6 px-2"
+                  className="mt-2 text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white h-6 px-2 rounded-xl"
                 >
                   <X className="h-3 w-3 ml-1" />
                   ביטול בחירה
@@ -87,32 +87,32 @@ export function FoodHistorySidebar({
             )}
             
             {filteredHistory.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-500 dark:text-slate-400 py-8">
                 {searchQuery ? 'לא נמצאו תוצאות' : 'אין היסטוריית מזונות'}
               </div>
             ) : (
               filteredHistory.map((food, index) => (
                 <div
                   key={`${food.foodName}-${index}`}
-                  className="flex items-center gap-3 p-3 bg-[#0f1a2a] rounded-lg hover:bg-[#1a2332] cursor-pointer border border-gray-800"
+                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer border border-gray-200 dark:border-slate-800 transition-colors"
                   onClick={() => onAddFood(food)}
                 >
-                  <Apple className="h-5 w-5 text-gray-400" />
-                  <div className="flex-1">
-                    <p className="text-white text-sm">{food.foodName}</p>
+                  <Apple className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 dark:text-white text-xs sm:text-sm font-medium truncate">{food.foodName}</p>
                     {food.amount && (
-                      <p className="text-gray-500 text-xs">כמות: {food.amount} גרם</p>
+                      <p className="text-gray-500 dark:text-slate-400 text-xs">כמות: {food.amount} גרם</p>
                     )}
                   </div>
                   <Button
                     size="sm"
-                    className="bg-[#00ff88] hover:bg-[#00e677] text-black"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl shadow-sm flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       onAddFood(food);
                     }}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               ))

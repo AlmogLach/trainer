@@ -1,16 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, MessageCircle, ArrowRight, CheckCircle2, Users } from "lucide-react";
+import { Loader2, Mail, Lock, Eye, EyeOff, User, Phone } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Link from "next/link";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -23,33 +33,25 @@ export default function RegisterPage() {
     }
   }, [user, authLoading, router]);
 
+  const handleClose = () => {
+    router.push("/auth/login");
+  };
+
   // Show loading while checking auth
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
-            <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary relative" />
-          </div>
-          <p className="text-muted-foreground font-medium animate-pulse">בודק התחברות...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen text="Checking authentication..." size="lg" dir="ltr" />;
   }
 
   // Don't show register form if already logged in
   if (user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
-        <Card className="w-full max-w-md shadow-xl border-border bg-card">
-          <CardHeader className="text-center space-y-3 pb-4">
-            <CardTitle className="text-2xl font-bold text-foreground">אתה כבר מחובר!</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              אתה מחובר כ-<span className="font-semibold text-foreground">{user.name}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <div className="min-h-screen bg-grey-g6 flex items-center justify-center p-4" dir="ltr">
+        <div className="w-full max-w-md bg-grey-g5 rounded-xl p-6 shadow-lg">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-outfit font-semibold text-white">Already Logged In!</h2>
+            <p className="text-grey-g2 font-outfit font-normal">
+              You are logged in as <span className="font-semibold text-white">{user.name}</span>
+            </p>
             <Button
               onClick={() => {
                 if (user.role === "trainer") {
@@ -58,151 +60,225 @@ export default function RegisterPage() {
                   router.push("/trainee/dashboard");
                 }
               }}
-              className="w-full h-12 text-base font-medium bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-all"
+              className="w-full h-12 bg-primary-g4 hover:bg-primary-g4/90 text-white font-outfit font-semibold"
             >
-              עבור לדף שלי
+              Go to My Page
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
-  const handleWhatsAppClick = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    if (!agreeToTerms) {
+      alert("Please agree to the terms and privacy policy");
+      return;
+    }
+
+    setLoading(true);
+
+    // Registration is handled via WhatsApp contact
     const phoneNumber = "972522249162";
-    const message = encodeURIComponent("היי! אני מעוניין/ת להירשם למערכת FitLog");
+    const message = encodeURIComponent(`Hi! I want to register for FitLog\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}`);
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
-      {/* Header with Logo */}
-      <div className="pt-8 pb-4 px-4 text-center">
-        <h1 className="text-2xl font-bold text-foreground">
-          FitLog
-        </h1>
+    <div className="min-h-screen w-full bg-[#1A1D2E] flex flex-col overflow-x-hidden" dir="ltr">
+      {/* Back Button - Absolute positioning */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          onClick={handleClose}
+          className="w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 rounded-full transition-all active:scale-95"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-2xl border-border bg-card">
-          <CardHeader className="text-center space-y-4 pb-6">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mb-2 animate-in zoom-in duration-500">
-              <Users className="h-10 w-10 text-green-500" />
-            </div>
-            <CardTitle className="text-3xl font-black text-foreground">
-              הצטרף ל-FitLog
-            </CardTitle>
-            <CardDescription className="text-base text-muted-foreground">
-              מאמנים ומתאמנים - צרו איתנו קשר להצטרפות!
-            </CardDescription>
-            <div className="bg-primary/10 border-2 border-primary/30 rounded-xl p-3">
-              <p className="text-sm font-bold text-primary">
-                💡 ההרשמה למערכת מתבצעת באישור אישי
-              </p>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            {/* Benefits Section */}
-            <div className="space-y-4 bg-accent/30 rounded-2xl p-5 border-2 border-border">
-              <h3 className="font-black text-foreground text-lg mb-3">מה תקבל במערכת?</h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-500/20 p-1.5 rounded-lg mt-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground">מעקב אימונים מתקדם</p>
-                    <p className="text-sm text-muted-foreground">תיעוד מפורט של כל אימון והתקדמות</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-500/20 p-1.5 rounded-lg mt-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground">תוכניות תזונה מותאמות</p>
-                    <p className="text-sm text-muted-foreground">תפריט יומי עם מעקב קלוריות</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-500/20 p-1.5 rounded-lg mt-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground">ליווי אישי של מאמן</p>
-                    <p className="text-sm text-muted-foreground">תמיכה מקצועית לאורך כל הדרך</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="bg-green-500/20 p-1.5 rounded-lg mt-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground">גרפים והתקדמות</p>
-                    <p className="text-sm text-muted-foreground">מעקב ויזואלי אחר השיפור שלך</p>
-                  </div>
-                </div>
+      {/* Spacer to push card down */}
+      <div className="flex-shrink-0 h-[20vh]"></div>
+
+      {/* Card Container - Full width, no horizontal padding on container */}
+      <div className="w-full bg-[#252837] rounded-t-[32px] flex-1">
+        {/* Inner content with padding */}
+        <div className="px-6 py-10 pb-16">
+          {/* Title */}
+          <div className="text-center mb-10">
+            <h1 className="text-[26px] font-outfit font-semibold text-white leading-tight">
+              Create your<br />Account
+            </h1>
+          </div>
+
+          {/* Register Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name Input */}
+            <div>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#A0A0A0] z-10 pointer-events-none" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Name"
+                  required
+                  className="w-full h-[56px] pl-12 pr-4 bg-[#3D4058] border-0 text-white placeholder:text-[#A0A0A0] focus:ring-2 focus:ring-[#5B7FFF]/30 transition-all outline-none font-outfit font-normal text-[15px] rounded-xl"
+                  disabled={loading}
+                />
               </div>
             </div>
 
-            {/* WhatsApp Button */}
-            <Button
-              onClick={handleWhatsAppClick}
-              className="w-full h-16 text-lg font-black bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-xl shadow-green-500/30 transition-all active:scale-95 rounded-xl relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-              <div className="relative flex items-center justify-center gap-2">
-                <MessageCircle className="h-6 w-6" />
-                <span>שלח הודעה בווצאפ להרשמה</span>
+            {/* Email Input */}
+            <div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#A0A0A0] z-10 pointer-events-none" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  required
+                  className="w-full h-[56px] pl-12 pr-4 bg-[#3D4058] border-0 text-white placeholder:text-[#A0A0A0] focus:ring-2 focus:ring-[#5B7FFF]/30 transition-all outline-none font-outfit font-normal text-[15px] rounded-xl"
+                  disabled={loading}
+                />
               </div>
-            </Button>
+            </div>
 
-            {/* Contact Info */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                או התקשר ישירות:
-              </p>
-              <a 
-                href="tel:+972522249162"
-                className="text-primary font-bold text-lg hover:underline"
+            {/* Phone Input */}
+            <div>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#A0A0A0] z-10 pointer-events-none" />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Phone number"
+                  required
+                  className="w-full h-[56px] pl-12 pr-4 bg-[#3D4058] border-0 text-white placeholder:text-[#A0A0A0] focus:ring-2 focus:ring-[#5B7FFF]/30 transition-all outline-none font-outfit font-normal text-[15px] rounded-xl"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Password Input */}
+            <div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#A0A0A0] z-10 pointer-events-none" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create Password"
+                  required
+                  className="w-full h-[56px] pl-12 pr-12 bg-[#3D4058] border-0 text-white placeholder:text-[#A0A0A0] focus:ring-2 focus:ring-[#5B7FFF]/30 transition-all outline-none font-outfit font-normal text-[15px] rounded-xl"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A0A0] hover:text-white transition-colors active:scale-95 z-10"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password Input */}
+            <div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#A0A0A0] z-10 pointer-events-none" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm Password"
+                  required
+                  className="w-full h-[56px] pl-12 pr-12 bg-[#3D4058] border-0 text-white placeholder:text-[#A0A0A0] focus:ring-2 focus:ring-[#5B7FFF]/30 transition-all outline-none font-outfit font-normal text-[15px] rounded-xl"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A0A0] hover:text-white transition-colors active:scale-95 z-10"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Terms and Privacy Agreement */}
+            <div className="flex items-start gap-2.5 pt-1">
+              <input
+                type="checkbox"
+                checked={agreeToTerms}
+                onChange={(e) => setAgreeToTerms(e.target.checked)}
+                className="w-[18px] h-[18px] mt-0.5 rounded border-2 border-[#6B7280] bg-transparent checked:bg-[#5B7FFF] checked:border-[#5B7FFF] focus:ring-2 focus:ring-[#5B7FFF]/20 transition-all cursor-pointer flex-shrink-0"
+              />
+              <label className="text-[14px] text-white font-outfit font-normal leading-relaxed cursor-pointer">
+                I agree to the company's{" "}
+                <Link href="#" className="text-[#5B7FFF] hover:text-[#5B7FFF]/80 font-medium">
+                  Term of use
+                </Link>
+                {" "}and{" "}
+                <Link href="#" className="text-[#5B7FFF] hover:text-[#5B7FFF]/80 font-medium">
+                  Privacy policy
+                </Link>
+              </label>
+            </div>
+
+            {/* Sign Up Button */}
+            <div className="pt-2">
+              <Button 
+                type="submit" 
+                className="w-full h-[54px] bg-[#6B8EFF] hover:bg-[#5B7FFF] text-white font-outfit font-semibold text-[16px] rounded-[30px] transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-none border-0" 
+                disabled={loading}
               >
-                052-224-9162
-              </a>
-            </div>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-card text-muted-foreground font-medium">
-                  כבר יש לך חשבון?
-                </span>
-              </div>
-            </div>
-
-            {/* Login Link */}
-            <Link href="/auth/login" className="block">
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base border-2 border-border hover:bg-accent text-foreground font-bold transition-all rounded-xl"
-              >
-                התחבר למערכת
-                <ArrowRight className="h-5 w-5 mr-2" />
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Signing up...
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </form>
 
-      {/* Footer */}
-      <div className="py-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          © 2024 FitLog. כל הזכויות שמורות.
-        </p>
+          {/* Login Link */}
+          <div className="text-center pt-8">
+            <p className="text-[15px] text-[#9CA3AF] font-outfit font-normal">
+              Already have an account?{" "}
+              <Link 
+                href="/auth/login" 
+                className="text-[#5B7FFF] hover:text-[#5B7FFF]/80 font-semibold transition-colors"
+              >
+                Login
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

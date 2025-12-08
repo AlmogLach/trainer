@@ -17,3 +17,5 @@ ADD COLUMN IF NOT EXISTS nutrition_menu JSONB;
 --   ]
 -- }
 
+
+

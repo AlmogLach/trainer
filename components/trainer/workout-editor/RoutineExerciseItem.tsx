@@ -75,15 +75,15 @@ export function RoutineExerciseItem({
 
   if (isEditing) {
     return (
-      <div className="border-b border-gray-800 pb-4 last:border-0">
-        <div className="flex items-start gap-3">
+      <div className="border-b border-gray-200 dark:border-slate-800 pb-4 last:border-0">
+        <div className="flex items-start gap-3 sm:gap-4">
           <div className="flex-1">
-            <h4 className="text-white font-semibold mb-3">
+            <h4 className="text-gray-900 dark:text-white font-semibold mb-3">
               {index + 1}. {exercise.exercise?.name || 'תרגיל לא ידוע'}
             </h4>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">סטים:</label>
+                <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">סטים:</label>
                 <Input
                   type="number"
                   value={values.target_sets || 0}
@@ -91,11 +91,11 @@ export function RoutineExerciseItem({
                     ...values,
                     target_sets: parseInt(e.target.value) || 0
                   })}
-                  className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                  className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">חזרות:</label>
+                <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">חזרות:</label>
                 <div className="flex gap-1">
                   <Input
                     type="number"
@@ -104,10 +104,10 @@ export function RoutineExerciseItem({
                       ...values,
                       target_reps_min: parseInt(e.target.value) || 0
                     })}
-                    className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                    className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm"
                     placeholder="מינימום"
                   />
-                  <span className="text-gray-400 self-center">-</span>
+                  <span className="text-gray-400 dark:text-slate-500 self-center">-</span>
                   <Input
                     type="number"
                     value={values.target_reps_max || 0}
@@ -115,13 +115,13 @@ export function RoutineExerciseItem({
                       ...values,
                       target_reps_max: parseInt(e.target.value) || 0
                     })}
-                    className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                    className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm"
                     placeholder="מקסימום"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">RIR:</label>
+                <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">RIR:</label>
                 <Input
                   type="number"
                   value={values.rir_target || 0}
@@ -129,11 +129,11 @@ export function RoutineExerciseItem({
                     ...values,
                     rir_target: parseInt(e.target.value) || 0
                   })}
-                  className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                  className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 mb-1 block">מנוחה:</label>
+                <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">מנוחה:</label>
                 <Input
                   type="number"
                   value={values.rest_time_seconds || 0}
@@ -141,11 +141,11 @@ export function RoutineExerciseItem({
                     ...values,
                     rest_time_seconds: parseInt(e.target.value) || 0
                   })}
-                  className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                  className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm"
                 />
               </div>
               <div className="col-span-2 lg:col-span-4">
-                <label className="text-xs text-gray-400 mb-1 block">הוראות ביצוע:</label>
+                <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">הוראות ביצוע:</label>
                 <Textarea
                   value={values.special_instructions || ''}
                   onChange={(e) => setValues({
@@ -153,13 +153,13 @@ export function RoutineExerciseItem({
                     special_instructions: e.target.value
                   })}
                   placeholder="הזן הוראות ביצוע מפורטות לתרגיל..."
-                  className="bg-[#0f1a2a] border-gray-700 text-white text-sm min-h-[100px]"
+                  className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm min-h-[100px]"
                   rows={4}
                 />
               </div>
               {onUpdateImage && (
                 <div className="col-span-2 lg:col-span-4">
-                  <label className="text-xs text-gray-400 mb-1 block">
+                  <label className="text-xs text-gray-600 dark:text-slate-400 mb-1 block">
                     <ImageIcon className="inline h-3 w-3 ml-1" />
                     URL תמונה:
                   </label>
@@ -168,13 +168,13 @@ export function RoutineExerciseItem({
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="https://example.com/image.jpg"
-                      className="bg-[#0f1a2a] border-gray-700 text-white text-sm flex-1"
+                      className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm flex-1"
                     />
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={handleSaveImage}
-                      className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                      className="border-gray-200 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
                     >
                       <Save className="h-3 w-3 ml-1" />
                       שמור תמונה
@@ -185,7 +185,7 @@ export function RoutineExerciseItem({
                       <img
                         src={imageUrl}
                         alt="תצוגה מקדימה"
-                        className="w-24 h-24 rounded object-cover border border-gray-700"
+                        className="w-24 h-24 rounded object-cover border border-gray-200 dark:border-slate-800"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                         }}
@@ -199,7 +199,7 @@ export function RoutineExerciseItem({
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="bg-[#00ff88] hover:bg-[#00e677] text-black"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
                 >
                   {isSaving ? "שומר..." : "שמור"}
                 </Button>
@@ -218,7 +218,7 @@ export function RoutineExerciseItem({
                       special_instructions: exercise.special_instructions || '',
                     });
                   }}
-                  className="border-gray-700 text-gray-300"
+                  className="border-gray-200 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
                 >
                   ביטול
                 </Button>
@@ -227,7 +227,7 @@ export function RoutineExerciseItem({
                   variant="outline"
                   onClick={handleDelete}
                   disabled={isDeleting}
-                  className="border-red-700 text-red-400 hover:bg-red-900/20"
+                  className="border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <X className="h-4 w-4" />
                   מחק
@@ -241,43 +241,43 @@ export function RoutineExerciseItem({
   }
 
   return (
-    <div className="border-b border-gray-800 pb-4 last:border-0">
-      <div className="flex items-start gap-3">
+    <div className="border-b border-gray-200 dark:border-slate-800 pb-3 sm:pb-4 last:border-0">
+      <div className="flex items-start gap-3 sm:gap-4">
         <div className="flex-1">
-          <h4 className="text-white font-semibold mb-3">
+          <h4 className="text-gray-900 dark:text-white font-semibold mb-3">
             {index + 1}. {exercise.exercise?.name || 'תרגיל לא ידוע'}
           </h4>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm mb-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm mb-3 sm:mb-4">
             <div>
-              <span className="text-gray-400">סטים:</span>
-              <span className="text-white mr-2">{exercise.target_sets}</span>
+              <span className="text-gray-500 dark:text-slate-400">סטים:</span>
+              <span className="text-gray-900 dark:text-white mr-2">{exercise.target_sets}</span>
             </div>
             <div>
-              <span className="text-gray-400">חזרות:</span>
-              <span className="text-white mr-2">{exercise.target_reps_min}-{exercise.target_reps_max}</span>
+              <span className="text-gray-500 dark:text-slate-400">חזרות:</span>
+              <span className="text-gray-900 dark:text-white mr-2">{exercise.target_reps_min}-{exercise.target_reps_max}</span>
             </div>
             <div>
-              <span className="text-gray-400">RIR:</span>
-              <span className="text-white mr-2">{exercise.rir_target}</span>
+              <span className="text-gray-500 dark:text-slate-400">RIR:</span>
+              <span className="text-gray-900 dark:text-white mr-2">{exercise.rir_target}</span>
             </div>
             <div>
-              <span className="text-gray-400">מנוחה:</span>
-              <span className="text-white mr-2">{exercise.rest_time_seconds}ש</span>
+              <span className="text-gray-500 dark:text-slate-400">מנוחה:</span>
+              <span className="text-gray-900 dark:text-white mr-2">{exercise.rest_time_seconds}ש</span>
             </div>
           </div>
           {exercise.exercise?.image_url && (
-            <div className="mb-3">
+            <div className="mb-3 sm:mb-4">
               <img
                 src={exercise.exercise.image_url}
                 alt={exercise.exercise.name}
-                className="w-32 h-32 rounded object-cover border border-gray-700"
+                className="w-32 h-32 rounded object-cover border border-gray-200 dark:border-slate-800"
               />
             </div>
           )}
           {exercise.special_instructions && (
-            <div className="col-span-2 lg:col-span-4 mt-2 p-3 bg-[#0f1a2a] rounded-lg border border-gray-700 mb-3">
-              <p className="text-xs text-gray-400 mb-1">הוראות ביצוע:</p>
-              <p className="text-sm text-white whitespace-pre-line">{exercise.special_instructions}</p>
+            <div className="col-span-2 lg:col-span-4 mt-2 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-800 mb-3 sm:mb-4">
+              <p className="text-xs text-gray-500 dark:text-slate-400 mb-1">הוראות ביצוע:</p>
+              <p className="text-sm text-gray-900 dark:text-white whitespace-pre-line">{exercise.special_instructions}</p>
             </div>
           )}
           <div className="col-span-2 lg:col-span-4">
@@ -285,7 +285,7 @@ export function RoutineExerciseItem({
               size="sm"
               variant="outline"
               onClick={() => setIsEditing(true)}
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="border-gray-200 dark:border-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
             >
               ערוך
             </Button>
@@ -295,4 +295,6 @@ export function RoutineExerciseItem({
     </div>
   );
 }
+
+
 

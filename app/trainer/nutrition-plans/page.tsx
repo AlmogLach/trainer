@@ -1,17 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
-  Plus, Search, Edit, Trash2, Loader2, PieChart
+  Plus, Search, Edit, Trash2, Loader2, PieChart, Filter, ArrowUpDown, Users, Target, TrendingUp, Apple
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { getTrainerTrainees, getActiveWorkoutPlan, getNutritionMenu } from "@/lib/db";
+import { getTrainerTrainees, getActiveWorkoutPlan, getNutritionMenu, getNutritionSwaps } from "@/lib/db";
 import type { User, NutritionMenu } from "@/lib/types";
+import { calculateMacros, convertSwapToFoodItem, type FoodItem } from "@/lib/nutrition-utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/toast";
 
 interface NutritionPlanCard {
   id: string;
@@ -22,26 +31,40 @@ interface NutritionPlanCard {
   protein: number;
   carbs: number;
   fat: number;
+  createdAt?: string;
 }
+
+type SortOption = 'name' | 'trainee' | 'calories' | 'date';
+type FilterOption = 'all' | 'low' | 'medium' | 'high';
 
 function NutritionPlansContent() {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [nutritionPlans, setNutritionPlans] = useState<NutritionPlanCard[]>([]);
-  const [filteredPlans, setFilteredPlans] = useState<NutritionPlanCard[]>([]);
+  const [sortBy, setSortBy] = useState<SortOption>('date');
+  const [calorieFilter, setCalorieFilter] = useState<FilterOption>('all');
+  const [availableFoods, setAvailableFoods] = useState<FoodItem[]>([]);
 
   const trainerId = user?.id || "";
 
   useEffect(() => {
     if (trainerId) {
       loadNutritionPlans();
+      loadFoodDatabase();
     }
   }, [trainerId]);
 
-  useEffect(() => {
-    filterPlans();
-  }, [searchQuery, nutritionPlans]);
+  const loadFoodDatabase = async () => {
+    try {
+      const swaps = await getNutritionSwaps();
+      const foods = swaps.map(convertSwapToFoodItem);
+      setAvailableFoods(foods);
+    } catch (error: any) {
+      console.error("Error loading food database:", error);
+    }
+  };
 
   const loadNutritionPlans = async () => {
     try {
@@ -59,7 +82,7 @@ function NutritionPlansContent() {
           const nutritionMenu = await getNutritionMenu(trainee.id);
           
           if (nutritionMenu) {
-            // Calculate macros from nutrition menu
+            // Calculate macros from nutrition menu using food database
             let totalCalories = 0;
             let totalProtein = 0;
             let totalCarbs = 0;
@@ -67,17 +90,35 @@ function NutritionPlansContent() {
             
             nutritionMenu.meals.forEach(meal => {
               meal.foods.forEach(food => {
-                // Mock calculation - you'll need to implement real food database
                 const amount = parseFloat(food.amount) || 0;
-                // These are placeholder values - replace with real food database
-                totalProtein += amount * 0.2; // 20g protein per 100g
-                totalCarbs += amount * 0.5; // 50g carbs per 100g
-                totalFat += amount * 0.1; // 10g fat per 100g
+                if (amount > 0 && food.foodName) {
+                  // Find food in database
+                  const foodItem = availableFoods.find(
+                    f => f.name.toLowerCase() === food.foodName.toLowerCase()
+                  );
+                  
+                  if (foodItem) {
+                    // Use accurate calculation from database
+                    const macros = calculateMacros(foodItem, amount);
+                    totalProtein += macros.protein;
+                    totalCarbs += macros.carbs;
+                    totalFat += macros.fat;
+                    totalCalories += macros.calories;
+                  } else {
+                    // Fallback: use estimated values if food not found in database
+                    totalProtein += amount * 0.2;
+                    totalCarbs += amount * 0.5;
+                    totalFat += amount * 0.1;
+                    totalCalories += (amount * 0.2 * 4) + (amount * 0.5 * 4) + (amount * 0.1 * 9);
+                  }
+                }
               });
             });
             
-            // Calculate calories (4 cal/g protein, 4 cal/g carbs, 9 cal/g fat)
-            totalCalories = (totalProtein * 4) + (totalCarbs * 4) + (totalFat * 9);
+            // Calculate calories if not already calculated
+            if (totalCalories === 0 && (totalProtein > 0 || totalCarbs > 0 || totalFat > 0)) {
+              totalCalories = (totalProtein * 4) + (totalCarbs * 4) + (totalFat * 9);
+            }
             
             // Calculate percentages
             const proteinPercent = totalCalories > 0 ? Math.round((totalProtein * 4 / totalCalories) * 100) : 30;
@@ -88,11 +129,12 @@ function NutritionPlansContent() {
               id: workoutPlan.id,
               traineeId: trainee.id,
               traineeName: trainee.name,
-              planName: `${workoutPlan.name} - ${trainee.name}`,
+              planName: workoutPlan.name || `${trainee.name} - תוכנית תזונה`,
               calorieTarget: Math.round(totalCalories) || 2500,
               protein: proteinPercent,
               carbs: carbsPercent,
               fat: fatPercent,
+              createdAt: workoutPlan.created_at,
             });
           }
         }
@@ -101,24 +143,69 @@ function NutritionPlansContent() {
       setNutritionPlans(plans);
     } catch (error: any) {
       console.error("Error loading nutrition plans:", error);
+      showToast("שגיאה בטעינת תוכניות התזונה: " + (error.message || "שגיאה לא ידועה"), "error", 5000);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterPlans = () => {
-    if (!searchQuery.trim()) {
-      setFilteredPlans(nutritionPlans);
-      return;
+  // Quick Stats
+  const quickStats = useMemo(() => {
+    const totalPlans = nutritionPlans.length;
+    const activePlans = nutritionPlans.length; // All plans are active
+    const avgCalories = nutritionPlans.length > 0
+      ? Math.round(nutritionPlans.reduce((sum, p) => sum + p.calorieTarget, 0) / nutritionPlans.length)
+      : 0;
+    const avgProtein = nutritionPlans.length > 0
+      ? Math.round(nutritionPlans.reduce((sum, p) => sum + p.protein, 0) / nutritionPlans.length)
+      : 0;
+    
+    return { totalPlans, activePlans, avgCalories, avgProtein };
+  }, [nutritionPlans]);
+
+  // Filtered and sorted plans
+  const filteredAndSortedPlans = useMemo(() => {
+    let filtered = [...nutritionPlans];
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(plan =>
+        plan.traineeName.toLowerCase().includes(query) ||
+        plan.planName.toLowerCase().includes(query)
+      );
     }
     
-    const query = searchQuery.toLowerCase();
-    const filtered = nutritionPlans.filter(plan =>
-      plan.traineeName.toLowerCase().includes(query) ||
-      plan.planName.toLowerCase().includes(query)
-    );
-    setFilteredPlans(filtered);
-  };
+    // Calorie filter
+    if (calorieFilter !== 'all') {
+      filtered = filtered.filter(plan => {
+        if (calorieFilter === 'low') return plan.calorieTarget < 2000;
+        if (calorieFilter === 'medium') return plan.calorieTarget >= 2000 && plan.calorieTarget < 3000;
+        if (calorieFilter === 'high') return plan.calorieTarget >= 3000;
+        return true;
+      });
+    }
+    
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.planName.localeCompare(b.planName, 'he');
+        case 'trainee':
+          return a.traineeName.localeCompare(b.traineeName, 'he');
+        case 'calories':
+          return b.calorieTarget - a.calorieTarget;
+        case 'date':
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        default:
+          return 0;
+      }
+    });
+    
+    return filtered;
+  }, [nutritionPlans, searchQuery, calorieFilter, sortBy]);
 
   // Pie Chart Component
   const PieChartComponent = ({ protein, carbs, fat }: { protein: number; carbs: number; fat: number }) => {
@@ -173,167 +260,295 @@ function NutritionPlansContent() {
         {proteinAngle > 0 && (
           <path
             d={createArc(proteinStart, proteinEnd)}
-            fill="#00ff88"
+            fill="#3b82f6"
           />
         )}
         {carbsAngle > 0 && (
           <path
             d={createArc(carbsStart, carbsEnd)}
-            fill="#ffa500"
+            fill="#f97316"
           />
         )}
         {fatAngle > 0 && (
           <path
             d={createArc(fatStart, fatEnd)}
-            fill="#ff6b6b"
+            fill="#ef4444"
           />
         )}
       </svg>
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground animate-pulse">טוען תוכניות תזונה...</p>
-            <p className="text-sm text-muted-foreground mt-1">מכין את המידע התזונתי</p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
+  // Skeleton Component
+  const SkeletonNutritionPlanCard = () => (
+    <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+      <CardHeader className="p-5">
+        <Skeleton className="h-6 w-3/4" />
+      </CardHeader>
+      <CardContent className="space-y-4 p-5 pt-0">
+        <Skeleton className="h-20 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <div className="flex gap-2 pt-2">
+          <Skeleton className="h-10 flex-1 rounded-xl" />
+          <Skeleton className="h-10 w-10 rounded-xl" />
         </div>
-      </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Stat Card Component
+  const StatCard = ({ title, value, icon: Icon, colorTheme }: { title: string; value: string | number; icon: any; colorTheme: 'blue' | 'indigo' | 'emerald' | 'orange' }) => {
+    const themes = {
+      blue: { 
+        bg: "bg-gradient-to-br from-blue-500/80 to-blue-600/50 dark:from-blue-600/40 dark:to-blue-800/20", 
+        text: "text-white dark:text-blue-100", 
+        iconBg: "bg-white/20 dark:bg-blue-500/20",
+      },
+      indigo: { 
+        bg: "bg-gradient-to-br from-indigo-500/80 to-indigo-600/50 dark:from-indigo-600/40 dark:to-indigo-800/20", 
+        text: "text-white dark:text-indigo-100", 
+        iconBg: "bg-white/20 dark:bg-indigo-500/20",
+      },
+      emerald: { 
+        bg: "bg-gradient-to-br from-emerald-500/80 to-emerald-600/50 dark:from-emerald-600/40 dark:to-emerald-800/20", 
+        text: "text-white dark:text-emerald-100", 
+        iconBg: "bg-white/20 dark:bg-emerald-500/20",
+      },
+      orange: { 
+        bg: "bg-gradient-to-br from-orange-500/80 to-orange-600/50 dark:from-orange-600/40 dark:to-orange-800/20", 
+        text: "text-white dark:text-orange-100", 
+        iconBg: "bg-white/20 dark:bg-orange-500/20",
+      },
+    };
+    
+    const theme = themes[colorTheme];
+
+    return (
+      <Card className={`relative overflow-hidden border-none shadow-md hover:shadow-lg transition-all ${theme.bg} backdrop-blur-md`}>
+        <CardContent className="p-4 sm:p-5 flex flex-col h-28 sm:h-32 justify-between">
+          <div className="flex justify-between items-start mb-2 sm:mb-3">
+            <h3 className={`text-xs sm:text-sm font-medium ${theme.text} tracking-wide opacity-90`}>{title}</h3>
+            <div className={`p-1.5 sm:p-2 rounded-xl ${theme.iconBg} ${theme.text} shadow-sm backdrop-blur-sm`}>
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+          </div>
+          <div className={`text-2xl sm:text-3xl font-black ${theme.text} tracking-tight`}>
+            {value}
+          </div>
+        </CardContent>
+      </Card>
     );
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      <div className="max-w-7xl mx-auto">
-        {/* Enhanced Header - Connected to top header */}
-        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Nutrition 🍎</p>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">ניהול תוכניות תזונה</h1>
-              <p className="text-muted-foreground text-xs sm:text-sm mt-2">מאגר תזונה מקצועי למתאמנים</p>
-            </div>
-            <Link href="/trainer/nutrition-plans/new" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto h-10 sm:h-12 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base">
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
-                <span className="hidden sm:inline">צור תוכנית תזונה חדשה</span>
-                <span className="sm:hidden">תוכנית חדשה</span>
-              </Button>
-            </Link>
-          </div>
+    <div className="space-y-4 sm:space-y-6 pb-32" dir="rtl">
+      {/* --- Page Header & Action --- */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800 mb-4 sm:mb-6">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">ניהול תוכניות תזונה</h1>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mt-1">מאגר תזונה מקצועי למתאמנים</p>
         </div>
+        <Link href="/trainer/nutrition-plans/new">
+          <Button className="gap-2 shadow-sm rounded-xl h-10 px-4 sm:px-5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border-none text-sm sm:text-base">
+            <Plus className="h-4 w-4" />
+            <span>צור תוכנית תזונה</span>
+          </Button>
+        </Link>
+      </div>
 
-        {/* Content with padding */}
-        <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        {/* Enhanced Search Bar */}
-        <div className="relative">
-          <Search className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+      {/* --- Quick Stats --- */}
+      {!loading && nutritionPlans.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <StatCard
+            title="סה״כ תוכניות"
+            value={quickStats.totalPlans}
+            icon={PieChart}
+            colorTheme="blue"
+          />
+          <StatCard
+            title="תוכניות פעילות"
+            value={quickStats.activePlans}
+            icon={Target}
+            colorTheme="indigo"
+          />
+          <StatCard
+            title="ממוצע קלוריות"
+            value={`${quickStats.avgCalories} קק״ל`}
+            icon={TrendingUp}
+            colorTheme="emerald"
+          />
+          <StatCard
+            title="ממוצע חלבון"
+            value={`${quickStats.avgProtein}%`}
+            icon={Apple}
+            colorTheme="orange"
+          />
+        </div>
+      )}
+
+      {/* --- Filters & Search --- */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-slate-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="חפש תוכנית תזונה..."
-            className="bg-card border-2 border-border text-foreground pr-10 sm:pr-12 h-10 sm:h-12 rounded-lg sm:rounded-xl font-medium focus:border-primary transition-all text-sm sm:text-base"
+            placeholder="חיפוש תוכנית תזונה..."
+            className="pr-10 bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 rounded-xl"
           />
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl">
+              <Filter className="h-4 w-4 ml-2" />
+              <span className="hidden sm:inline">פילטר קלוריות</span>
+              <span className="sm:hidden">פילטר</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setCalorieFilter('all')}>
+              הכל
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCalorieFilter('low')}>
+              נמוך (&lt;2000 קק״ל)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCalorieFilter('medium')}>
+              בינוני (2000-3000 קק״ל)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCalorieFilter('high')}>
+              גבוה (&gt;3000 קק״ל)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl">
+              <ArrowUpDown className="h-4 w-4 ml-2" />
+              <span className="hidden sm:inline">מיון</span>
+              <span className="sm:hidden">מיון</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => setSortBy('name')}>
+              לפי שם
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('trainee')}>
+              לפי מתאמן
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('calories')}>
+              לפי קלוריות
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSortBy('date')}>
+              לפי תאריך
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Enhanced Nutrition Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
-          {filteredPlans.length === 0 ? (
-            <div className="col-span-full text-center py-16">
-              <div className="space-y-4">
-                <div className="bg-accent/30 p-8 rounded-3xl inline-block">
-                  <PieChart className="h-16 w-16 text-muted-foreground mx-auto" />
-                </div>
-                <p className="text-foreground font-black text-xl">
-                  {searchQuery ? "לא נמצאו תוכניות תזונה" : "אין תוכניות תזונה עדיין"}
-                </p>
-                <p className="text-muted-foreground">התחל ליצור תוכניות תזונה למתאמנים שלך</p>
+      {/* --- Nutrition Plans Grid --- */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <SkeletonNutritionPlanCard key={i} />
+          ))}
+        </div>
+      ) : filteredAndSortedPlans.length === 0 ? (
+        <div className="col-span-full">
+          <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+            <CardContent className="p-12 sm:p-16 text-center flex flex-col items-center justify-center gap-4 sm:gap-6">
+              <div className="p-4 sm:p-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                <PieChart className="h-12 w-12 sm:h-16 sm:w-16" />
               </div>
-            </div>
-          ) : (
-            filteredPlans.map((plan, index) => (
-              <Card 
-                key={plan.id} 
-                className="bg-card border-2 border-border hover:border-primary/50 transition-all shadow-lg hover:shadow-xl rounded-xl sm:rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-300"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-foreground text-lg sm:text-xl font-black truncate">{plan.planName}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                  {/* Enhanced Calorie Target */}
-                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-primary/20">
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 font-bold uppercase tracking-wider">יעד קלורי:</p>
-                    <p className="text-2xl sm:text-3xl font-black text-primary">{plan.calorieTarget} קק"ל</p>
-                  </div>
+              <div>
+                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                  {searchQuery || calorieFilter !== 'all' ? "לא נמצאו תוכניות תזונה" : "אין תוכניות תזונה עדיין"}
+                </p>
+                <p className="text-sm sm:text-base text-gray-500 dark:text-slate-400 mt-2">
+                  {searchQuery || calorieFilter !== 'all' 
+                    ? "נסה לשנות את החיפוש או הפילטרים" 
+                    : "התחל ליצור תוכניות תזונה מקצועיות למתאמנים שלך"}
+                </p>
+              </div>
+              {!searchQuery && calorieFilter === 'all' && (
+                <Link href="/trainer/nutrition-plans/new">
+                  <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl">
+                    <Plus className="h-4 w-4 ml-2" />
+                    צור תוכנית תזונה ראשונה
+                  </Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAndSortedPlans.map((plan) => (
+            <Card 
+              key={plan.id} 
+              className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl hover:shadow-md transition-all"
+            >
+              <CardHeader className="p-4 sm:p-5">
+                <CardTitle className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{plan.planName}</CardTitle>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mt-1">{plan.traineeName}</p>
+              </CardHeader>
+              <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-5 pt-0">
+                {/* Calorie Target */}
+                <div className="bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-600/20 dark:to-blue-800/10 rounded-xl p-3 sm:p-4 border border-blue-200/50 dark:border-blue-500/20">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mb-1.5 font-medium uppercase tracking-wider">יעד קלורי:</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">{plan.calorieTarget} קק"ל</p>
+                </div>
 
-                  {/* Enhanced Pie Chart and Macros */}
-                  <div className="flex items-center gap-3 sm:gap-4 bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4">
-                    <PieChartComponent 
-                      protein={plan.protein} 
-                      carbs={plan.carbs} 
-                      fat={plan.fat} 
-                    />
-                    <div className="flex-1 space-y-1.5 sm:space-y-2">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-green-500 to-green-400 shadow-sm"></div>
-                        <span className="text-xs sm:text-sm text-foreground font-bold">חלבון: {plan.protein}%</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 shadow-sm"></div>
-                        <span className="text-xs sm:text-sm text-foreground font-bold">פחמימות: {plan.carbs}%</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-lg bg-gradient-to-r from-red-500 to-red-400 shadow-sm"></div>
-                        <span className="text-xs sm:text-sm text-foreground font-bold">שומן: {plan.fat}%</span>
-                      </div>
+                {/* Pie Chart and Macros */}
+                <div className="flex items-center gap-3 sm:gap-4 bg-gray-50/50 dark:bg-slate-800/50 rounded-xl p-3 sm:p-4">
+                  <PieChartComponent 
+                    protein={plan.protein} 
+                    carbs={plan.carbs} 
+                    fat={plan.fat} 
+                  />
+                  <div className="flex-1 space-y-1.5 sm:space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-lg bg-blue-500"></div>
+                      <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-bold">חלבון: {plan.protein}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-lg bg-orange-500"></div>
+                      <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-bold">פחמימות: {plan.carbs}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-lg bg-red-500"></div>
+                      <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-bold">שומן: {plan.fat}%</span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Enhanced Action Buttons */}
-                  <div className="flex gap-2 pt-2">
-                    <Link href={`/trainer/nutrition-plans/${plan.traineeId}/edit`} className="flex-1">
-                      <Button
-                        variant="outline"
-                        className="w-full h-10 sm:h-11 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-xs sm:text-sm"
-                      >
-                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
-                        ערוך
-                      </Button>
-                    </Link>
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <Link href={`/trainer/nutrition-plans/${plan.traineeId}/edit`} className="flex-1">
                     <Button
                       variant="outline"
-                      className="h-10 sm:h-11 w-10 sm:w-11 border-2 border-red-500/30 text-red-500 hover:bg-red-500/10 font-black rounded-lg sm:rounded-xl transition-all active:scale-95 p-0"
-                      onClick={() => {
-                        if (confirm("האם אתה בטוח שברצונך למחוק תוכנית תזונה זו?")) {
-                          // TODO: Delete nutrition plan
-                          alert("מחיקת תוכנית תזונה - יושם בהמשך");
-                        }
-                      }}
+                      className="w-full h-10 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 font-bold rounded-xl transition-all text-sm"
                     >
-                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <Edit className="h-4 w-4 ml-2" />
+                      ערוך
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="h-10 w-10 border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-bold rounded-xl transition-all p-0"
+                    onClick={() => {
+                      if (confirm("האם אתה בטוח שברצונך למחוק תוכנית תזונה זו?")) {
+                        showToast("מחיקת תוכנית תזונה - יושם בהמשך", "info", 3000);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

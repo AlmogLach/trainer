@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2, Apple, Beef, Home, BarChart3, Users, Target, Settings, Edit, Dumbbell, Plus, X } from "lucide-react";
+import { ArrowLeft, Loader2, Apple, Beef, Home, BarChart3, Users, Target, Settings, Edit, Dumbbell, Plus, X, Zap, Flame, Activity } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -21,10 +21,13 @@ import {
 } from "@/lib/nutrition-utils";
 import { FoodSelectorCard } from "@/components/trainee/FoodSelectorCard";
 import { NutritionMenuCard } from "@/components/trainee/NutritionMenuCard";
+import { useToast } from "@/components/ui/toast";
+import { getNutritionTargets } from "@/lib/nutrition-config";
 
 function NutritionCalculatorContent() {
   const { user } = useAuth();
   const pathname = usePathname();
+  const { showToast } = useToast();
   const [sourceFood, setSourceFood] = useState<FoodItem | null>(null);
   const [sourceAmount, setSourceAmount] = useState<string>("100");
   const [targetFood, setTargetFood] = useState<FoodItem | null>(null);
@@ -32,7 +35,8 @@ function NutritionCalculatorContent() {
   const [showSourcePicker, setShowSourcePicker] = useState(false);
   const [showTargetPicker, setShowTargetPicker] = useState(false);
   const [nutritionMenu, setNutritionMenu] = useState<NutritionMenu | null>(null);
-  const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
+  // Loaded from database via getNutritionSwaps()
+  const [availableFoods, setAvailableFoods] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFoodLog, setShowFoodLog] = useState(false);
   const [dailyLog, setDailyLog] = useState<any>(null);
@@ -66,7 +70,7 @@ function NutritionCalculatorContent() {
             hint: err.hint
           });
           // Show user-friendly error
-          alert(`שגיאה בטעינת המזונות: ${err.message || 'לא ניתן לטעון את המזונות. אנא בדוק את הגדרות RLS.'}`);
+          showToast(`שגיאה בטעינת המזונות: ${err.message || 'לא ניתן לטעון את המזונות. אנא בדוק את הגדרות RLS.'}`, "error", 5000);
           return []; // Return empty array if error
         }),
         getDailyNutritionLog(user.id).catch(() => null)
@@ -75,11 +79,11 @@ function NutritionCalculatorContent() {
       setNutritionMenu(menu || { meals: [] });
       setDailyLog(log);
       
-      // Convert swaps to FoodItem format
+      // Convert swaps to FoodItem format (all data comes from DB, no hardcoded values)
       const formattedSwaps = Array.isArray(swaps) ? swaps.map(convertSwapToFoodItem) : [];
-      setFoodDatabase(formattedSwaps);
+      setAvailableFoods(formattedSwaps);
       
-      console.log(`Loaded ${formattedSwaps.length} foods into database`);
+      console.log(`Loaded ${formattedSwaps.length} foods from database`);
       
       if (formattedSwaps.length === 0) {
         console.warn('No nutrition swaps found in database. Please add foods to nutrition_swaps table or check RLS policies.');
@@ -87,9 +91,9 @@ function NutritionCalculatorContent() {
     } catch (error: any) {
       console.error('Error loading nutrition data:', error);
       setNutritionMenu({ meals: [] });
-      setFoodDatabase([]);
+      setAvailableFoods([]);
       // Show error to user
-      alert(`שגיאה בטעינת נתוני התזונה: ${error.message || 'שגיאה לא ידועה'}`);
+      showToast(`שגיאה בטעינת נתוני התזונה: ${error.message || 'שגיאה לא ידועה'}`, "error", 5000);
     } finally {
       setLoading(false);
     }
@@ -118,7 +122,8 @@ function NutritionCalculatorContent() {
       setSavingLog(true);
       const amount = parseFloat(logAmount);
       if (isNaN(amount) || amount <= 0) {
-        alert('אנא הזן כמות תקינה');
+        showToast('אנא הזן כמות תקינה', "warning", 3000);
+        setSavingLog(false);
         return;
       }
 
@@ -159,11 +164,7 @@ function NutritionCalculatorContent() {
       setLogAmount("");
       
       // Show success message
-      const successDiv = document.createElement('div');
-      successDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-green-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in zoom-in duration-300 font-bold text-center';
-      successDiv.innerHTML = '✅ האוכל נוסף ללוג היומי!';
-      document.body.appendChild(successDiv);
-      setTimeout(() => successDiv.remove(), 2000);
+      showToast('✅ האוכל נוסף ללוג היומי!', "success", 3000);
     } catch (error: any) {
       console.error('Error adding to log:', error);
       console.error('Error details:', {
@@ -173,11 +174,7 @@ function NutritionCalculatorContent() {
       });
       
       // Show detailed error
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4 duration-300 font-bold text-center';
-      errorDiv.innerHTML = `❌ שגיאה: ${error.message || 'לא ניתן להוסיף אוכל ללוג'}`;
-      document.body.appendChild(errorDiv);
-      setTimeout(() => errorDiv.remove(), 4000);
+      showToast(`❌ שגיאה: ${error.message || 'לא ניתן להוסיף אוכל ללוג'}`, "error", 5000);
     } finally {
       setSavingLog(false);
     }
@@ -215,34 +212,146 @@ function NutritionCalculatorContent() {
   const carbsCurrent = targetMacros?.carbs || 0;
   const fatCurrent = targetMacros?.fat || 0;
 
+  // Calculate nutrition progress
+  const nutritionTargets = useMemo(() => getNutritionTargets(user?.id), [user?.id]);
+  const nutritionProgress = useMemo(() => {
+    if (!dailyLog) return null;
+    return {
+      protein: dailyLog.total_protein || 0,
+      carbs: dailyLog.total_carbs || 0,
+      fat: dailyLog.total_fat || 0,
+      calories: dailyLog.total_calories || 0,
+      proteinPercent: ((dailyLog.total_protein || 0) / nutritionTargets.protein) * 100,
+      carbsPercent: ((dailyLog.total_carbs || 0) / nutritionTargets.carbs) * 100,
+      fatPercent: ((dailyLog.total_fat || 0) / nutritionTargets.fat) * 100,
+      caloriesPercent: ((dailyLog.total_calories || 0) / nutritionTargets.calories) * 100
+    };
+  }, [dailyLog, nutritionTargets]);
+
   return (
-    <div className="min-h-screen" dir="rtl">
-      {/* Enhanced Header - Connected to top header */}
-      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2.5rem] px-4 sm:px-6 py-4 sm:py-6 relative overflow-hidden">
-        {/* Animated Background blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/30 rounded-full blur-2xl -z-10 -translate-x-1/2 translate-y-1/2" />
-        
-        <div className="max-w-2xl mx-auto flex items-center justify-between relative z-10 gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <div className="bg-gradient-to-br from-primary to-primary/80 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0">
-              <Apple className="w-5 h-5 sm:w-6 sm:h-6 text-background" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight truncate">מחשבון המרות</h1>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Nutrition Calculator</p>
-            </div>
-          </div>
-          
-          <Link href="/trainee/dashboard" className="flex-shrink-0">
-            <div className="bg-background p-2 sm:p-2.5 rounded-xl sm:rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </div>
+    <div className="space-y-6 sm:space-y-8 pb-32" dir="rtl">
+      {/* --- Page Header --- */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">מחשבון המרות</h1>
+        <p className="text-sm sm:text-base text-gray-500 dark:text-slate-400 mt-1">המר בין מזונות שונים ושמור על ערכים תזונתיים דומים</p>
       </div>
 
-      <div className="max-w-2xl mx-auto px-3 sm:px-4 lg:px-5 space-y-4 sm:space-y-6">
+      {/* Daily Statistics Cards */}
+      {nutritionProgress && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          {/* Protein Card */}
+          <Card className="border-none shadow-lg bg-gradient-to-br from-emerald-500/90 to-emerald-600/80 dark:from-emerald-600/80 dark:to-emerald-700/70 overflow-hidden rounded-xl sm:rounded-2xl">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <span className="text-xs sm:text-sm text-white/90 font-medium">חלבון</span>
+              </div>
+              <div className="space-y-2">
+                <div className="text-white">
+                  <span className="text-lg sm:text-xl font-black">{nutritionProgress.protein.toFixed(0)}</span>
+                  <span className="text-xs sm:text-sm text-white/80 mr-1">/ {nutritionTargets.protein} גרם</span>
+                </div>
+                <div className="relative h-2 sm:h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      nutritionProgress.proteinPercent >= 80 ? 'bg-white' : 
+                      nutritionProgress.proteinPercent >= 50 ? 'bg-yellow-200' : 'bg-red-200'
+                    }`}
+                    style={{ width: `${Math.min(100, nutritionProgress.proteinPercent)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white/80 font-medium">{nutritionProgress.proteinPercent.toFixed(0)}%</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Carbs Card */}
+          <Card className="border-none shadow-lg bg-gradient-to-br from-blue-500/90 to-blue-600/80 dark:from-blue-600/80 dark:to-blue-700/70 overflow-hidden rounded-xl sm:rounded-2xl">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <Apple className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <span className="text-xs sm:text-sm text-white/90 font-medium">פחמימות</span>
+              </div>
+              <div className="space-y-2">
+                <div className="text-white">
+                  <span className="text-lg sm:text-xl font-black">{nutritionProgress.carbs.toFixed(0)}</span>
+                  <span className="text-xs sm:text-sm text-white/80 mr-1">/ {nutritionTargets.carbs} גרם</span>
+                </div>
+                <div className="relative h-2 sm:h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      nutritionProgress.carbsPercent >= 80 ? 'bg-white' : 
+                      nutritionProgress.carbsPercent >= 50 ? 'bg-yellow-200' : 'bg-red-200'
+                    }`}
+                    style={{ width: `${Math.min(100, nutritionProgress.carbsPercent)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white/80 font-medium">{nutritionProgress.carbsPercent.toFixed(0)}%</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fat Card */}
+          <Card className="border-none shadow-lg bg-gradient-to-br from-yellow-500/90 to-yellow-600/80 dark:from-yellow-600/80 dark:to-yellow-700/70 overflow-hidden rounded-xl sm:rounded-2xl">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <span className="text-xs sm:text-sm text-white/90 font-medium">שומן</span>
+              </div>
+              <div className="space-y-2">
+                <div className="text-white">
+                  <span className="text-lg sm:text-xl font-black">{nutritionProgress.fat.toFixed(1)}</span>
+                  <span className="text-xs sm:text-sm text-white/80 mr-1">/ {nutritionTargets.fat} גרם</span>
+                </div>
+                <div className="relative h-2 sm:h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      nutritionProgress.fatPercent >= 80 ? 'bg-white' : 
+                      nutritionProgress.fatPercent >= 50 ? 'bg-yellow-200' : 'bg-red-200'
+                    }`}
+                    style={{ width: `${Math.min(100, nutritionProgress.fatPercent)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white/80 font-medium">{nutritionProgress.fatPercent.toFixed(0)}%</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Calories Card */}
+          <Card className="border-none shadow-lg bg-gradient-to-br from-purple-500/90 to-purple-600/80 dark:from-purple-600/80 dark:to-purple-700/70 overflow-hidden rounded-xl sm:rounded-2xl">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <span className="text-xs sm:text-sm text-white/90 font-medium">קלוריות</span>
+              </div>
+              <div className="space-y-2">
+                <div className="text-white">
+                  <span className="text-lg sm:text-xl font-black">{nutritionProgress.calories.toFixed(0)}</span>
+                  <span className="text-xs sm:text-sm text-white/80 mr-1">/ {nutritionTargets.calories} קק"ל</span>
+                </div>
+                <div className="relative h-2 sm:h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      nutritionProgress.caloriesPercent >= 80 ? 'bg-white' : 
+                      nutritionProgress.caloriesPercent >= 50 ? 'bg-yellow-200' : 'bg-red-200'
+                    }`}
+                    style={{ width: `${Math.min(100, nutritionProgress.caloriesPercent)}%` }}
+                  />
+                </div>
+                <span className="text-xs text-white/80 font-medium">{nutritionProgress.caloriesPercent.toFixed(0)}%</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
         {/* Nutrition Menu Card */}
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           <NutritionMenuCard menu={nutritionMenu} variant="dark" />
@@ -251,10 +360,10 @@ function NutritionCalculatorContent() {
         {/* Add to Daily Log Button */}
         <Button
           onClick={() => setShowFoodLog(true)}
-          className="w-full h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-500"
+          className="w-full h-12 sm:h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-sm sm:text-base rounded-xl sm:rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-500"
           style={{ animationDelay: '50ms' }}
         >
-          <Plus className="h-5 w-5 ml-2" />
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
           הוסף אוכל ללוג היומי
         </Button>
 
@@ -278,15 +387,15 @@ function NutritionCalculatorContent() {
 
         {/* Nutritional Breakdown */}
         {sourceMacros && targetMacros && (
-          <Card className="bg-card border-border shadow-md rounded-2xl sm:rounded-[2rem] animate-in zoom-in duration-500" style={{ animationDelay: '200ms' }}>
+          <Card className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 shadow-md rounded-xl sm:rounded-2xl animate-in zoom-in duration-500" style={{ animationDelay: '200ms' }}>
             <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
               {/* Protein */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-foreground text-sm font-bold">חלבון</span>
-                  <span className="text-muted-foreground text-sm font-medium">{proteinCurrent.toFixed(0)} / {proteinTarget.toFixed(0)} גרם</span>
+                  <span className="text-gray-900 dark:text-white text-xs sm:text-sm font-bold">חלבון</span>
+                  <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">{proteinCurrent.toFixed(0)} / {proteinTarget.toFixed(0)} גרם</span>
                 </div>
-                <div className="relative h-3 bg-accent/30 rounded-full overflow-hidden">
+                <div className="relative h-2 sm:h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   {proteinCurrent <= proteinTarget ? (
                     <>
                       <div
@@ -316,10 +425,10 @@ function NutritionCalculatorContent() {
               {/* Carbohydrates */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-foreground text-sm font-bold">פחמימות</span>
-                  <span className="text-muted-foreground text-sm font-medium">{carbsCurrent.toFixed(0)} / {carbsTarget.toFixed(0)} גרם</span>
+                  <span className="text-gray-900 dark:text-white text-xs sm:text-sm font-bold">פחמימות</span>
+                  <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">{carbsCurrent.toFixed(0)} / {carbsTarget.toFixed(0)} גרם</span>
                 </div>
-                <div className="relative h-3 bg-accent/30 rounded-full overflow-hidden">
+                <div className="relative h-2 sm:h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   {carbsCurrent <= carbsTarget ? (
                     <>
                       <div
@@ -349,10 +458,10 @@ function NutritionCalculatorContent() {
               {/* Fat */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-foreground text-sm font-bold">שומן</span>
-                  <span className="text-muted-foreground text-sm font-medium">{fatCurrent.toFixed(1)} / {fatTarget.toFixed(1)} גרם</span>
+                  <span className="text-gray-900 dark:text-white text-xs sm:text-sm font-bold">שומן</span>
+                  <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">{fatCurrent.toFixed(1)} / {fatTarget.toFixed(1)} גרם</span>
                 </div>
-                <div className="relative h-3 bg-accent/30 rounded-full overflow-hidden">
+                <div className="relative h-2 sm:h-3 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   {fatCurrent <= fatTarget ? (
                     <>
                       <div
@@ -384,80 +493,80 @@ function NutritionCalculatorContent() {
 
         {/* Summary - Conversion Result */}
         {sourceFood && targetFood && sourceAmount && targetAmount && sourceMacros && targetMacros && (
-          <Card className="bg-card border-primary/30 border-2 shadow-lg shadow-primary/10 rounded-[2rem] animate-in zoom-in duration-500" style={{ animationDelay: '300ms' }}>
+          <Card className="bg-white dark:bg-slate-900/50 border-blue-500/30 dark:border-blue-600/30 border-2 shadow-lg shadow-blue-500/10 dark:shadow-blue-600/10 rounded-xl sm:rounded-2xl animate-in zoom-in duration-500" style={{ animationDelay: '300ms' }}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-foreground text-xl font-black">תוצאות ההמרה 🎯</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white text-lg sm:text-xl font-black">תוצאות ההמרה 🎯</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Main conversion info */}
-              <div className="bg-accent/30 rounded-2xl p-5 space-y-3 border border-border/50">
+              <div className="bg-gray-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-5 space-y-3 border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground font-medium">מקור:</span>
-                  <span className="text-foreground font-bold">
+                  <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">מקור:</span>
+                  <span className="text-gray-900 dark:text-white text-sm sm:text-base font-bold">
                     {sourceAmount} גרם {sourceFood.name}
                   </span>
                 </div>
                 <div className="flex items-center justify-center py-2">
-                  <div className="bg-primary/20 p-2 rounded-xl">
-                    <span className="text-primary text-2xl">⇄</span>
+                  <div className="bg-blue-500/20 dark:bg-blue-600/20 p-2 rounded-xl">
+                    <span className="text-blue-600 dark:text-blue-400 text-xl sm:text-2xl">⇄</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground font-medium">יעד (משוער):</span>
-                  <span className="text-primary font-black text-xl">
+                  <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">יעד (משוער):</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-black text-base sm:text-xl">
                     ~{targetAmount} גרם {targetFood.name}
                   </span>
                 </div>
-                <p className="text-muted-foreground text-xs text-center mt-3 bg-background/50 rounded-lg p-2">
+                <p className="text-gray-500 dark:text-slate-400 text-xs text-center mt-3 bg-white dark:bg-slate-900/50 rounded-lg p-2">
                   💡 הכמות משוערת - ערכים דומים, לא זהים בדיוק
                 </p>
               </div>
 
               {/* Macros comparison */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="bg-background/50 rounded-xl p-3 border border-border/50">
-                  <div className="text-muted-foreground text-xs mb-1 font-bold uppercase">חלבון</div>
-                  <div className="text-foreground font-black text-lg">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div className="bg-white dark:bg-slate-900/50 rounded-xl p-3 border border-gray-200 dark:border-slate-700">
+                  <div className="text-gray-500 dark:text-slate-400 text-[10px] sm:text-xs mb-1 font-bold uppercase">חלבון</div>
+                  <div className="text-gray-900 dark:text-white font-black text-base sm:text-lg">
                     {targetMacros.protein.toFixed(1)}
-                    <span className="text-xs text-muted-foreground mr-1">גרם</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mr-1">גרם</span>
                     {Math.abs(macroDiffs.protein) > 2 && (
-                      <span className={`text-xs block mt-1 ${macroDiffs.protein > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
+                      <span className={`text-[10px] sm:text-xs block mt-1 ${macroDiffs.protein > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
                         ({macroDiffs.protein > 0 ? '+' : ''}{macroDiffs.protein.toFixed(1)})
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="bg-background/50 rounded-xl p-3 border border-border/50">
-                  <div className="text-muted-foreground text-xs mb-1 font-bold uppercase">פחמימות</div>
-                  <div className="text-foreground font-black text-lg">
+                <div className="bg-white dark:bg-slate-900/50 rounded-xl p-3 border border-gray-200 dark:border-slate-700">
+                  <div className="text-gray-500 dark:text-slate-400 text-[10px] sm:text-xs mb-1 font-bold uppercase">פחמימות</div>
+                  <div className="text-gray-900 dark:text-white font-black text-base sm:text-lg">
                     {targetMacros.carbs.toFixed(1)}
-                    <span className="text-xs text-muted-foreground mr-1">גרם</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mr-1">גרם</span>
                     {Math.abs(macroDiffs.carbs) > 5 && (
-                      <span className={`text-xs block mt-1 ${macroDiffs.carbs > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
+                      <span className={`text-[10px] sm:text-xs block mt-1 ${macroDiffs.carbs > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
                         ({macroDiffs.carbs > 0 ? '+' : ''}{macroDiffs.carbs.toFixed(1)})
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="bg-background/50 rounded-xl p-3 border border-border/50">
-                  <div className="text-muted-foreground text-xs mb-1 font-bold uppercase">שומן</div>
-                  <div className="text-foreground font-black text-lg">
+                <div className="bg-white dark:bg-slate-900/50 rounded-xl p-3 border border-gray-200 dark:border-slate-700">
+                  <div className="text-gray-500 dark:text-slate-400 text-[10px] sm:text-xs mb-1 font-bold uppercase">שומן</div>
+                  <div className="text-gray-900 dark:text-white font-black text-base sm:text-lg">
                     {targetMacros.fat.toFixed(1)}
-                    <span className="text-xs text-muted-foreground mr-1">גרם</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mr-1">גרם</span>
                     {Math.abs(macroDiffs.fat) > 2 && (
-                      <span className={`text-xs block mt-1 ${macroDiffs.fat > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
+                      <span className={`text-[10px] sm:text-xs block mt-1 ${macroDiffs.fat > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
                         ({macroDiffs.fat > 0 ? '+' : ''}{macroDiffs.fat.toFixed(1)})
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="bg-background/50 rounded-xl p-3 border border-border/50">
-                  <div className="text-muted-foreground text-xs mb-1 font-bold uppercase">קלוריות</div>
-                  <div className="text-foreground font-black text-lg">
+                <div className="bg-white dark:bg-slate-900/50 rounded-xl p-3 border border-gray-200 dark:border-slate-700">
+                  <div className="text-gray-500 dark:text-slate-400 text-[10px] sm:text-xs mb-1 font-bold uppercase">קלוריות</div>
+                  <div className="text-gray-900 dark:text-white font-black text-base sm:text-lg">
                     {targetMacros.calories.toFixed(0)}
-                    <span className="text-xs text-muted-foreground mr-1">קק"ל</span>
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 mr-1">קק"ל</span>
                     {Math.abs(macroDiffs.calories) > 20 && (
-                      <span className={`text-xs block mt-1 ${macroDiffs.calories > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
+                      <span className={`text-[10px] sm:text-xs block mt-1 ${macroDiffs.calories > 0 ? 'text-orange-400' : 'text-blue-400'}`}>
                         ({macroDiffs.calories > 0 ? '+' : ''}{macroDiffs.calories.toFixed(0)})
                       </span>
                     )}
@@ -467,13 +576,13 @@ function NutritionCalculatorContent() {
 
               {/* Match quality */}
               <div className={`flex items-center justify-between pt-3 mt-3 border-t-2 ${
-                matchQuality.color === 'green' ? 'border-primary/30' :
+                matchQuality.color === 'green' ? 'border-blue-500/30 dark:border-blue-600/30' :
                 matchQuality.color === 'yellow' ? 'border-yellow-400/30' :
                 'border-red-400/30'
               }`}>
-                <span className="text-muted-foreground font-medium">דיוק ההמרה:</span>
-                <span className={`font-black text-lg ${
-                  matchQuality.color === 'green' ? 'text-primary' :
+                <span className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">דיוק ההמרה:</span>
+                <span className={`font-black text-base sm:text-lg ${
+                  matchQuality.color === 'green' ? 'text-blue-600 dark:text-blue-400' :
                   matchQuality.color === 'yellow' ? 'text-yellow-400' :
                   'text-red-400'
                 }`}>
@@ -506,17 +615,17 @@ function NutritionCalculatorContent() {
         )}
 
         {/* FoodsDictionary Search Box */}
-        <Card className="bg-card border-border shadow-md rounded-[2rem] animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '400ms' }}>
+        <Card className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 shadow-md rounded-xl sm:rounded-2xl animate-in fade-in slide-in-from-bottom-2 duration-500" style={{ animationDelay: '400ms' }}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-foreground text-lg font-black flex items-center gap-2">
-              <div className="bg-primary/20 p-2 rounded-xl">
-                <Apple className="w-5 h-5 text-primary" />
+            <CardTitle className="text-gray-900 dark:text-white text-base sm:text-lg font-black flex items-center gap-2">
+              <div className="bg-blue-500/20 dark:bg-blue-600/20 p-2 rounded-xl">
+                <Apple className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
               חיפוש מזונות
             </CardTitle>
-            <p className="text-muted-foreground text-xs mt-1">FoodsDictionary - מאגר ערכים תזונתיים</p>
+            <p className="text-gray-500 dark:text-slate-400 text-xs mt-1">FoodsDictionary - מאגר ערכים תזונתיים</p>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex justify-center" dir="rtl">
               <form 
                 name="SearchFoods" 
@@ -545,7 +654,7 @@ function NutritionCalculatorContent() {
                     name="q" 
                     maxLength={200}
                     placeholder="חפש מזון לקבלת ערכים תזונתיים מדויקים..."
-                    className="flex-1 px-4 py-3 bg-background border-2 border-border rounded-2xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary transition-all font-medium"
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-600 transition-all text-sm sm:text-base font-medium"
                     style={{
                       backgroundImage: "url('https://storage.googleapis.com/st2.foodsd.co.il/Images/logo-small-v3.0-watermark.png')",
                       backgroundRepeat: "no-repeat",
@@ -562,14 +671,14 @@ function NutritionCalculatorContent() {
                   />
                   <Button 
                     type="submit"
-                    className="bg-primary hover:bg-primary/90 text-background font-black px-8 py-3 h-auto rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-black px-4 sm:px-8 py-2 sm:py-3 h-auto rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 text-sm sm:text-base"
                   >
                     חיפוש
                   </Button>
                 </div>
               </form>
             </div>
-            <p className="text-muted-foreground text-xs text-center mt-3 bg-accent/30 rounded-xl p-2">
+            <p className="text-gray-500 dark:text-slate-400 text-xs text-center mt-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl p-2">
               💡 השתמש בחיפוש זה כדי למצוא ערכים תזונתיים מדויקים למזונות שונים
             </p>
           </CardContent>
@@ -577,21 +686,21 @@ function NutritionCalculatorContent() {
 
         {/* Info Card - This is just a calculator, not a logger */}
         {sourceFood && targetFood && sourceAmount && targetAmount && (
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 border-2 shadow-md rounded-[2rem] animate-in fade-in zoom-in duration-500" style={{ animationDelay: '500ms' }}>
-            <CardContent className="p-6">
+          <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 dark:from-blue-600/10 dark:to-blue-700/5 border-blue-500/30 dark:border-blue-600/30 border-2 shadow-md rounded-xl sm:rounded-2xl animate-in fade-in zoom-in duration-500" style={{ animationDelay: '500ms' }}>
+            <CardContent className="p-4 sm:p-6">
               <div className="text-center space-y-3">
                 <div className="flex items-center justify-center gap-2">
-                  <div className="bg-primary/20 p-2 rounded-xl">
-                    <Target className="w-5 h-5 text-primary" />
+                  <div className="bg-blue-500/20 dark:bg-blue-600/20 p-2 rounded-xl">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <p className="text-foreground text-base font-black">
+                  <p className="text-gray-900 dark:text-white text-sm sm:text-base font-black">
                     מחשבון המרות
                   </p>
                 </div>
-                <p className="text-muted-foreground text-sm font-medium">
+                <p className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium">
                   עוזר לך לגוון את התזונה בצורה מדויקת
                 </p>
-                <p className="text-muted-foreground text-xs bg-background/50 rounded-xl p-3">
+                <p className="text-gray-500 dark:text-slate-400 text-xs bg-white dark:bg-slate-900/50 rounded-xl p-3">
                   השתמש במידע הזה כדי להחליף מזונות בתפריט שלך תוך שמירה על ערכים תזונתיים דומים
                 </p>
                 {matchQuality.score < 0.3 && (
@@ -605,26 +714,26 @@ function NutritionCalculatorContent() {
             </CardContent>
           </Card>
         )}
-      </div>
 
       {/* Food Picker Modals */}
       {showSourcePicker && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setShowSourcePicker(false)}>
-          <Card className="bg-card border-border shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden rounded-[2rem] animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
-            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/10 to-primary/5">
-              <CardTitle className="text-foreground font-black text-xl flex items-center gap-2">
-                <div className="bg-primary/20 p-2 rounded-xl">
-                  <Apple className="w-5 h-5 text-primary" />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200" onClick={() => setShowSourcePicker(false)}>
+          <Card className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 shadow-2xl w-full h-full sm:h-auto sm:max-w-md sm:max-h-[80vh] overflow-hidden rounded-none sm:rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-600/10 dark:to-blue-700/5 p-4 sm:p-5">
+              <CardTitle className="text-gray-900 dark:text-white font-black text-lg sm:text-xl flex items-center gap-2">
+                <div className="bg-blue-500/20 dark:bg-blue-600/20 p-2 rounded-xl">
+                  <Apple className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 בחר מזון מקור
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 p-4 sm:p-6 max-h-[calc(100vh-200px)] sm:max-h-[60vh] overflow-y-auto">
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#00ff88]" />
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" strokeWidth={2.5} />
+                  <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">טוען מזונות...</p>
                 </div>
-              ) : foodDatabase.length === 0 ? (
+              ) : availableFoods.length === 0 ? (
                 <div className="text-center text-gray-400 py-4 space-y-2">
                   <p className="font-semibold">אין מזונות זמינים</p>
                   <p className="text-sm">אנא הוסף מזונות לטבלת nutrition_swaps במסד הנתונים</p>
@@ -638,26 +747,26 @@ function NutritionCalculatorContent() {
                   {menuFoods.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-2 mb-3 px-2">
-                        <div className="bg-primary/20 p-1 rounded-lg">
-                          <Apple className="w-3 h-3 text-primary" />
+                        <div className="bg-blue-500/20 dark:bg-blue-600/20 p-1 rounded-lg">
+                          <Apple className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">מהתפריט שלך</p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wide">מהתפריט שלך</p>
                       </div>
                       {menuFoods.map((menuFood, index) => {
-                        const food = foodDatabase.find(f => f.name === menuFood.name);
+                        const food = availableFoods.find(f => f.name === menuFood.name);
                         if (!food) return null;
                         return (
                           <button
                             key={`menu-${index}`}
-                            className="w-full text-right p-4 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 rounded-2xl text-foreground transition-all mb-2 border-2 border-primary/30 active:scale-98 shadow-sm"
+                            className="w-full text-right p-3 sm:p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-600/10 dark:to-blue-700/5 hover:from-blue-500/20 hover:to-blue-600/10 dark:hover:from-blue-600/20 dark:hover:to-blue-700/10 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white transition-all mb-2 border-2 border-blue-500/30 dark:border-blue-600/30 active:scale-98 shadow-sm"
                             onClick={() => {
                               setSourceFood(food);
                               setSourceAmount(menuFood.amount.toString());
                               setShowSourcePicker(false);
                             }}
                           >
-                            <div className="font-black text-base">{food.name}</div>
-                            <div className="text-sm text-muted-foreground font-medium mt-1">{menuFood.amount} גרם</div>
+                            <div className="font-black text-sm sm:text-base">{food.name}</div>
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 font-medium mt-1">{menuFood.amount} גרם</div>
                           </button>
                         );
                       })}
@@ -667,12 +776,12 @@ function NutritionCalculatorContent() {
                   {/* Show all available foods */}
                   <div>
                     {menuFoods.length > 0 && (
-                      <div className="flex items-center gap-2 mb-3 px-2 pt-2 border-t border-border/50">
-                        <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">כל המזונות הזמינים</p>
+                      <div className="flex items-center gap-2 mb-3 px-2 pt-2 border-t border-gray-200 dark:border-slate-700">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wide">כל המזונות הזמינים</p>
                       </div>
                     )}
                     <div className="space-y-2">
-                      {foodDatabase
+                      {availableFoods
                         .filter(food => {
                           // Don't show foods that are already in menu (to avoid duplicates)
                           if (menuFoods.length > 0) {
@@ -683,7 +792,7 @@ function NutritionCalculatorContent() {
                         .map((food) => (
                           <button
                             key={food.id}
-                            className="w-full text-right p-4 bg-accent/30 hover:bg-accent/50 rounded-2xl text-foreground transition-all border border-border/50 hover:border-primary/30 active:scale-98"
+                            className="w-full text-right p-3 sm:p-4 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white transition-all border border-gray-200 dark:border-slate-700 hover:border-blue-500/30 dark:hover:border-blue-600/30 active:scale-98 text-sm sm:text-base"
                             onClick={() => {
                               setSourceFood(food);
                               setSourceAmount("100");
@@ -703,57 +812,57 @@ function NutritionCalculatorContent() {
       )}
 
       {showTargetPicker && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setShowTargetPicker(false)}>
-          <Card className="bg-card border-border shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden rounded-[2rem] animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
-            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/10 to-primary/5">
-              <CardTitle className="text-foreground font-black text-xl flex items-center gap-2">
-                <div className="bg-primary/20 p-2 rounded-xl">
-                  <Beef className="w-5 h-5 text-primary" />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200" onClick={() => setShowTargetPicker(false)}>
+          <Card className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 shadow-2xl w-full h-full sm:h-auto sm:max-w-md sm:max-h-[80vh] overflow-hidden rounded-none sm:rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-blue-500/10 to-blue-600/5 dark:from-blue-600/10 dark:to-blue-700/5 p-4 sm:p-5">
+              <CardTitle className="text-gray-900 dark:text-white font-black text-lg sm:text-xl flex items-center gap-2">
+                <div className="bg-blue-500/20 dark:bg-blue-600/20 p-2 rounded-xl">
+                  <Beef className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   בחר מזון יעד
                   {sourceFood && (
-                    <span className="text-xs text-muted-foreground block mt-1 font-medium">
+                    <span className="text-xs text-gray-500 dark:text-slate-400 block mt-1 font-medium">
                       רק מזונות מ-{sourceFood.category === 'carbs' ? 'פחמימות' : sourceFood.category === 'protein' ? 'חלבון' : sourceFood.category === 'fat' ? 'שומן' : sourceFood.category === 'bread' ? 'לחם' : sourceFood.category}
                     </span>
                   )}
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 max-h-[60vh] overflow-y-auto p-4">
+            <CardContent className="space-y-2 max-h-[calc(100vh-200px)] sm:max-h-[60vh] overflow-y-auto p-4 sm:p-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
-                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                  <p className="text-muted-foreground text-sm font-medium">טוען מזונות...</p>
+                  <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" strokeWidth={2.5} />
+                  <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">טוען מזונות...</p>
                 </div>
-              ) : foodDatabase.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8 space-y-3 bg-accent/30 rounded-2xl p-6">
+              ) : availableFoods.length === 0 ? (
+                <div className="text-center text-gray-500 dark:text-slate-400 py-8 space-y-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                   <div className="text-4xl">📭</div>
-                  <p className="font-bold text-foreground">אין מזונות זמינים</p>
-                  <p className="text-sm">אנא הוסף מזונות לטבלת nutrition_swaps במסד הנתונים</p>
-                  <p className="text-xs bg-background/50 rounded-xl p-2 mt-2">
+                  <p className="font-bold text-gray-900 dark:text-white">אין מזונות זמינים</p>
+                  <p className="text-xs sm:text-sm">אנא הוסף מזונות לטבלת nutrition_swaps במסד הנתונים</p>
+                  <p className="text-xs bg-white dark:bg-slate-900/50 rounded-xl p-2 mt-2">
                     או בדוק שהטבלה קיימת ושה-RLS מוגדר נכון
                   </p>
                 </div>
               ) : !sourceFood ? (
-                <div className="text-center text-muted-foreground py-8 bg-accent/30 rounded-2xl p-6">
+                <div className="text-center text-gray-500 dark:text-slate-400 py-8 bg-gray-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                   <div className="text-4xl mb-3">⚠️</div>
-                  <p className="font-bold text-foreground">אנא בחר מזון מקור קודם</p>
+                  <p className="font-bold text-gray-900 dark:text-white">אנא בחר מזון מקור קודם</p>
                 </div>
               ) : (
                 (() => {
                   // Filter foods by same category as source food
-                  const sameCategoryFoods = foodDatabase.filter(f => 
+                  const sameCategoryFoods = availableFoods.filter(f => 
                     f.id !== sourceFood.id && 
                     f.category === sourceFood.category
                   );
                   
                   if (sameCategoryFoods.length === 0) {
                     return (
-                      <div className="text-center text-muted-foreground py-8 space-y-3 bg-accent/30 rounded-2xl p-6">
+                      <div className="text-center text-gray-500 dark:text-slate-400 py-8 space-y-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6">
                         <div className="text-4xl">🔍</div>
-                        <p className="font-bold text-foreground">אין מזונות נוספים בקטגוריה "{sourceFood.category}"</p>
-                        <p className="text-xs bg-background/50 rounded-xl p-2 mt-2">אנא הוסף מזונות נוספים לקטגוריה זו</p>
+                        <p className="font-bold text-gray-900 dark:text-white">אין מזונות נוספים בקטגוריה "{sourceFood.category}"</p>
+                        <p className="text-xs bg-white dark:bg-slate-900/50 rounded-xl p-2 mt-2">אנא הוסף מזונות נוספים לקטגוריה זו</p>
                       </div>
                     );
                   }
@@ -763,7 +872,7 @@ function NutritionCalculatorContent() {
                       {sameCategoryFoods.map((food) => (
                         <button
                           key={food.id}
-                          className="w-full text-right p-4 bg-accent/30 hover:bg-accent/50 rounded-2xl text-foreground transition-all border border-border/50 hover:border-primary/30 active:scale-98"
+                          className="w-full text-right p-3 sm:p-4 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl sm:rounded-2xl text-gray-900 dark:text-white transition-all border border-gray-200 dark:border-slate-700 hover:border-blue-500/30 dark:hover:border-blue-600/30 active:scale-98 text-sm sm:text-base"
                           onClick={() => {
                             setTargetFood(food);
                             setShowTargetPicker(false);
@@ -783,39 +892,39 @@ function NutritionCalculatorContent() {
 
       {/* Add to Log Modal */}
       {showFoodLog && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setShowFoodLog(false)}>
-          <Card className="bg-card border-border shadow-2xl w-full max-w-md rounded-[2rem] animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
-            <CardHeader className="border-b border-border/50 bg-gradient-to-r from-green-500/10 to-green-600/5">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-200" onClick={() => setShowFoodLog(false)}>
+          <Card className="bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 shadow-2xl w-full h-full sm:h-auto sm:max-w-md overflow-hidden rounded-none sm:rounded-2xl animate-in zoom-in-95 slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
+            <CardHeader className="border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-green-500/10 to-green-600/5 dark:from-green-600/10 dark:to-green-700/5 p-4 sm:p-5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500/20 p-2 rounded-xl">
-                    <Plus className="w-5 h-5 text-green-500" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="bg-green-500/20 dark:bg-green-600/20 p-2 rounded-xl">
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 dark:text-green-400" />
                   </div>
-                  <CardTitle className="text-foreground font-black text-xl">הוסף אוכל ללוג</CardTitle>
+                  <CardTitle className="text-gray-900 dark:text-white font-black text-lg sm:text-xl">הוסף אוכל ללוג</CardTitle>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowFoodLog(false)}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"
+                  className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5 p-6">
+            <CardContent className="space-y-4 sm:space-y-5 p-4 sm:p-6 max-h-[calc(100vh-200px)] sm:max-h-[80vh] overflow-y-auto">
               {!logFood ? (
                 <>
-                  <p className="text-muted-foreground text-sm font-medium text-center">בחר מזון מהרשימה:</p>
-                  <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                    {foodDatabase.map((food) => (
+                  <p className="text-gray-500 dark:text-slate-400 text-xs sm:text-sm font-medium text-center">בחר מזון מהרשימה:</p>
+                  <div className="space-y-2 max-h-[calc(100vh-300px)] sm:max-h-[50vh] overflow-y-auto">
+                    {availableFoods.map((food) => (
                       <button
                         key={food.name}
                         onClick={() => setLogFood(food)}
-                        className="w-full text-right p-4 bg-accent/20 hover:bg-accent/40 border-2 border-border hover:border-primary/50 rounded-xl font-bold text-foreground transition-all active:scale-98"
+                        className="w-full text-right p-3 sm:p-4 bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800 border-2 border-gray-200 dark:border-slate-700 hover:border-green-500/50 dark:hover:border-green-600/50 rounded-xl font-bold text-gray-900 dark:text-white transition-all active:scale-98 text-sm sm:text-base"
                       >
                         {food.name}
-                        <span className="text-xs text-muted-foreground block mt-1 font-medium">
+                        <span className="text-xs text-gray-500 dark:text-slate-400 block mt-1 font-medium">
                           {food.category === 'carbs' ? 'פחמימות' : food.category === 'protein' ? 'חלבון' : food.category === 'fat' ? 'שומן' : food.category === 'bread' ? 'לחם' : food.category}
                         </span>
                       </button>
@@ -824,76 +933,76 @@ function NutritionCalculatorContent() {
                 </>
               ) : (
                 <>
-                  <div className="bg-accent/30 rounded-2xl p-4 border-2 border-border">
-                    <p className="text-sm text-muted-foreground font-medium mb-1">מזון נבחר:</p>
-                    <p className="text-xl font-black text-foreground">{logFood.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  <div className="bg-gray-50 dark:bg-slate-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-gray-200 dark:border-slate-700">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 font-medium mb-1">מזון נבחר:</p>
+                    <p className="text-lg sm:text-xl font-black text-gray-900 dark:text-white">{logFood.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                       {logFood.proteinPer100g}g חלבון | {logFood.carbsPer100g}g פחמימות | {logFood.fatPer100g}g שומן (ל-100גרם)
                     </p>
                   </div>
 
                   <div>
-                    <label className="text-sm text-muted-foreground font-bold mb-2 block">כמות (גרם):</label>
+                    <label className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 font-bold mb-2 block">כמות (גרם):</label>
                     <Input
                       type="number"
                       step="1"
                       value={logAmount}
                       onChange={(e) => setLogAmount(e.target.value)}
                       placeholder="100"
-                      className="w-full h-14 text-2xl font-black bg-background border-2 border-border focus:border-primary text-foreground text-center rounded-xl"
+                      className="w-full h-12 sm:h-14 text-xl sm:text-2xl font-black bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 focus:border-green-500 dark:focus:border-green-600 text-gray-900 dark:text-white text-center rounded-xl"
                       autoFocus
                     />
                   </div>
 
                   {logAmount && parseFloat(logAmount) > 0 && (
-                    <div className="bg-primary/10 rounded-2xl p-4 border-2 border-primary/30">
-                      <p className="text-xs text-muted-foreground font-medium mb-2">ערכים תזונתיים:</p>
-                      <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-green-500/10 dark:bg-green-600/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-green-500/30 dark:border-green-600/30">
+                      <p className="text-xs text-gray-500 dark:text-slate-400 font-medium mb-2">ערכים תזונתיים:</p>
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         <div className="text-center">
-                          <p className="text-lg font-black text-primary">
+                          <p className="text-base sm:text-lg font-black text-green-600 dark:text-green-400">
                             {calculateMacros(logFood, parseFloat(logAmount)).protein.toFixed(1)}
                           </p>
-                          <p className="text-xs text-muted-foreground">חלבון</p>
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400">חלבון</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-lg font-black text-primary">
+                          <p className="text-base sm:text-lg font-black text-green-600 dark:text-green-400">
                             {calculateMacros(logFood, parseFloat(logAmount)).carbs.toFixed(1)}
                           </p>
-                          <p className="text-xs text-muted-foreground">פחמימות</p>
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400">פחמימות</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-lg font-black text-primary">
+                          <p className="text-base sm:text-lg font-black text-green-600 dark:text-green-400">
                             {calculateMacros(logFood, parseFloat(logAmount)).fat.toFixed(1)}
                           </p>
-                          <p className="text-xs text-muted-foreground">שומן</p>
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400">שומן</p>
                         </div>
                       </div>
-                      <div className="text-center mt-3 pt-3 border-t border-border">
-                        <p className="text-2xl font-black text-foreground">
+                      <div className="text-center mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                        <p className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
                           {calculateMacros(logFood, parseFloat(logAmount)).calories.toFixed(0)}
                         </p>
-                        <p className="text-xs text-muted-foreground">קלוריות</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400">קלוריות</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3">
                     <Button
                       onClick={() => {
                         setLogFood(null);
                         setLogAmount("");
                       }}
                       variant="outline"
-                      className="flex-1 h-12 border-2 border-border text-foreground hover:bg-accent font-bold rounded-xl"
+                      className="flex-1 h-10 sm:h-12 border-2 border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800 font-bold rounded-xl text-sm sm:text-base"
                     >
                       שנה מזון
                     </Button>
                     <Button
                       onClick={handleAddToLog}
                       disabled={!logAmount || parseFloat(logAmount) <= 0 || savingLog}
-                      className="flex-1 h-12 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95"
+                      className="flex-1 h-10 sm:h-12 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 dark:from-green-600 dark:to-green-700 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 text-sm sm:text-base"
                     >
-                      {savingLog ? <Loader2 className="h-5 w-5 animate-spin" /> : "הוסף ללוג"}
+                      {savingLog ? <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" /> : "הוסף ללוג"}
                     </Button>
                   </div>
                 </>

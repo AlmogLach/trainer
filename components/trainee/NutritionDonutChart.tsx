@@ -61,7 +61,7 @@ export function NutritionDonutChart({
                 cy="48"
                 r="42"
                 fill="none"
-                className="stroke-muted/30"
+                className="stroke-gray-200 dark:stroke-slate-700"
                 strokeWidth="8"
               />
               <circle
@@ -69,17 +69,17 @@ export function NutritionDonutChart({
                 cy="48"
                 r="42"
                 fill="none"
-                className="stroke-primary"
+                className="stroke-blue-600 dark:stroke-blue-400"
                 strokeWidth="8"
                 strokeDasharray={`${Math.min(caloriesProgress, circumference * 0.75)} ${circumference * 0.75}`}
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl sm:text-2xl font-black text-primary">{caloriesPercent}%</span>
+              <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">{caloriesPercent}%</span>
             </div>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-2 text-center">קק"ל נצרך</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 font-medium mt-2 text-center">קק"ל נצרך</p>
         </div>
 
         {/* Macros Circle - Blue */}
@@ -91,7 +91,7 @@ export function NutritionDonutChart({
                 cy="48"
                 r="42"
                 fill="none"
-                className="stroke-muted/30"
+                className="stroke-gray-200 dark:stroke-slate-700"
                 strokeWidth="8"
               />
               <circle
@@ -99,14 +99,14 @@ export function NutritionDonutChart({
                 cy="48"
                 r="42"
                 fill="none"
-                className="stroke-blue-500"
+                className="stroke-blue-600 dark:stroke-blue-400"
                 strokeWidth="8"
                 strokeDasharray={`${Math.min((macroPercent / 100) * circumference * 0.75, circumference * 0.75)} ${circumference * 0.75}`}
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl sm:text-2xl font-black text-blue-500">{macroPercent}%</span>
+              <span className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">{macroPercent}%</span>
             </div>
           </div>
         </div>
@@ -115,20 +115,20 @@ export function NutritionDonutChart({
       {/* Macros List */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-primary"></div>
-          <span className="text-sm text-foreground font-bold">נוזלים</span>
+          <div className="w-3 h-3 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+          <span className="text-sm text-gray-900 dark:text-white font-bold">נוזלים</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-          <span className="text-sm text-foreground font-bold">חלבון</span>
+          <div className="w-3 h-3 rounded-full bg-blue-600 dark:bg-blue-400"></div>
+          <span className="text-sm text-gray-900 dark:text-white font-bold">חלבון</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span className="text-sm text-foreground font-bold">שומן</span>
+          <div className="w-3 h-3 rounded-full bg-red-500 dark:bg-red-400"></div>
+          <span className="text-sm text-gray-900 dark:text-white font-bold">שומן</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-          <span className="text-sm text-foreground font-bold">פחמימות</span>
+          <div className="w-3 h-3 rounded-full bg-orange-500 dark:bg-orange-400"></div>
+          <span className="text-sm text-gray-900 dark:text-white font-bold">פחמימות</span>
         </div>
       </div>
     </div>

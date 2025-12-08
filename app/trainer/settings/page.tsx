@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/toast";
 
 // Toggle Switch Component
 const ToggleSwitch = ({ 
@@ -25,7 +26,7 @@ const ToggleSwitch = ({
 }) => {
   return (
     <div className="flex items-center justify-between">
-      {label && <span className="text-white text-sm">{label}</span>}
+      {label && <span className="text-gray-900 dark:text-white text-sm font-medium">{label}</span>}
       <button
         type="button"
         role="switch"
@@ -33,7 +34,7 @@ const ToggleSwitch = ({
         onClick={() => onChange(!checked)}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-          ${checked ? 'bg-[#00ff88]' : 'bg-gray-700'}
+          ${checked ? 'bg-blue-600 dark:bg-blue-500' : 'bg-gray-300 dark:bg-slate-700'}
         `}
       >
         <span
@@ -50,6 +51,7 @@ const ToggleSwitch = ({
 function TrainerSettingsContent() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -198,64 +200,50 @@ function TrainerSettingsContent() {
   };
 
   return (
-    <main className="space-y-4 sm:space-y-6" dir="rtl">
-      {/* Enhanced Header - Connected to top header */}
-      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl sm:rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-        <div className="relative z-10">
-          <p className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider mb-1">FitLog Settings ⚙️</p>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-foreground">הגדרות מאמן</h2>
-          <p className="text-muted-foreground text-xs sm:text-sm mt-2">נהל את החשבון וההעדפות שלך</p>
-        </div>
+    <div className="space-y-8 pb-32" dir="rtl">
+      {/* --- Page Header --- */}
+      <div className="pb-4 border-b border-gray-200 dark:border-slate-800 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">הגדרות מאמן</h1>
+        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">נהל את החשבון וההעדפות שלך</p>
       </div>
-
-      {/* Content with padding */}
-      <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Enhanced Success/Error Messages */}
+      {/* Success/Error Messages */}
       {success && (
-        <Card className="bg-green-500/10 border-2 border-green-500/30 shadow-lg rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+        <Card className="border-none shadow-sm bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/30 rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 text-green-500">
-              <div className="bg-green-500/20 p-2 rounded-xl">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <span className="font-bold">{success}</span>
+            <div className="flex items-center gap-3 text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="font-bold text-sm">{success}</span>
             </div>
           </CardContent>
         </Card>
       )}
 
       {error && (
-        <Card className="bg-red-500/10 border-2 border-red-500/30 shadow-lg rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+        <Card className="border-none shadow-sm bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-500/30 rounded-2xl">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 text-red-500">
-              <div className="bg-red-500/20 p-2 rounded-xl">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <span className="font-bold">{error}</span>
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <AlertCircle className="h-5 w-5" />
+              <span className="font-bold text-sm">{error}</span>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Enhanced Profile Section */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
-        <CardHeader className="p-4 sm:p-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-blue-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
-              <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500" />
-            </div>
-            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">פרופיל</CardTitle>
-          </div>
+      {/* Profile Section */}
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+        <CardHeader className="p-5">
+          <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">פרופיל</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 border-2 border-primary/30 flex items-center justify-center shadow-lg flex-shrink-0">
-              <User className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
-            </div>
-            <div className="flex-1 text-center sm:text-right min-w-0">
-              <p className="text-xl sm:text-2xl font-black text-foreground truncate">{user?.name || "מאמן"}</p>
-              <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1 truncate">{user?.email || ""}</p>
+        <CardContent className="space-y-4 p-5 pt-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{user?.name || "מאמן"}</p>
+                <p className="text-sm text-gray-500 dark:text-slate-400">{user?.email || ""}</p>
+              </div>
             </div>
             <Button
               onClick={() => {
@@ -263,27 +251,21 @@ function TrainerSettingsContent() {
                 setError(null);
                 setSuccess(null);
               }}
-              className="w-full sm:w-auto h-10 sm:h-11 px-4 sm:px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
+              className="gap-2 shadow-sm rounded-xl h-10 px-5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white border-none w-full sm:w-auto"
             >
-              <Edit className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
-              <span className="hidden sm:inline">ערוך פרופיל</span>
-              <span className="sm:hidden">ערוך</span>
+              <Edit className="h-4 w-4" />
+              <span>ערוך פרופיל</span>
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Enhanced Account Settings */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
-        <CardHeader className="p-4 sm:p-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-purple-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
-              <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
-            </div>
-            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">הגדרות חשבון</CardTitle>
-          </div>
+      {/* Account Settings */}
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+        <CardHeader className="p-5">
+          <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">הגדרות חשבון</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 p-4 sm:p-6">
+        <CardContent className="space-y-3 p-5 pt-0">
           <Button
             onClick={() => {
               setShowChangePassword(true);
@@ -291,48 +273,37 @@ function TrainerSettingsContent() {
               setSuccess(null);
             }}
             variant="outline"
-            className="w-full justify-start bg-accent/30 hover:bg-accent border-2 border-border text-foreground h-auto py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all active:scale-98"
+            className="w-full justify-start bg-white dark:bg-slate-900/50 hover:bg-gray-50 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white h-auto py-3 rounded-xl transition-all"
           >
-            <div className="bg-purple-500/20 p-1.5 sm:p-2 rounded-lg ml-2 sm:ml-3">
-              <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
-            </div>
+            <Lock className="h-4 w-4 ml-2 text-gray-600 dark:text-slate-400" />
             <div className="text-right">
-              <p className="font-black text-sm sm:text-base">שינוי סיסמה</p>
-              <p className="text-xs text-muted-foreground font-medium">עדכן את סיסמת החשבון שלך</p>
+              <p className="font-bold text-sm">שינוי סיסמה</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">עדכן את סיסמת החשבון שלך</p>
             </div>
           </Button>
         </CardContent>
       </Card>
 
-      {/* Enhanced General Settings */}
-      <Card className="bg-card border-2 border-border shadow-lg rounded-xl sm:rounded-2xl">
-        <CardHeader className="p-4 sm:p-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-orange-500/20 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl">
-              <Globe className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
-            </div>
-            <CardTitle className="text-foreground text-xl sm:text-2xl font-black">הגדרות כלליות</CardTitle>
-          </div>
+      {/* General Settings */}
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+        <CardHeader className="p-5">
+          <CardTitle className="text-lg font-bold text-gray-900 dark:text-white">הגדרות כלליות</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-          <div className="flex items-center justify-between bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="bg-blue-500/20 p-1.5 sm:p-2 rounded-lg">
-                <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-              </div>
-              <span className="text-foreground text-xs sm:text-sm font-bold">התראות</span>
+        <CardContent className="space-y-3 p-5 pt-0">
+          <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/50 rounded-xl p-4 border border-gray-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <Bell className="h-5 w-5 text-gray-600 dark:text-slate-400" />
+              <span className="text-gray-900 dark:text-white text-sm font-bold">התראות</span>
             </div>
             <ToggleSwitch
               checked={generalSettings.notifications}
               onChange={(checked) => saveGeneralSettings({ ...generalSettings, notifications: checked })}
             />
           </div>
-          <div className="flex items-center justify-between bg-accent/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-border">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="bg-purple-500/20 p-1.5 sm:p-2 rounded-lg">
-                <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
-              </div>
-              <span className="text-foreground text-xs sm:text-sm font-bold">התראות אימייל</span>
+          <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/50 rounded-xl p-4 border border-gray-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <Mail className="h-5 w-5 text-gray-600 dark:text-slate-400" />
+              <span className="text-gray-900 dark:text-white text-sm font-bold">התראות אימייל</span>
             </div>
             <ToggleSwitch
               checked={generalSettings.emailNotifications}
@@ -341,51 +312,43 @@ function TrainerSettingsContent() {
           </div>
           <Button
             onClick={() => {
-              alert('שינוי שפה יושם בקרוב');
+              showToast('שינוי שפה יושם בקרוב', 'info');
             }}
             variant="outline"
-            className="w-full justify-start h-auto py-4 px-4 bg-card hover:bg-accent border-2 border-border rounded-xl transition-all"
+            className="w-full justify-start h-auto py-3 px-4 bg-white dark:bg-slate-900/50 hover:bg-gray-50 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-800 rounded-xl transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className="bg-green-500/20 p-2 rounded-lg">
-                <Globe className="h-5 w-5 text-green-500" />
-              </div>
-              <span className="text-sm font-bold text-foreground">שפה ({generalSettings.language})</span>
-            </div>
+            <Globe className="h-5 w-5 ml-2 text-gray-600 dark:text-slate-400" />
+            <span className="text-sm font-bold text-gray-900 dark:text-white">שפה ({generalSettings.language})</span>
           </Button>
           <Button
             onClick={() => {
-              alert('עזרה ותמיכה יושם בקרוב');
+              showToast('עזרה ותמיכה יושם בקרוב', 'info');
             }}
             variant="outline"
-            className="w-full justify-start h-auto py-4 px-4 bg-card hover:bg-accent border-2 border-border rounded-xl transition-all"
+            className="w-full justify-start h-auto py-3 px-4 bg-white dark:bg-slate-900/50 hover:bg-gray-50 dark:hover:bg-slate-800 border border-gray-200 dark:border-slate-800 rounded-xl transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className="bg-orange-500/20 p-2 rounded-lg">
-                <HelpCircle className="h-5 w-5 text-orange-500" />
-              </div>
-              <span className="text-sm font-bold text-foreground">עזרה ותמיכה</span>
-            </div>
+            <HelpCircle className="h-5 w-5 ml-2 text-gray-600 dark:text-slate-400" />
+            <span className="text-sm font-bold text-gray-900 dark:text-white">עזרה ותמיכה</span>
           </Button>
         </CardContent>
       </Card>
 
-      {/* Enhanced Logout Button */}
-      <Card className="bg-gradient-to-r from-red-500/10 to-red-500/5 border-2 border-red-500/30 shadow-lg rounded-xl sm:rounded-2xl">
-        <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+      {/* Logout Button */}
+      <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+        <CardContent className="p-5">
           <Button
             onClick={handleLogout}
             disabled={loading}
-            className="w-full h-12 sm:h-14 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white font-black rounded-lg sm:rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 text-base sm:text-lg"
+            className="w-full h-12 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-bold rounded-xl transition-all"
           >
             {loading ? (
               <>
-                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 ml-1.5 sm:ml-2 animate-spin" />
+                <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                 מתנתק...
               </>
             ) : (
               <>
-                <LogOut className="h-5 w-5 sm:h-6 sm:w-6 ml-1.5 sm:ml-2" />
+                <LogOut className="h-5 w-5 ml-2" />
                 התנתק מהמערכת
               </>
             )}
@@ -393,20 +356,20 @@ function TrainerSettingsContent() {
         </CardContent>
       </Card>
 
-      {/* Enhanced Version */}
+      {/* Version */}
       <div className="text-center">
-        <div className="inline-block bg-accent/30 px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-border">
-          <p className="text-muted-foreground text-xs sm:text-sm font-bold">FitLog גרסה 1.2.0</p>
+        <div className="inline-block bg-gray-100 dark:bg-slate-800 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-800">
+          <p className="text-gray-500 dark:text-slate-400 text-xs font-bold">FitLog גרסה 1.2.0</p>
         </div>
       </div>
 
-      {/* Enhanced Edit Profile Modal */}
+      {/* Edit Profile Modal */}
       {showEditProfile && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-xl sm:rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
-            <CardHeader className="p-4 sm:p-6">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 w-full max-w-md shadow-2xl rounded-2xl">
+            <CardHeader className="p-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground text-xl sm:text-2xl font-black">ערוך פרופיל</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white text-xl font-bold">ערוך פרופיל</CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -417,52 +380,52 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg sm:rounded-xl"
+                  className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl"
                 >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+            <CardContent className="space-y-4 p-5 pt-0">
               {error && (
-                <div className="p-4 bg-red-500/10 border-2 border-red-500/30 rounded-xl text-red-500 text-sm font-bold">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
                   {error}
                 </div>
               )}
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">שם</label>
+                <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold">שם</label>
                 <Input
                   type="text"
                   value={editedName}
                   onChange={(e) => setEditedName(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                  className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-12 font-medium focus:border-blue-500 transition-all"
                   placeholder="הזן שם"
                 />
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">אימייל</label>
+                <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold">אימייל</label>
                 <Input
                   type="email"
                   value={editedEmail}
                   onChange={(e) => setEditedEmail(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                  className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-12 font-medium focus:border-blue-500 transition-all"
                   placeholder="הזן אימייל"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <Button
                   onClick={handleEditProfile}
                   disabled={loading || !editedName || !editedEmail}
-                  className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
+                  className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl transition-all"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                       שומר...
                     </>
                   ) : (
                     <>
-                      <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+                      <Save className="h-5 w-5 ml-2" />
                       שמור
                     </>
                   )}
@@ -476,7 +439,7 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
+                  className="flex-1 h-12 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 font-bold rounded-xl transition-all"
                 >
                   ביטול
                 </Button>
@@ -486,13 +449,13 @@ function TrainerSettingsContent() {
         </div>
       )}
 
-      {/* Enhanced Change Password Modal */}
+      {/* Change Password Modal */}
       {showChangePassword && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-          <Card className="bg-card border-2 border-border w-full max-w-md shadow-2xl rounded-xl sm:rounded-2xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
-            <CardHeader className="p-4 sm:p-6">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 w-full max-w-md shadow-2xl rounded-2xl">
+            <CardHeader className="p-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground text-xl sm:text-2xl font-black">שינוי סיסמה</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white text-xl font-bold">שינוי סיסמה</CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -504,52 +467,52 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg sm:rounded-xl"
+                  className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl"
                 >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+            <CardContent className="space-y-4 p-5 pt-0">
               {error && (
-                <div className="p-3 sm:p-4 bg-red-500/10 border-2 border-red-500/30 rounded-lg sm:rounded-xl text-red-500 text-xs sm:text-sm font-bold">
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
                   {error}
                 </div>
               )}
               <div>
-                <label className="text-xs sm:text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">סיסמה חדשה</label>
+                <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold">סיסמה חדשה</label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-medium focus:border-primary transition-all text-sm sm:text-base"
+                  className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-12 font-medium focus:border-blue-500 transition-all"
                   placeholder="הזן סיסמה חדשה (לפחות 6 תווים)"
                 />
               </div>
               <div>
-                <label className="text-xs sm:text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">אישור סיסמה</label>
+                <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold">אישור סיסמה</label>
                 <Input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="bg-accent/30 border-2 border-border text-foreground rounded-lg sm:rounded-xl h-11 sm:h-12 font-medium focus:border-primary transition-all text-sm sm:text-base"
+                  className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-12 font-medium focus:border-blue-500 transition-all"
                   placeholder="הזן שוב את הסיסמה החדשה"
                 />
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <Button
                   onClick={handleChangePassword}
                   disabled={loading || !newPassword || !confirmPassword}
-                  className="flex-1 h-11 sm:h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm sm:text-base"
+                  className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl transition-all"
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2 animate-spin" />
+                      <Loader2 className="h-5 w-5 ml-2 animate-spin" />
                       מעדכן...
                     </>
                   ) : (
                     <>
-                      <Save className="h-4 w-4 sm:h-5 sm:w-5 ml-1.5 sm:ml-2" />
+                      <Save className="h-5 w-5 ml-2" />
                       עדכן סיסמה
                     </>
                   )}
@@ -564,7 +527,7 @@ function TrainerSettingsContent() {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className="flex-1 h-11 sm:h-12 border-2 border-border text-foreground hover:bg-accent font-black rounded-lg sm:rounded-xl transition-all active:scale-95 text-sm sm:text-base"
+                  className="flex-1 h-12 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 font-bold rounded-xl transition-all"
                 >
                   ביטול
                 </Button>
@@ -573,8 +536,7 @@ function TrainerSettingsContent() {
           </Card>
         </div>
       )}
-      </div>
-    </main>
+    </div>
   );
 }
 
@@ -585,4 +547,3 @@ export default function TrainerSettingsPage() {
     </ProtectedRoute>
   );
 }
-

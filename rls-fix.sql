@@ -12,3 +12,5 @@ ALTER TABLE workout_plans ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "workout_plans_policy" ON workout_plans
 FOR ALL USING (true)
 WITH CHECK (true);
+
+

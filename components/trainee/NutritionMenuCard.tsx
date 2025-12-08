@@ -10,16 +10,15 @@ interface NutritionMenuCardProps {
 }
 
 export function NutritionMenuCard({ menu, variant = "default" }: NutritionMenuCardProps) {
-  const isDark = variant === "dark";
-  const cardClassName = isDark ? "bg-[#1a2332] border-gray-800" : "bg-card border-border shadow-md";
-  const titleClassName = isDark ? "text-white" : "text-foreground";
-  const textClassName = isDark ? "text-gray-400" : "text-muted-foreground";
-  const mealBgClassName = isDark ? "bg-[#0f1a2a]" : "bg-accent/30";
-  const mealTextClassName = isDark ? "text-white" : "text-foreground";
-  const foodBgClassName = isDark ? "bg-[#1a2332]" : "bg-card";
-  const foodBorderClassName = isDark ? "border-gray-800" : "border-border";
-  const foodTextClassName = isDark ? "text-white" : "text-foreground";
-  const foodAmountClassName = isDark ? "text-gray-400" : "text-muted-foreground";
+  const cardClassName = "border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl";
+  const titleClassName = "text-gray-900 dark:text-white";
+  const textClassName = "text-gray-500 dark:text-slate-400";
+  const mealBgClassName = "bg-gray-50 dark:bg-slate-800/50";
+  const mealTextClassName = "text-gray-900 dark:text-white";
+  const foodBgClassName = "bg-white dark:bg-slate-900/50";
+  const foodBorderClassName = "border-gray-200 dark:border-slate-800";
+  const foodTextClassName = "text-gray-900 dark:text-white";
+  const foodAmountClassName = "text-gray-500 dark:text-slate-400";
 
   if (!menu || !menu.meals || menu.meals.length === 0) {
     return (

@@ -43,28 +43,28 @@ export function BodyDataCard({ weightHistory, onAddWeight }: BodyDataCardProps) 
   const weightPath = generateWeightPath(weightHistory);
 
   return (
-    <Card className="bg-gradient-to-br from-card via-card to-accent/10 border-2 border-border rounded-2xl sm:rounded-[2rem] shadow-lg">
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle className="text-foreground text-lg sm:text-xl font-black">נתוני גוף</CardTitle>
+    <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
+      <CardHeader className="p-5">
+        <CardTitle className="text-gray-900 dark:text-white text-lg sm:text-xl font-bold">נתוני גוף</CardTitle>
       </CardHeader>
-      <CardContent className="p-4 sm:p-6 pt-0">
+      <CardContent className="p-5 pt-0">
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {/* Morning Weight */}
           <div className="flex flex-col justify-center">
             {morningWeight ? (
               <>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1 font-medium">משקל הבוקר:</p>
-                <p className="text-2xl sm:text-3xl font-black text-foreground">{morningWeight} ק"ג</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mb-1 font-medium">משקל הבוקר:</p>
+                <p className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">{morningWeight} ק"ג</p>
               </>
             ) : (
               <>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1 font-medium">משקל הבוקר:</p>
-                <p className="text-lg text-muted-foreground">אין נתונים</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 mb-1 font-medium">משקל הבוקר:</p>
+                <p className="text-lg text-gray-500 dark:text-slate-400">אין נתונים</p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onAddWeight}
-                  className="mt-2 border-input text-muted-foreground hover:bg-accent text-xs sm:text-sm h-8 sm:h-9"
+                  className="mt-2 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 text-xs sm:text-sm h-8 sm:h-9"
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
                   הוסף משקל
@@ -105,7 +105,7 @@ export function BodyDataCard({ weightHistory, onAddWeight }: BodyDataCardProps) 
                 </svg>
               </div>
             ) : (
-              <div className="w-full h-20 sm:h-24 flex items-center justify-center text-muted-foreground text-xs">
+              <div className="w-full h-20 sm:h-24 flex items-center justify-center text-gray-500 dark:text-slate-400 text-xs">
                 <p className="text-center">נדרשות 2 שקילות לגרף</p>
               </div>
             )}

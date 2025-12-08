@@ -1,0 +1,659 @@
+import { supabase } from '../supabase';
+import type {
+  Exercise,
+  WorkoutPlan,
+  Routine,
+  RoutineExercise,
+  WorkoutLog,
+  SetLog,
+  CreateExercise,
+  CreateWorkoutPlan,
+  CreateRoutine,
+  CreateRoutineExercise,
+  CreateWorkoutLog,
+  CreateSetLog,
+  WorkoutLogWithDetails,
+  RoutineWithExercises,
+} from '../types';
+import { handleDatabaseError, DatabaseError } from './errors';
+import { getTrainerTrainees } from './users';
+
+// ============= EXERCISES =============
+export async function getExerciseLibrary(): Promise<Exercise[]> {
+  const { data, error } = await supabase
+    .from('exercise_library')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getExercise(exerciseId: string): Promise<Exercise | null> {
+  const { data, error } = await supabase
+    .from('exercise_library')
+    .select('*')
+    .eq('id', exerciseId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getExerciseByName(name: string): Promise<Exercise | null> {
+  const { data, error } = await supabase
+    .from('exercise_library')
+    .select('*')
+    .ilike('name', name.trim())
+    .maybeSingle();
+
+  if (error && error.code !== 'PGRST116') throw error;
+  return data || null;
+}
+
+export async function createExercise(exercise: CreateExercise): Promise<Exercise> {
+  const { data, error } = await supabase
+    .from('exercise_library')
+    .insert(exercise)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateExercise(exerciseId: string, updates: Partial<Exercise>): Promise<Exercise> {
+  const { data, error } = await supabase
+    .from('exercise_library')
+    .update(updates)
+    .eq('id', exerciseId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ============= WORKOUT PLANS =============
+export async function getActiveWorkoutPlan(traineeId: string): Promise<WorkoutPlan | null> {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .select('*')
+    .eq('trainee_id', traineeId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching workout plan:', error);
+    throw error;
+  }
+  return data || null;
+}
+
+export async function createWorkoutPlan(plan: CreateWorkoutPlan): Promise<WorkoutPlan> {
+  const { data: existingTrainer } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', plan.trainer_id)
+    .single();
+
+  if (!existingTrainer) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.name || user.email || 'Trainer',
+          role: 'trainer'
+        });
+    }
+  }
+
+  const { data: existingTrainee } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', plan.trainee_id)
+    .single();
+
+  if (!existingTrainee) {
+    await supabase
+      .from('users')
+      .insert({
+        id: plan.trainee_id,
+        email: `trainee-${plan.trainee_id}@example.com`,
+        name: 'Trainee',
+        role: 'trainee',
+        trainer_id: plan.trainer_id
+      });
+  }
+
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .insert(plan)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWorkoutPlan(planId: string, updates: Partial<WorkoutPlan>): Promise<WorkoutPlan> {
+  const { data, error } = await supabase
+    .from('workout_plans')
+    .update(updates)
+    .eq('id', planId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ============= ROUTINES =============
+export async function getRoutinesWithExercises(planId: string): Promise<RoutineWithExercises[]> {
+  const { data, error } = await supabase
+    .from('routines')
+    .select(`
+      *,
+      routine_exercises (
+        *,
+        exercise:exercise_library (*)
+      )
+    `)
+    .eq('plan_id', planId)
+    .order('order_index', { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []).map(routine => ({
+    ...routine,
+    routine_exercises: (routine.routine_exercises || []).map((re: any) => ({
+      ...re,
+      exercise: re.exercise,
+    })),
+  }));
+}
+
+export async function createRoutine(routine: CreateRoutine): Promise<Routine> {
+  const { data, error } = await supabase
+    .from('routines')
+    .insert(routine)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRoutine(routineId: string, updates: Partial<Routine>): Promise<Routine> {
+  const { data, error } = await supabase
+    .from('routines')
+    .update(updates)
+    .eq('id', routineId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRoutine(routineId: string): Promise<void> {
+  const { error } = await supabase
+    .from('routines')
+    .delete()
+    .eq('id', routineId);
+
+  if (error) throw error;
+}
+
+// ============= ROUTINE EXERCISES =============
+export async function createRoutineExercise(exercise: CreateRoutineExercise): Promise<RoutineExercise> {
+  const { data, error } = await supabase
+    .from('routine_exercises')
+    .insert(exercise)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateRoutineExercise(
+  exerciseId: string,
+  updates: Partial<RoutineExercise>
+): Promise<RoutineExercise> {
+  const { data, error } = await supabase
+    .from('routine_exercises')
+    .update(updates)
+    .eq('id', exerciseId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRoutineExercise(exerciseId: string): Promise<void> {
+  const { error } = await supabase
+    .from('routine_exercises')
+    .delete()
+    .eq('id', exerciseId);
+
+  if (error) throw error;
+}
+
+// ============= WORKOUT LOGS =============
+export async function getWorkoutLogs(traineeId: string, limit?: number, startDate?: string): Promise<WorkoutLogWithDetails[]> {
+  let query = supabase
+    .from('workout_logs')
+    .select(`
+      *,
+      routine:routines (*),
+      set_logs (
+        *,
+        exercise:exercise_library (*)
+      )
+    `)
+    .eq('user_id', traineeId)
+    .order('date', { ascending: false });
+
+  if (startDate) {
+    query = query.gte('date', startDate);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  if (error) handleDatabaseError('getWorkoutLogs', error);
+
+  return (data || []).map(log => ({
+    ...log,
+    routine: log.routine,
+    set_logs: (log.set_logs || []).map((sl: any) => ({
+      ...sl,
+      exercise: sl.exercise,
+    })),
+  }));
+}
+
+export async function getWorkoutLogsForUsers(
+  traineeIds: string[],
+  startDate?: string
+): Promise<Map<string, WorkoutLogWithDetails[]>> {
+  if (traineeIds.length === 0) {
+    return new Map();
+  }
+
+  let query = supabase
+    .from('workout_logs')
+    .select(`
+      *,
+      routine:routines (*),
+      set_logs (
+        *,
+        exercise:exercise_library (*)
+      )
+    `)
+    .in('user_id', traineeIds)
+    .order('date', { ascending: false });
+
+  if (startDate) {
+    query = query.gte('date', startDate);
+  }
+
+  const { data, error } = await query;
+
+  if (error) handleDatabaseError('getWorkoutLogsForUsers', error);
+
+  const logsMap = new Map<string, WorkoutLogWithDetails[]>();
+  
+  (data || []).forEach(log => {
+    const traineeId = log.user_id;
+    if (!logsMap.has(traineeId)) {
+      logsMap.set(traineeId, []);
+    }
+    
+    logsMap.get(traineeId)!.push({
+      ...log,
+      routine: log.routine,
+      set_logs: (log.set_logs || []).map((sl: any) => ({
+        ...sl,
+        exercise: sl.exercise,
+      })),
+    });
+  });
+
+  return logsMap;
+}
+
+export async function getWorkoutLog(logId: string): Promise<WorkoutLogWithDetails | null> {
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .select(`
+      *,
+      routine:routines (*),
+      set_logs (
+        *,
+        exercise:exercise_library (*)
+      )
+    `)
+    .eq('id', logId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') throw error;
+  return data || null;
+}
+
+export async function createWorkoutLog(log: CreateWorkoutLog): Promise<WorkoutLog> {
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .insert(log)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWorkoutLog(
+  logId: string,
+  updates: Partial<WorkoutLog>
+): Promise<WorkoutLog> {
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .update(updates)
+    .eq('id', logId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ============= SET LOGS =============
+export async function createSetLog(setLog: CreateSetLog): Promise<SetLog> {
+  const { data, error } = await supabase
+    .from('set_logs')
+    .insert(setLog)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ============= BODY WEIGHT =============
+export async function getBodyWeightHistory(traineeId: string): Promise<Array<{ date: string; weight: number }>> {
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .select('date, body_weight')
+    .eq('user_id', traineeId)
+    .not('body_weight', 'is', null)
+    .order('date', { ascending: false });
+
+  if (error) handleDatabaseError('getBodyWeightHistory', error);
+
+  const weightMap = new Map<string, number>();
+  (data || []).forEach(log => {
+    if (log.body_weight && !weightMap.has(log.date)) {
+      weightMap.set(log.date, log.body_weight);
+    }
+  });
+
+  return Array.from(weightMap.entries())
+    .map(([date, weight]) => ({ date, weight }))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export async function getBodyWeightHistoryForUsers(
+  traineeIds: string[]
+): Promise<Map<string, Array<{ date: string; weight: number }>>> {
+  if (traineeIds.length === 0) {
+    return new Map();
+  }
+
+  const { data, error } = await supabase
+    .from('workout_logs')
+    .select('user_id, date, body_weight')
+    .in('user_id', traineeIds)
+    .not('body_weight', 'is', null)
+    .order('date', { ascending: false });
+
+  if (error) handleDatabaseError('getBodyWeightHistoryForUsers', error);
+
+  const weightsMap = new Map<string, Map<string, number>>();
+  
+  (data || []).forEach(log => {
+    const traineeId = log.user_id;
+    if (!weightsMap.has(traineeId)) {
+      weightsMap.set(traineeId, new Map());
+    }
+    
+    const traineeWeights = weightsMap.get(traineeId)!;
+    if (!traineeWeights.has(log.date)) {
+      traineeWeights.set(log.date, log.body_weight);
+    }
+  });
+
+  const result = new Map<string, Array<{ date: string; weight: number }>>();
+  
+  weightsMap.forEach((dateMap, traineeId) => {
+    const weights = Array.from(dateMap.entries())
+      .map(([date, weight]) => ({ date, weight }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    result.set(traineeId, weights);
+  });
+
+  return result;
+}
+
+export async function saveBodyWeight(traineeId: string, weight: number): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+  
+  try {
+    const { data: existingLogs, error: fetchError } = await supabase
+      .from('workout_logs')
+      .select('id, routine_id')
+      .eq('user_id', traineeId)
+      .eq('date', today)
+      .limit(1);
+
+    if (fetchError) handleDatabaseError('saveBodyWeight (fetch)', fetchError);
+
+    if (existingLogs && existingLogs.length > 0) {
+      const { error: updateError } = await supabase
+        .from('workout_logs')
+        .update({ body_weight: weight })
+        .eq('id', existingLogs[0].id);
+
+      if (updateError) handleDatabaseError('saveBodyWeight (update)', updateError);
+    } else {
+      const plan = await getActiveWorkoutPlan(traineeId);
+      if (!plan) {
+        throw new DatabaseError('אין תוכנית אימונים פעילה');
+      }
+
+      const routines = await getRoutinesWithExercises(plan.id);
+      if (routines.length === 0) {
+        throw new DatabaseError('אין routines בתוכנית');
+      }
+      const routineId = routines[0].id;
+
+      const { error: insertError } = await supabase
+        .from('workout_logs')
+        .insert({
+          user_id: traineeId,
+          routine_id: routineId,
+          date: today,
+          body_weight: weight,
+          start_time: new Date().toISOString(),
+          completed: false,
+        });
+
+      if (insertError) handleDatabaseError('saveBodyWeight (insert)', insertError);
+    }
+  } catch (error) {
+    if (error instanceof DatabaseError) {
+      throw error;
+    }
+    handleDatabaseError('saveBodyWeight', error);
+  }
+}
+
+// ============= TRAINER STATISTICS =============
+export interface TrainerStats {
+  activeTrainees: number;
+  workoutsToday: { completed: number; total: number };
+  averageCompliance: number;
+  alerts: number;
+}
+
+export async function getTrainerStats(trainerId: string): Promise<TrainerStats> {
+  const { data: trainees, error: traineesError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('trainer_id', trainerId)
+    .eq('role', 'trainee');
+
+  if (traineesError) throw traineesError;
+  const traineeIds = trainees?.map(t => t.id) || [];
+
+  if (traineeIds.length === 0) {
+    return {
+      activeTrainees: 0,
+      workoutsToday: { completed: 0, total: 0 },
+      averageCompliance: 0,
+      alerts: 0,
+    };
+  }
+
+  const { data: activePlans, error: plansError } = await supabase
+    .from('workout_plans')
+    .select('trainee_id, weekly_target_workouts')
+    .eq('trainer_id', trainerId)
+    .eq('is_active', true)
+    .in('trainee_id', traineeIds);
+
+  if (plansError) throw plansError;
+  const activeTrainees = activePlans?.length || 0;
+
+  const today = new Date().toISOString().split('T')[0];
+  const { data: todayLogs, error: logsError } = await supabase
+    .from('workout_logs')
+    .select('user_id, completed')
+    .eq('date', today)
+    .in('user_id', traineeIds);
+
+  if (logsError) throw logsError;
+  const completedToday = todayLogs?.filter(log => log.completed).length || 0;
+  const totalTarget = activePlans?.reduce((sum, plan) => sum + (plan.weekly_target_workouts || 0), 0) || 0;
+  const workoutsToday = { completed: completedToday, total: totalTarget };
+
+  let totalCompliance = 0;
+  let complianceCount = 0;
+  
+  for (const plan of activePlans || []) {
+    const traineeId = plan.trainee_id;
+    const target = plan.weekly_target_workouts || 0;
+    
+    if (target > 0) {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const { data: weekLogs } = await supabase
+        .from('workout_logs')
+        .select('completed')
+        .eq('user_id', traineeId)
+        .gte('date', weekStart.toISOString().split('T')[0])
+        .eq('completed', true);
+      
+      const completed = weekLogs?.length || 0;
+      const compliance = Math.min(100, Math.round((completed / target) * 100));
+      totalCompliance += compliance;
+      complianceCount++;
+    }
+  }
+  
+  const averageCompliance = complianceCount > 0 ? Math.round(totalCompliance / complianceCount) : 0;
+
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0];
+  
+  const { data: recentLogs } = await supabase
+    .from('workout_logs')
+    .select('user_id')
+    .in('user_id', traineeIds)
+    .gte('date', threeDaysAgoStr);
+  
+  const traineesWithRecentWorkouts = new Set(recentLogs?.map(log => log.user_id) || []);
+  const alerts = traineeIds.filter(id => !traineesWithRecentWorkouts.has(id)).length;
+
+  return {
+    activeTrainees,
+    workoutsToday,
+    averageCompliance,
+    alerts,
+  };
+}
+
+export interface TraineeWithStatus {
+  id: string;
+  name: string;
+  planName: string;
+  status: 'active' | 'inactive';
+  lastWorkout: string | null;
+  compliance: number;
+}
+
+export async function getTraineesWithStatus(trainerId: string): Promise<TraineeWithStatus[]> {
+  const trainees = await getTrainerTrainees(trainerId);
+  const traineeIds = trainees.map(t => t.id);
+
+  if (traineeIds.length === 0) return [];
+
+  const { data: plans } = await supabase
+    .from('workout_plans')
+    .select('trainee_id, name, is_active')
+    .eq('trainer_id', trainerId)
+    .in('trainee_id', traineeIds);
+
+  const { data: logs } = await supabase
+    .from('workout_logs')
+    .select('user_id, date')
+    .in('user_id', traineeIds)
+    .order('date', { ascending: false });
+
+  const traineesWithStatus: TraineeWithStatus[] = [];
+  
+  for (const trainee of trainees) {
+    const plan = plans?.find(p => p.trainee_id === trainee.id);
+    const traineeLogs = logs?.filter(l => l.user_id === trainee.id) || [];
+    const lastWorkout = traineeLogs.length > 0 ? traineeLogs[0].date : null;
+    
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    const weekLogs = traineeLogs.filter(l => l.date >= weekStart.toISOString().split('T')[0]);
+    const compliance = plan?.is_active ? Math.min(100, Math.round((weekLogs.length / 5) * 100)) : 0;
+
+    traineesWithStatus.push({
+      id: trainee.id,
+      name: trainee.name,
+      planName: plan?.name || 'אין תוכנית',
+      status: plan?.is_active ? 'active' : 'inactive',
+      lastWorkout,
+      compliance,
+    });
+  }
+
+  return traineesWithStatus;
+}
+
+
+

@@ -9,7 +9,22 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        outfit: ["var(--font-outfit)", "sans-serif"],
+        "open-sans": ["var(--font-open-sans)", "sans-serif"],
+        sans: ["var(--font-outfit)", "sans-serif"],
+      },
       colors: {
+        // Figma Color Palette
+        "grey-g1": "#EAEAF0",
+        "grey-g2": "#B4B4CA",
+        "grey-g3": "#8D8DAF",
+        "grey-g5": "#2A2A3C",
+        "grey-g6": "#111118",
+        "primary-g3": "#4D91EF",
+        "primary-g4": "#146BE6",
+        "accent-orange": "#EC8C56",
+        "accent-green": "#1E8F71",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

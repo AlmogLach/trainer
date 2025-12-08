@@ -23,12 +23,14 @@ import type { NutritionMenu } from "@/lib/types";
 import { MealCard, type Meal } from "@/components/trainer/nutrition/MealCard";
 import { FoodHistorySidebar } from "@/components/trainer/nutrition/FoodHistorySidebar";
 import { MacrosDistribution } from "@/components/trainer/nutrition/MacrosDistribution";
+import { useToast } from "@/components/ui/toast";
 
 function EditNutritionPlanContent() {
   const params = useParams();
   const router = useRouter();
   const traineeId = params.traineeId as string;
   const { user } = useAuth();
+  const { showToast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +62,7 @@ function EditNutritionPlanContent() {
       
       const workoutPlan = await getActiveWorkoutPlan(traineeId);
       if (!workoutPlan) {
-        alert("לא נמצאה תוכנית תזונה למתאמן זה");
+        showToast("לא נמצאה תוכנית תזונה למתאמן זה", "error", 4000);
         router.push("/trainer/nutrition-plans");
         return;
       }
@@ -77,7 +79,7 @@ function EditNutritionPlanContent() {
       }
     } catch (error: any) {
       console.error("Error loading nutrition plan:", error);
-      alert("שגיאה בטעינת תוכנית התזונה: " + error.message);
+      showToast("שגיאה בטעינת תוכנית התזונה: " + error.message, "error", 5000);
     } finally {
       setLoading(false);
     }
@@ -148,7 +150,7 @@ function EditNutritionPlanContent() {
 
   const removeMeal = (mealId: string) => {
     if (meals.length <= 1) {
-      alert("חייב להיות לפחות ארוחה אחת");
+      showToast("חייב להיות לפחות ארוחה אחת", "warning", 3000);
       return;
     }
     setMeals(prev => prev.filter(meal => meal.id !== mealId));
@@ -185,17 +187,17 @@ function EditNutritionPlanContent() {
 
   const handleSave = async () => {
     if (!planName.trim()) {
-      alert("אנא הזן שם לתוכנית");
+      showToast("אנא הזן שם לתוכנית", "warning", 3000);
       return;
     }
 
     if (proteinPercent + carbsPercent + fatPercent !== 100) {
-      alert("סכום האחוזים של המקרונוטריינטים חייב להיות 100%");
+      showToast("סכום האחוזים של המקרונוטריינטים חייב להיות 100%", "warning", 4000);
       return;
     }
 
     if (!workoutPlanId) {
-      alert("שגיאה: לא נמצא מזהה תוכנית");
+      showToast("שגיאה: לא נמצא מזהה תוכנית", "error", 4000);
       return;
     }
 
@@ -232,7 +234,7 @@ function EditNutritionPlanContent() {
       router.push("/trainer/nutrition-plans");
     } catch (error: any) {
       console.error("Error saving nutrition plan:", error);
-      alert("שגיאה בשמירת תוכנית התזונה: " + (error.message || error.toString()));
+      showToast("שגיאה בשמירת תוכנית התזונה: " + (error.message || error.toString()), "error", 5000);
     } finally {
       setSaving(false);
     }
@@ -240,77 +242,81 @@ function EditNutritionPlanContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
+      <div className="h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center gap-6">
+        <div className="relative">
+          {/* Outer pulsing circle */}
+          <div className="absolute inset-0 rounded-full bg-blue-500/20 dark:bg-blue-500/10 animate-ping" />
+          {/* Middle pulsing circle */}
+          <div className="absolute inset-2 rounded-full bg-blue-500/30 dark:bg-blue-500/20 animate-pulse" />
+          {/* Spinner */}
           <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
+            <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 h-16 w-16" strokeWidth={2.5} />
           </div>
-          <div>
-            <p className="text-xl font-black text-foreground animate-pulse">טוען תוכנית תזונה...</p>
-            <p className="text-sm text-muted-foreground mt-1">מכין את עורך התזונה</p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
+        </div>
+        <div className="text-center space-y-2">
+          <p className="text-base font-bold text-gray-900 dark:text-white">טוען תוכנית תזונה...</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">מכין את עורך התזונה</p>
+        </div>
+        {/* Loading dots */}
+        <div className="flex gap-2">
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-5 lg:p-6" dir="rtl">
-      <div className="max-w-7xl mx-auto flex gap-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 p-4 sm:p-5 lg:p-6 pb-32" dir="rtl">
+      <div className="max-w-7xl mx-auto flex gap-4 sm:gap-6">
         {/* Main Content */}
-        <div className="flex-1 space-y-6">
-        {/* Enhanced Header - Connected to top header */}
-        <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-[2rem] px-4 lg:px-6 py-4 sm:py-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl -z-10" />
-          <div className="relative z-10 flex items-center gap-4">
+        <div className="flex-1 space-y-4 sm:space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800 mb-4 sm:mb-6">
+          <div className="flex items-center gap-4">
             <Link href="/trainer/nutrition-plans">
-              <div className="bg-background p-2.5 rounded-2xl shadow-md border border-border hover:bg-accent/50 transition-all active:scale-95">
-                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-              </div>
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl">
+                <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-slate-400" />
+              </Button>
             </Link>
-            <div className="flex-1">
-              <p className="text-primary font-bold text-sm uppercase tracking-wider mb-1">FitLog Nutrition Editor 🍎</p>
-              <h1 className="text-4xl font-black text-foreground">ערוך תוכנית תזונה</h1>
+            <div>
+              <p className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-wider mb-1">FitLog Nutrition Editor</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">ערוך תוכנית תזונה</h1>
             </div>
           </div>
         </div>
 
         {/* Content with padding */}
-        <div className="px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6">
         {/* Enhanced Basic Info Card */}
-        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
+        <Card className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 shadow-md rounded-2xl">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500/20 p-2.5 rounded-2xl">
-                <Apple className="h-6 w-6 text-blue-500" />
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-2xl">
+                <Apple className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <CardTitle className="text-foreground text-2xl font-black">פרטים בסיסיים</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white text-xl sm:text-2xl font-black">פרטים בסיסיים</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">שם התוכנית:</label>
+              <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold uppercase tracking-wider">שם התוכנית:</label>
               <Input
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder="לדוגמה: חיטוב מתקדם"
-                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-11 sm:h-12 font-medium focus:border-blue-600 dark:focus:border-blue-500 transition-all"
               />
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block font-bold uppercase tracking-wider">יעד קלורי (קק"ל):</label>
+              <label className="text-sm text-gray-500 dark:text-slate-400 mb-2 block font-bold uppercase tracking-wider">יעד קלורי (קק"ל):</label>
               <Input
                 type="number"
                 value={calorieTarget}
                 onChange={(e) => setCalorieTarget(parseInt(e.target.value) || 2500)}
-                className="bg-accent/30 border-2 border-border text-foreground rounded-xl h-12 font-medium focus:border-primary transition-all"
+                className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl h-11 sm:h-12 font-medium focus:border-blue-600 dark:focus:border-blue-500 transition-all"
               />
             </div>
 
@@ -326,31 +332,31 @@ function EditNutritionPlanContent() {
         </Card>
 
         {/* Enhanced Meals Card */}
-        <Card className="bg-card border-2 border-border shadow-lg rounded-2xl">
+        <Card className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 shadow-md rounded-2xl">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-orange-500/20 p-2.5 rounded-2xl">
-                  <Apple className="h-6 w-6 text-orange-500" />
+                <div className="bg-orange-100 dark:bg-orange-900/30 p-2.5 rounded-2xl">
+                  <Apple className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400" />
                 </div>
-                <CardTitle className="text-foreground text-2xl font-black">ארוחות ומזונות</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-white text-xl sm:text-2xl font-black">ארוחות ומזונות</CardTitle>
                 {meals.length > 0 && (
-                  <div className="bg-orange-500/10 px-3 py-1 rounded-lg border border-orange-500/30">
-                    <span className="text-orange-500 font-black text-sm">{meals.length}</span>
-                    <span className="text-muted-foreground text-xs mr-1">ארוחות</span>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 px-2 sm:px-3 py-1 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <span className="text-orange-600 dark:text-orange-400 font-black text-xs sm:text-sm">{meals.length}</span>
+                    <span className="text-gray-500 dark:text-slate-400 text-xs mr-1">ארוחות</span>
                   </div>
                 )}
               </div>
               <Button
                 onClick={addMeal}
-                className="h-11 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background font-black rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                className="h-10 sm:h-11 px-4 sm:px-6 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 text-sm sm:text-base"
               >
-                <Plus className="h-5 w-5 ml-2" />
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                 הוסף ארוחה
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6">
             {meals.map((meal) => (
               <MealCard
                 key={meal.id}
@@ -371,11 +377,11 @@ function EditNutritionPlanContent() {
         </Card>
 
         {/* Enhanced Save Button */}
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <Button
             onClick={handleSave}
             disabled={saving || !planName.trim()}
-            className="flex-1 h-14 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-black rounded-xl shadow-lg shadow-green-500/20 transition-all active:scale-95 text-lg"
+            className="flex-1 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95 text-base sm:text-lg"
           >
             {saving ? (
               <>
@@ -392,7 +398,7 @@ function EditNutritionPlanContent() {
           <Link href="/trainer/nutrition-plans">
             <Button
               variant="outline"
-              className="h-14 px-8 border-2 border-border text-foreground hover:bg-accent font-black rounded-xl transition-all active:scale-95"
+              className="h-12 sm:h-14 px-6 sm:px-8 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 font-bold rounded-xl shadow-sm transition-all active:scale-95"
             >
               ביטול
             </Button>

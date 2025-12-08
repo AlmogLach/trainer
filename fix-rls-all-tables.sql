@@ -111,3 +111,5 @@ FROM pg_policies
 WHERE tablename IN ('routines', 'exercise_library', 'routine_exercises', 'workout_logs', 'set_logs')
 ORDER BY tablename, policyname;
 
+
+

@@ -1,189 +1,120 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { 
+  Settings, Home, Apple, FileText, LogOut, Dumbbell, ChevronRight, BarChart3
+} from "lucide-react";
 import Link from "next/link";
-import { Home, BarChart3, Apple, Dumbbell, Settings, Menu, X, LogOut } from "lucide-react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { DashboardHeader } from "@/components/trainee/DashboardHeader";
+import { BottomNavigation } from "@/components/trainee/BottomNavigation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-export default function TraineeLayout({ children }: { children: React.ReactNode }) {
+export default function TraineeLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/auth/login");
   };
 
-  const navItems = [
-    { href: "/trainee/dashboard", icon: Home, label: "דף בית" },
-    { href: "/trainee/workout", icon: Dumbbell, label: "אימון" },
-    { href: "/trainee/nutrition", icon: Apple, label: "תזונה" },
-    { href: "/trainee/history", icon: BarChart3, label: "התקדמות" },
-    { href: "/trainee/settings", icon: Settings, label: "הגדרות" },
-  ];
-
   const isActive = (path: string, label: string) => {
-    if (label === "דף בית") {
-      return pathname === "/trainee/dashboard";
-    }
-    return pathname === path || pathname?.startsWith(path);
+    if (label === "Home") return pathname === "/trainee/dashboard";
+    return pathname.startsWith(path);
   };
 
+  const navItems = [
+    { href: "/trainee/dashboard", icon: Home, label: "Home" },
+    { href: "/trainee/workout", icon: Dumbbell, label: "Workout" },
+    { href: "/trainee/nutrition", icon: Apple, label: "Nutrition" },
+    { href: "/trainee/history", icon: BarChart3, label: "Progress" },
+    { href: "/trainee/settings", icon: Settings, label: "Settings" },
+  ];
+
+  const isTraineePage = pathname.startsWith("/trainee");
+  const isDashboard = pathname === "/trainee/dashboard";
+  const isWorkoutPage = pathname === "/trainee/workout" || pathname.startsWith("/trainee/workout/");
+  const isWorkoutsPage = pathname === "/trainee/workouts";
+  const isSettingsPage = pathname === "/trainee/settings";
+  const isAchievementsPage = pathname === "/trainee/achievements";
+  const isHistoryPage = pathname === "/trainee/history";
+
   return (
-    <ProtectedRoute requiredRole="trainee">
-      <div className="min-h-screen bg-background flex" dir="rtl">
-        {/* Enhanced Sidebar - Desktop */}
-        <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-card to-card/95 border-l-2 border-border fixed right-0 top-0 h-full z-30 shadow-2xl">
-          <div className="p-6 border-b-2 border-border bg-gradient-to-r from-primary/10 to-primary/5">
-            <h2 className="text-2xl font-black text-foreground">
-              <span className="text-primary">FitLog</span> 💪
-            </h2>
-            <p className="text-xs text-muted-foreground mt-1 font-medium">Trainee Dashboard</p>
-          </div>
-          <nav className="flex-1 p-4 space-y-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href, item.label);
-              return (
-                <Link
-                  key={item.href + item.label}
-                  href={item.href}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                    active
-                      ? "bg-gradient-to-r from-primary/20 to-primary/10 border-2 border-primary/30 text-primary font-black shadow-lg shadow-primary/10"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground font-bold"
-                  }`}
-                >
-                  <div className={`${active ? 'bg-primary/20 p-1.5 rounded-lg' : ''}`}>
-                    <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
-                  </div>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-          <div className="p-4 border-t-2 border-border">
-            <Button
-              variant="ghost"
-              onClick={handleSignOut}
-              className="w-full justify-start text-muted-foreground hover:text-red-500 hover:bg-red-500/10 font-bold rounded-xl transition-all active:scale-95"
-            >
-              <div className="bg-red-500/20 p-1.5 rounded-lg ml-2">
-                <LogOut className="h-5 w-5 text-red-500" />
-              </div>
-              <span>התנתק</span>
-            </Button>
-          </div>
-        </aside>
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${isTraineePage ? 'bg-[#1A1D2E]' : 'bg-gray-50 dark:bg-slate-950'}`} dir={isTraineePage ? 'ltr' : 'rtl'}>
+      
+      {/* --- Dashboard Header (All Trainee Pages except dashboard, workout, workouts, settings, achievements, and history - they have their own) --- */}
+      {isTraineePage && !isDashboard && !isWorkoutPage && !isWorkoutsPage && !isSettingsPage && !isAchievementsPage && !isHistoryPage && <DashboardHeader />}
 
-        {/* Main Content */}
-        <div className="flex-1 lg:mr-64 transition-all duration-200">
-          {/* Enhanced Header */}
-          <header className="bg-gradient-to-r from-card to-card/95 border-b-0 border-border sticky top-0 z-20 pt-safe shadow-lg backdrop-blur-sm rounded-b-none">
-            <div className="px-4 lg:px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="lg:hidden text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all active:scale-95"
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                >
-                  <Menu className="h-6 w-6" />
-                </Button>
-                <h1 className="text-xl font-black lg:hidden">
-                  <span className="text-primary">FitLog</span> 💪
-                </h1>
-              </div>
-              
-              {/* Enhanced User Profile Section */}
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex flex-col items-end">
-                  <p className="text-sm font-bold text-foreground">
-                    שלום, {user?.name || "מתאמן"}! 👋
-                  </p>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/20 flex items-center justify-center text-primary font-black text-lg border-2 border-primary/30 shadow-lg hover:scale-105 transition-transform cursor-pointer">
-                  {user?.name?.charAt(0) || "U"}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Mobile Sidebar */}
-          {sidebarOpen && (
-            <div className="lg:hidden fixed inset-0 z-50">
-              <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in"
-                onClick={() => setSidebarOpen(false)}
-              ></div>
-              <aside className="absolute right-0 top-0 w-72 h-full bg-card border-l border-border shadow-2xl animate-in slide-in-from-right">
-                <div className="p-6 border-b border-border flex items-center justify-between pt-safe">
-                  <h2 className="text-xl font-bold text-foreground">
-                    <span className="text-primary">FitLog</span> 💪
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSidebarOpen(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
-                <nav className="p-4 space-y-2">
-                  {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isActive(item.href, item.label);
-                    return (
-                      <Link
-                        key={item.href + item.label}
-                        href={item.href}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                          active
-                            ? "bg-primary/10 border border-primary/20 text-primary font-medium"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                        }`}
-                      >
-                        <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
-                        <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </nav>
-                <div className="p-4 border-t border-border absolute bottom-0 left-0 right-0 pb-safe">
-                  <Button
-                    variant="ghost"
-                    onClick={async () => {
-                      setSidebarOpen(false);
-                      await handleSignOut();
-                    }}
-                    className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  >
-                    <LogOut className="h-5 w-5 ml-2" />
-                    <span>התנתק</span>
-                  </Button>
-                </div>
-              </aside>
-            </div>
-          )}
-
-          {/* Page Content */}
-          <div>
-            {children}
-          </div>
-        </div>
+      {/* --- Desktop Sidebar Navigation (Hidden on Mobile) --- */}
+      {!isTraineePage && (
+      <div className="hidden lg:flex fixed right-0 top-16 bottom-0 w-64 border-l border-gray-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm z-30">
+        <nav className="w-full p-4 space-y-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href, item.label);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative",
+                  active
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold shadow-sm"
+                    : "text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white"
+                )}
+              >
+                <Icon className={cn(
+                  "h-5 w-5 transition-transform",
+                  active && "scale-110"
+                )} />
+                <span className="text-sm font-medium">{item.label}</span>
+                {active && (
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-600 dark:bg-blue-400 rounded-r-full" />
+                )}
+                {!active && (
+                  <ChevronRight className="h-4 w-4 mr-auto opacity-0 group-hover:opacity-50 transition-opacity" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
-    </ProtectedRoute>
+      )}
+
+      {/* --- Main Content Area --- */}
+      <div className={cn("flex-1 flex w-full", isTraineePage ? "w-full relative" : "max-w-screen-xl mx-auto")}>
+        <main className={cn(
+          "flex-1 w-full transition-all",
+          isTraineePage 
+            ? (isDashboard ? "p-0" : "pb-20") 
+            : "pb-24 pt-6 px-4 lg:mr-64" // Add margin for sidebar on desktop
+        )}>
+          <ProtectedRoute requiredRole="trainee">
+            {children}
+          </ProtectedRoute>
+        </main>
+      </div>
+
+      {/* --- Bottom Navigation (All Trainee Pages) --- */}
+      {isTraineePage && <BottomNavigation />}
+
+    </div>
   );
 }
-

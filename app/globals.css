@@ -4,36 +4,73 @@
 
 @layer base {
   :root {
-    /* Brand Colors - Dark Mode Default */
-    --background: 218 56% 10%; /* #0a1628 */
+    /* --- הגדרות למצב בהיר (Light Mode) --- */
+    /* רקע לבן נקי */
+    --background: 0 0% 100%;
+    /* טקסט כהה מאוד */
+    --foreground: 222.2 84% 4.9%;
+
+    /* רקע כרטיסים ואלמנטים צפים */
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* צבע ראשי - כחול */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+
+    /* צבע משני ואלמנטים מושתקים */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    /* צבעי שגיאה ומחיקה */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* גבולות וקלט */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    /* רדיוס כללי לאפליקציה */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* --- הגדרות למצב כהה (Dark Mode) --- */
+    /* הגדרות מותאמות לפי ה-Style Guide שסופק */
+    --background: 218 56% 10%; /* #0a1628 - רקע כהה */
     --foreground: 210 40% 98%;
-    
-    --card: 218 32% 15%; /* #1a2332 */
+
+    --card: 218 32% 15%; /* #1a2332 - רקע כרטיסים */
     --card-foreground: 210 40% 98%;
-    
+
     --popover: 218 32% 15%;
     --popover-foreground: 210 40% 98%;
-    
-    --primary: 152 100% 50%; /* #00ff88 */
-    --primary-foreground: 0 0% 0%; /* Black text on green */
-    
+
+    --primary: 152 100% 50%; /* #00ff88 - ירוק זוהר */
+    --primary-foreground: 0 0% 0%; /* טקסט שחור על ירוק */
+
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
-    
+
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    
+
     --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
-    
+
     --destructive: 0 62% 30%;
     --destructive-foreground: 210 40% 98%;
-    
+
     --border: 217 33% 20%;
-    --input: 217 33% 12%; /* Darker input background */
+    --input: 217 33% 12%; /* רקע כהה יותר לקלט */
     --ring: 152 100% 50%;
-    
-    --radius: 0.5rem;
   }
 }
 
@@ -53,7 +90,7 @@
   .pt-safe {
     padding-top: env(safe-area-inset-top);
   }
-  
+
   /* Custom scrollbar for webkit */
   ::-webkit-scrollbar {
     width: 6px;
@@ -63,13 +100,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-700 rounded-full;
+    @apply bg-gray-300 dark:bg-gray-700 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-600;
+    @apply bg-gray-400 dark:bg-gray-600;
   }
 
-  /* Hide scrollbar for cleaner UI in some places */
+  /* Hide scrollbar */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -78,129 +115,50 @@
     scrollbar-width: none;
   }
 
-  /* Enhanced Animation utilities */
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-in-from-bottom {
-    from {
-      transform: translateY(10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-in-from-bottom-2 {
-    from {
-      transform: translateY(8px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes slide-in-from-top-4 {
-    from {
-      transform: translateY(-16px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  @keyframes zoom-in {
-    from {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes zoom-in-95 {
-    from {
-      transform: scale(0.95);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
-  }
-
+  /* Animation utilities */
   .animate-in {
     animation-fill-mode: both;
   }
-
   .fade-in {
     animation: fade-in 0.3s ease-in-out;
   }
-
   .slide-in-from-bottom-2 {
     animation: slide-in-from-bottom-2 0.4s ease-out;
   }
-
-  .slide-in-from-bottom-4 {
-    animation: slide-in-from-bottom 0.5s ease-out;
-  }
-
   .slide-in-from-top-4 {
     animation: slide-in-from-top-4 0.3s ease-out;
   }
-
   .zoom-in {
-    animation: zoom-in 0.2s ease-out;
+    animation: zoom-in 0.3s ease-out;
   }
-
   .zoom-in-95 {
     animation: zoom-in-95 0.3s ease-out;
   }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite;
-  }
-
-  .duration-200 {
-    animation-duration: 200ms;
-  }
-
-  .duration-300 {
-    animation-duration: 300ms;
-  }
-
-  .duration-500 {
-    animation-duration: 500ms;
-  }
-
   .active\:scale-95:active {
     transform: scale(0.95);
   }
-
   .active\:scale-98:active {
     transform: scale(0.98);
+  }
+  
+  /* Keyframes */
+  @keyframes fade-in {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes slide-in-from-bottom-2 {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes slide-in-from-top-4 {
+    from { transform: translateY(-16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes zoom-in {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  @keyframes zoom-in-95 {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 }

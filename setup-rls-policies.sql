@@ -173,3 +173,5 @@ FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete access on daily_nutrition_logs" ON daily_nutrition_logs
 FOR DELETE USING (true);
 
+
+

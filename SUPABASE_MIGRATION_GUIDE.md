@@ -76,3 +76,5 @@ const TRAINER_ID = "trainer-id-here";
 - [ ] הוסף authentication
 - [ ] בדוק את כל ה-error handling
 
+
+

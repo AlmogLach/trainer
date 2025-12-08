@@ -56,24 +56,24 @@ export function WeightInputModal({ isOpen, onClose, onSave }: WeightInputModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <Card className="bg-card border-border w-full max-w-md shadow-2xl">
-        <CardHeader>
+    <div className="fixed inset-0 bg-black/80 dark:bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl">
+        <CardHeader className="p-5">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-foreground">הוסף משקל</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-white font-bold">הוסף משקל</CardTitle>
             <Button
               variant="ghost"
               size="icon"
               onClick={handleClose}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-5 pt-0">
           {weightError && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md text-destructive-foreground text-sm">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-sm font-bold">
               {weightError}
             </div>
           )}
@@ -86,14 +86,14 @@ export function WeightInputModal({ isOpen, onClose, onSave }: WeightInputModalPr
               setWeightError(null);
             }}
             placeholder="הזן משקל (ק״ג)"
-            className="w-full px-4 py-8 text-3xl font-bold bg-secondary/50 border-input text-foreground text-center"
+            className="w-full px-4 py-8 text-3xl font-bold bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-center rounded-xl"
             autoFocus
             disabled={savingWeight}
           />
           <div className="flex gap-2">
             <Button
               onClick={handleSubmit}
-              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-12"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold h-12 rounded-xl"
               disabled={!bodyWeight || savingWeight}
             >
               {savingWeight ? (
@@ -111,7 +111,7 @@ export function WeightInputModal({ isOpen, onClose, onSave }: WeightInputModalPr
             <Button
               variant="outline"
               onClick={handleClose}
-              className="flex-1 border-input text-muted-foreground hover:bg-accent h-12"
+              className="flex-1 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 h-12 rounded-xl"
               disabled={savingWeight}
             >
               ביטול

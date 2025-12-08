@@ -1,25 +1,36 @@
 "use client";
 
-import { useState, useEffect, useMemo, memo, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useMemo, memo, useCallback, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Loader2, 
-  ArrowRight, 
+  ArrowLeft, 
   ChevronDown, 
   CheckCircle2, 
   Dumbbell, 
   Trophy, 
-  CalendarDays, 
   Timer,
   Target,
   Flame,
-  Minus,
-  Plus
+  Copy,
+  RotateCcw,
+  X,
+  Bell
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   getActiveWorkoutPlan,
   getRoutinesWithExercises,
@@ -29,14 +40,14 @@ import {
 } from "@/lib/db";
 import type { RoutineWithExercises } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/toast";
 
 // --- Types ---
 
 interface ExerciseData {
-  heaviestWeight: string;
-  heaviestReps: string;
-  heaviestRir: string;
-  totalSetsDone: number;
+  weight: string;
+  reps: string;
+  rir: string;
   isComplete: boolean;
 }
 
@@ -51,193 +62,176 @@ interface Exercise {
   previousBest?: { weight: number; reps: number };
 }
 
-// --- Component: Simple Exercise Card ---
+// --- Component: Enhanced Exercise Card ---
 
 const ExerciseCard = memo(({ 
   exercise, 
   data, 
-  onUpdate 
+  onUpdate,
+  onCopyPreviousWorkout,
+  onClearExercise
 }: { 
   exercise: Exercise; 
   data: ExerciseData; 
-  onUpdate: (field: keyof ExerciseData, value: any) => void; 
+  onUpdate: (field: keyof ExerciseData, value: any) => void;
+  onCopyPreviousWorkout: () => void;
+  onClearExercise: () => void;
 }) => {
   
-  const progressPercentage = Math.min(100, (data.totalSetsDone / exercise.targetSets) * 100);
-  const isOverTarget = data.totalSetsDone > exercise.targetSets;
+  const currentWeight = parseFloat(data.weight) || 0;
+  const currentReps = parseInt(data.reps) || 0;
   
-  // Check if user beat previous best
-  const currentWeight = parseFloat(data.heaviestWeight) || 0;
-  const currentReps = parseInt(data.heaviestReps) || 0;
-  const beatPrevious = exercise.previousBest && (
+  const beatPrevious = exercise.previousBest && currentWeight > 0 && (
     currentWeight > exercise.previousBest.weight || 
     (currentWeight === exercise.previousBest.weight && currentReps > exercise.previousBest.reps)
   );
 
+  const hasData = data.weight && data.reps;
+
   return (
     <div className={cn(
-      "bg-card rounded-2xl p-5 border-2 transition-all",
+      "bg-[#2D3142] rounded-2xl p-5 border-2 transition-all",
       data.isComplete 
-        ? "border-green-500 bg-green-500/5" 
-        : "border-border"
+        ? "border-[#4CAF50]" 
+        : "border-transparent"
     )}>
       
-      {/* Header */}
+      {/* Header: Exercise Name with Complete Badge */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-black text-foreground mb-1">{exercise.name}</h3>
-          {exercise.specialInstructions && (
-            <p className="text-xs text-muted-foreground">{exercise.specialInstructions}</p>
-          )}
-        </div>
-        {data.isComplete && (
-          <div className="bg-green-500 p-2 rounded-xl">
-            <CheckCircle2 className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-xl font-outfit font-bold text-white">{exercise.name}</h3>
+            {data.isComplete && (
+              <div className="bg-[#4CAF50] px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                <span className="text-xs font-outfit font-semibold text-white">Done</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      
-      {/* Target Info */}
-      <div className="flex items-center gap-4 mb-4 text-sm">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Target className="w-4 h-4" />
-          <span className="font-medium">{exercise.targetSets} סטים</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Dumbbell className="w-4 h-4" />
-          <span className="font-medium">{exercise.targetReps} חזרות</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Timer className="w-4 h-4" />
-          <span className="font-medium">{exercise.restTime}s</span>
+          {exercise.specialInstructions && (
+            <p className="text-sm text-[#9CA3AF] font-outfit font-normal leading-relaxed">{exercise.specialInstructions}</p>
+          )}
         </div>
       </div>
 
-      {/* New Record Badge */}
-      {beatPrevious && data.heaviestWeight && data.heaviestReps && (
-        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-2 rounded-xl text-sm font-bold mb-4 flex items-center gap-2">
-          <Trophy className="w-4 h-4" />
-          שיא חדש! 🔥
+      {/* Target Info */}
+      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[#3D4058]">
+        <div className="flex items-center gap-2 bg-[#1A1D2E] px-3 py-2 rounded-xl">
+          <Target className="w-4 h-4 text-[#5B7FFF]" />
+          <span className="text-sm font-outfit font-semibold text-white">{exercise.targetSets} סטים</span>
         </div>
-      )}
-      
-      {/* Previous Best */}
+        <div className="flex items-center gap-2 bg-[#1A1D2E] px-3 py-2 rounded-xl">
+          <Dumbbell className="w-4 h-4 text-[#5B7FFF]" />
+          <span className="text-sm font-outfit font-semibold text-white">{exercise.targetReps} reps</span>
+        </div>
+      </div>
+
+      {/* Previous Record */}
       {exercise.previousBest && (
-        <div className="bg-accent/30 rounded-xl p-3 mb-4">
-          <p className="text-xs text-muted-foreground font-medium mb-1">שיא קודם:</p>
-          <p className="text-sm font-bold text-foreground">
-            {exercise.previousBest.weight} ק"ג × {exercise.previousBest.reps} חזרות
-          </p>
+        <div className="bg-[#5B7FFF]/10 border border-[#5B7FFF]/30 rounded-xl p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-xs text-[#5B7FFF] font-outfit font-semibold mb-1.5 uppercase tracking-wide">שיא קודם</p>
+              <p className="text-xl font-outfit font-bold text-white">
+                {exercise.previousBest.weight} <span className="text-sm text-[#9CA3AF]">kg</span> × {exercise.previousBest.reps} <span className="text-sm text-[#9CA3AF]">reps</span>
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              {beatPrevious && (
+                <div className="bg-[#FF8A00] text-white px-2.5 py-1 rounded-lg text-xs font-outfit font-semibold flex items-center gap-1">
+                  <Trophy className="w-3.5 h-3.5" />
+                  New Record!
+                </div>
+              )}
+              <button
+                onClick={onCopyPreviousWorkout}
+                className="flex items-center gap-1.5 text-[#5B7FFF] hover:text-[#6B8EFF] text-xs font-outfit font-semibold transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                העתק
+              </button>
+            </div>
+          </div>
         </div>
       )}
-      
-      {/* Progress Bar */}
+
+      {/* Input Section */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-muted-foreground">התקדמות</span>
-          <span className={cn(
-            "text-sm font-black",
-            isOverTarget ? "text-amber-500" : "text-primary"
-          )}>
-            {data.totalSetsDone} / {exercise.targetSets}
-          </span>
-        </div>
-        <div className="h-2 bg-accent rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full transition-all duration-300",
-              isOverTarget 
-                ? "bg-gradient-to-r from-amber-500 to-orange-500" 
-                : "bg-gradient-to-r from-primary to-primary/80"
-            )}
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-      </div>
-      
-      {/* Input Fields */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">משקל</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={data.heaviestWeight}
-            onChange={(e) => onUpdate("heaviestWeight", e.target.value)}
-            className="w-full h-12 bg-accent/30 border-2 border-border rounded-xl px-3 text-center text-lg font-bold text-foreground focus:border-primary focus:ring-0 transition-all"
-            placeholder="0"
-          />
-        </div>
-        
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">חזרות</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={data.heaviestReps}
-            onChange={(e) => onUpdate("heaviestReps", e.target.value)}
-            className="w-full h-12 bg-accent/30 border-2 border-border rounded-xl px-3 text-center text-lg font-bold text-foreground focus:border-primary focus:ring-0 transition-all"
-            placeholder="0"
-          />
-        </div>
-        
-        <div>
-          <label className="text-xs font-bold text-muted-foreground mb-1 block">RIR</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={data.heaviestRir}
-            onChange={(e) => onUpdate("heaviestRir", e.target.value)}
-            className="w-full h-12 bg-accent/30 border-2 border-border rounded-xl px-3 text-center text-lg font-bold text-foreground focus:border-primary focus:ring-0 transition-all"
-            placeholder="0"
-          />
-        </div>
-      </div>
-      
-      {/* Set Counter */}
-      <div className="mb-4">
-        <label className="text-xs font-bold text-muted-foreground mb-2 block">סטים שבוצעו</label>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => onUpdate("totalSetsDone", Math.max(0, data.totalSetsDone - 1))}
-            className="h-12 w-12 rounded-xl bg-accent hover:bg-accent/80 border-2 border-border transition-all active:scale-95"
-            disabled={data.totalSetsDone === 0}
-          >
-            <Minus className="w-5 h-5 text-foreground" />
-          </Button>
-          
-          <div className="flex-1 h-12 bg-primary/10 border-2 border-primary/30 rounded-xl flex items-center justify-center">
-            <span className="text-2xl font-black text-primary">{data.totalSetsDone}</span>
+        <label className="text-sm font-outfit font-semibold text-white mb-3 block">רישום הסט שלך</label>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex flex-col">
+            <label className="text-xs font-outfit font-medium text-[#9CA3AF] mb-2 text-center">משקל</label>
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="decimal"
+                value={data.weight}
+                onChange={(e) => onUpdate("weight", e.target.value)}
+                className="w-full h-14 bg-[#1A1D2E] border-2 border-transparent rounded-xl px-3 text-center text-xl font-outfit font-bold text-white focus:border-[#5B7FFF] focus:ring-2 focus:ring-[#5B7FFF]/20 transition-all outline-none"
+                placeholder="0"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF] font-outfit font-medium">kg</span>
+            </div>
           </div>
           
-          <Button
-            onClick={() => onUpdate("totalSetsDone", data.totalSetsDone + 1)}
-            className="h-12 w-12 rounded-xl bg-primary hover:bg-primary/90 transition-all active:scale-95"
-          >
-            <Plus className="w-5 h-5 text-background" />
-          </Button>
+          <div className="flex flex-col">
+            <label className="text-xs font-outfit font-medium text-[#9CA3AF] mb-2 text-center">חזרות</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={data.reps}
+              onChange={(e) => onUpdate("reps", e.target.value)}
+              className="w-full h-14 bg-[#1A1D2E] border-2 border-transparent rounded-xl px-3 text-center text-xl font-outfit font-bold text-white focus:border-[#5B7FFF] focus:ring-2 focus:ring-[#5B7FFF]/20 transition-all outline-none"
+              placeholder="0"
+            />
+          </div>
+          
+          <div className="flex flex-col">
+            <label className="text-xs font-outfit font-medium text-[#9CA3AF] mb-2 text-center">RIR</label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={data.rir}
+              onChange={(e) => onUpdate("rir", e.target.value)}
+              className="w-full h-14 bg-[#1A1D2E] border-2 border-transparent rounded-xl px-3 text-center text-xl font-outfit font-bold text-white focus:border-[#5B7FFF] focus:ring-2 focus:ring-[#5B7FFF]/20 transition-all outline-none"
+              placeholder="1"
+            />
+          </div>
         </div>
       </div>
-      
-      {/* Complete Button */}
-      <Button
-        onClick={() => onUpdate("isComplete", !data.isComplete)}
-        className={cn(
-          "w-full h-12 rounded-xl font-black transition-all active:scale-98",
-          data.isComplete
-            ? "bg-green-500 hover:bg-green-600 text-white"
-            : "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-background"
+
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        {hasData && (
+          <button
+            onClick={onClearExercise}
+            className="flex-1 h-12 bg-[#1A1D2E] border border-[#3D4058] rounded-xl text-[#9CA3AF] hover:bg-[#3D4058] hover:text-white hover:border-[#4A4E69] text-sm font-outfit font-semibold transition-all flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            נקה
+          </button>
         )}
-      >
-        {data.isComplete ? (
-          <>
-            <CheckCircle2 className="w-5 h-5 ml-2" />
-            הושלם ✓
-          </>
-        ) : (
-          "סיימתי תרגיל"
-        )}
-      </Button>
+        
+        <Button
+          onClick={() => onUpdate("isComplete", !data.isComplete)}
+          className={cn(
+            hasData ? "flex-1" : "w-full",
+            "h-12 rounded-xl font-outfit font-semibold transition-all text-base",
+            data.isComplete
+              ? "bg-[#4CAF50] hover:bg-[#45A049] text-white"
+              : "bg-[#5B7FFF] hover:bg-[#6B8EFF] text-white"
+          )}
+        >
+          {data.isComplete ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+              Completed
+            </>
+          ) : (
+            "סיים תרגיל"
+          )}
+        </Button>
+      </div>
     </div>
   );
 });
@@ -248,6 +242,9 @@ ExerciseCard.displayName = 'ExerciseCard';
 
 function WorkoutPageContent() {
   const { user } = useAuth();
+  const { showToast } = useToast();
+  const searchParams = useSearchParams();
+  const routineIdFromUrl = searchParams.get('routine');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -257,16 +254,19 @@ function WorkoutPageContent() {
   const [selectedRoutine, setSelectedRoutine] = useState<RoutineWithExercises | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   
-  // New Data Structure State
+  // Exercise Data State
   const [exercisesData, setExercisesData] = useState<Record<string, ExerciseData>>({});
   
+  const completedExercisesRef = useRef<Set<string>>(new Set());
+  
   // UI State
-  const [showInstructions, setShowInstructions] = useState(false);
   const [showRoutineSelector, setShowRoutineSelector] = useState(false);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [incompleteCount, setIncompleteCount] = useState(0);
   const [startTime] = useState(new Date().toISOString());
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  // Timer for elapsed time
+  // Timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -281,11 +281,10 @@ function WorkoutPageContent() {
     if (user?.id) {
       loadWorkoutData();
     }
-  }, [user?.id]);
+  }, [user?.id, routineIdFromUrl]);
 
   useEffect(() => {
     if (selectedRoutine?.id && exercisesData && Object.keys(exercisesData).length > 0) {
-      // Debounce localStorage writes to improve performance
       const timeoutId = setTimeout(() => {
         localStorage.setItem(`workout_backup_${selectedRoutine.id}`, JSON.stringify(exercisesData));
       }, 500);
@@ -299,7 +298,6 @@ function WorkoutPageContent() {
     try {
       setLoading(true);
       
-      // Load plan and routines in parallel
       const [plan, logs] = await Promise.all([
         getActiveWorkoutPlan(user.id),
         getWorkoutLogs(user.id, 10)
@@ -314,7 +312,6 @@ function WorkoutPageContent() {
 
       const routinesData = await getRoutinesWithExercises(plan.id);
       
-      // Filter and sort routines with exercises
       const routinesWithExercises = routinesData
         .filter(r => r.routine_exercises && r.routine_exercises.length > 0)
         .sort((a, b) => {
@@ -332,22 +329,30 @@ function WorkoutPageContent() {
         return;
       }
       
-      // Find next routine to show
-      const lastLog = logs.find(log => log.date === new Date().toISOString().split('T')[0]);
-      let routineToShow: RoutineWithExercises;
+      let routineToShow: RoutineWithExercises | undefined;
       
-      if (lastLog) {
-        const lastRoutineIndex = routinesWithExercises.findIndex(r => r.id === lastLog.routine_id);
-        const nextIndex = lastRoutineIndex >= 0 && lastRoutineIndex < routinesWithExercises.length - 1
-          ? lastRoutineIndex + 1
-          : 0;
-        routineToShow = routinesWithExercises[nextIndex];
-      } else {
-        routineToShow = routinesWithExercises[0];
+      if (routineIdFromUrl) {
+        routineToShow = routinesWithExercises.find(r => r.id === routineIdFromUrl);
+      }
+      
+      if (!routineToShow) {
+        const lastLog = logs.find(log => log.date === new Date().toISOString().split('T')[0]);
+        
+        if (lastLog) {
+          const lastRoutineIndex = routinesWithExercises.findIndex(r => r.id === lastLog.routine_id);
+          const nextIndex = lastRoutineIndex >= 0 && lastRoutineIndex < routinesWithExercises.length - 1
+            ? lastRoutineIndex + 1
+            : 0;
+          routineToShow = routinesWithExercises[nextIndex];
+        } else {
+          routineToShow = routinesWithExercises[0];
+        }
       }
 
-      setSelectedRoutine(routineToShow);
-      await loadExercisesWithHistory(routineToShow, user.id, logs);
+      if (routineToShow) {
+        setSelectedRoutine(routineToShow);
+        await loadExercisesWithHistory(routineToShow, user.id, logs);
+      }
     } catch (error) {
       console.error('Error loading workout data:', error);
     } finally {
@@ -357,7 +362,6 @@ function WorkoutPageContent() {
 
   const loadExercisesWithHistory = async (routine: RoutineWithExercises, traineeId: string, existingLogs?: any[]) => {
     try {
-      // Use existing logs if provided to avoid duplicate fetch
       const allLogs = existingLogs || await getWorkoutLogs(traineeId, 50);
       
       const exercisesList: Exercise[] = routine.routine_exercises.map((re) => {
@@ -374,7 +378,7 @@ function WorkoutPageContent() {
 
         return {
           id: re.id,
-          name: re.exercise?.name || 'תרגיל לא ידוע',
+          name: re.exercise?.name || 'Unknown Exercise',
           specialInstructions: re.special_instructions || re.notes || '',
           targetSets: re.target_sets,
           targetReps: `${re.target_reps_min}-${re.target_reps_max}`,
@@ -396,20 +400,67 @@ function WorkoutPageContent() {
     const saved = localStorage.getItem(`workout_backup_${routineId}`);
     if (saved) {
       try {
-        setExercisesData(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        const migrated: Record<string, ExerciseData> = {};
+        Object.entries(parsed).forEach(([exerciseId, data]: [string, any]) => {
+          if (data.weight !== undefined || data.reps !== undefined) {
+            migrated[exerciseId] = {
+              weight: data.weight || "",
+              reps: data.reps || "",
+              rir: data.rir || "1",
+              isComplete: data.isComplete || false
+            };
+          } else if (data.sets && Array.isArray(data.sets) && data.sets.length > 0) {
+            const sets = data.sets.filter((s: any) => s.weight && s.reps);
+            if (sets.length > 0) {
+              const heaviest = sets.reduce((max: any, set: any) => {
+                const maxWeight = parseFloat(max.weight) || 0;
+                const setWeight = parseFloat(set.weight) || 0;
+                if (setWeight > maxWeight) return set;
+                if (setWeight === maxWeight) {
+                  const maxReps = parseInt(max.reps) || 0;
+                  const setReps = parseInt(set.reps) || 0;
+                  return setReps > maxReps ? set : max;
+                }
+                return max;
+              }, sets[0]);
+              
+              migrated[exerciseId] = {
+                weight: heaviest.weight || "",
+                reps: heaviest.reps || "",
+                rir: heaviest.rir || "1",
+                isComplete: data.isComplete || false
+              };
+            } else {
+              migrated[exerciseId] = {
+                weight: "",
+                reps: "",
+                rir: "1",
+                isComplete: data.isComplete || false
+              };
+            }
+          } else {
+            migrated[exerciseId] = {
+              weight: "",
+              reps: "",
+              rir: "1",
+              isComplete: false
+            };
+          }
+        });
+        setExercisesData(migrated);
         return;
       } catch (e) {
-        console.error("Failed to restore backup");
+        console.error("Failed to restore backup", e);
       }
     }
 
     const initialData: Record<string, ExerciseData> = {};
     exercisesList.forEach((exercise) => {
       initialData[exercise.id] = {
-        heaviestWeight: "",
-        heaviestReps: "",
-        heaviestRir: "1",
-        totalSetsDone: 0,
+        weight: "",
+        reps: "",
+        rir: "1",
         isComplete: false
       };
     });
@@ -418,22 +469,58 @@ function WorkoutPageContent() {
 
   const updateExerciseData = useCallback((exerciseId: string, field: keyof ExerciseData, value: any) => {
     setExercisesData(prev => {
+      const wasComplete = prev[exerciseId]?.isComplete;
       const newData = {
         ...prev,
         [exerciseId]: { ...prev[exerciseId], [field]: value }
       };
       
-      if (field === 'isComplete' && value === true && !prev[exerciseId]?.isComplete) {
-        const celebrationDiv = document.createElement('div');
-        celebrationDiv.className = 'fixed inset-0 pointer-events-none z-40 flex items-center justify-center';
-        celebrationDiv.innerHTML = '<div class="text-8xl animate-in zoom-in duration-500">🎉</div>';
-        document.body.appendChild(celebrationDiv);
-        setTimeout(() => celebrationDiv.remove(), 1000);
+      if (field === 'isComplete' && value === true && !wasComplete && !completedExercisesRef.current.has(exerciseId)) {
+        completedExercisesRef.current.add(exerciseId);
+        setTimeout(() => {
+          showToast('🎉 Exercise Complete!', "success", 2000);
+        }, 0);
+      }
+      
+      if (field === 'isComplete' && value === false) {
+        completedExercisesRef.current.delete(exerciseId);
       }
       
       return newData;
     });
-  }, []);
+  }, [showToast]);
+
+  const copyPreviousWorkoutSet = useCallback((exerciseId: string) => {
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (!exercise || !exercise.previousBest) {
+      showToast('⚠️ No previous workout data', "warning", 2000);
+      return;
+    }
+
+    setExercisesData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        ...prev[exerciseId],
+        weight: exercise.previousBest!.weight.toString(),
+        reps: exercise.previousBest!.reps.toString(),
+        rir: prev[exerciseId]?.rir || "1"
+      }
+    }));
+    showToast('✅ Previous workout copied', "success", 1500);
+  }, [exercises, showToast]);
+
+  const clearExercise = useCallback((exerciseId: string) => {
+    setExercisesData(prev => ({
+      ...prev,
+      [exerciseId]: {
+        weight: "",
+        reps: "",
+        rir: "1",
+        isComplete: false
+      }
+    }));
+    showToast('🗑️ Exercise cleared', "info", 1500);
+  }, [showToast]);
 
   const handleRoutineChange = async (routine: RoutineWithExercises) => {
     setSelectedRoutine(routine);
@@ -446,24 +533,27 @@ function WorkoutPageContent() {
     if (!selectedRoutine || !user?.id || exercises.length === 0) return;
     
     const hasValidData = Object.values(exercisesData).some(d => 
-      d.totalSetsDone > 0 || (d.heaviestWeight && d.heaviestReps)
+      d.weight && d.reps
     );
 
     if (!hasValidData) {
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4 duration-300 font-bold text-center';
-      errorDiv.innerHTML = '⚠️ לא ניתן לסיים אימון ריק. אנא מלא לפחות תרגיל אחד.';
-      document.body.appendChild(errorDiv);
-      setTimeout(() => errorDiv.remove(), 3000);
+      showToast('⚠️ Cannot finish empty workout. Please complete at least one exercise.', "warning", 4000);
       return;
     }
 
-    const incompleteCount = exercises.length - Object.values(exercisesData).filter(d => d.isComplete).length;
-    if (incompleteCount > 0 && progress < 100) {
-      const confirmed = confirm(`יש לך ${incompleteCount} תרגילים שלא סומנו כהושלמו. האם אתה בטוח שברצונך לסיים?`);
-      if (!confirmed) return;
+    const incomplete = exercises.length - Object.values(exercisesData).filter(d => d.isComplete).length;
+    if (incomplete > 0 && progress < 100) {
+      setIncompleteCount(incomplete);
+      setShowFinishConfirm(true);
+      return;
     }
 
+    finishWorkout();
+  };
+
+  const finishWorkout = async () => {
+    if (!selectedRoutine || !user?.id || exercises.length === 0) return;
+    
     try {
       setSaving(true);
       const workoutLog = await createWorkoutLog({
@@ -479,43 +569,42 @@ function WorkoutPageContent() {
 
       for (const exercise of exercises) {
         const data = exercisesData[exercise.id];
-        if (!data || data.totalSetsDone === 0) continue;
+        if (!data || !data.weight || !data.reps) continue;
 
-        const weight = parseFloat(data.heaviestWeight) || 0;
-        const reps = parseInt(data.heaviestReps) || 0;
+        const weight = parseFloat(data.weight) || 0;
+        const reps = parseInt(data.reps) || 0;
         
-        for (let i = 1; i <= data.totalSetsDone; i++) {
-           await createSetLog({
-             log_id: workoutLog.id,
-             exercise_id: exercise.exerciseId,
-             set_number: i,
-             weight_kg: weight,
-             reps: reps,
-             rir_actual: 2,
-             notes: i === 1 ? "Top Set" : "Volume Set",
-           });
+        if (weight > 0 && reps > 0) {
+          await createSetLog({
+            log_id: workoutLog.id,
+            exercise_id: exercise.exerciseId,
+            set_number: 1,
+            weight_kg: weight,
+            reps: reps,
+            rir_actual: parseInt(data.rir) || 2,
+            notes: "Top Set",
+          });
         }
       }
 
       localStorage.removeItem(`workout_backup_${selectedRoutine.id}`);
       
-      // Prepare data for summary page
       const summaryData = {
         exercises: exercises.map(exercise => {
           const data = exercisesData[exercise.id];
           const sets = [];
-          for (let i = 1; i <= data.totalSetsDone; i++) {
+          if (data && data.weight && data.reps) {
             sets.push({
-              setNumber: i,
-              weight: data.heaviestWeight,
-              reps: data.heaviestReps,
-              rir: data.heaviestRir
+              setNumber: 1,
+              weight: data.weight,
+              reps: data.reps,
+              rir: data.rir
             });
           }
           return {
             ...exercise,
             sets,
-            muscleGroup: 'כללי',
+            muscleGroup: 'General',
             exerciseId: exercise.exerciseId,
             previousPerformance: exercise.previousBest ? [exercise.previousBest] : []
           };
@@ -526,10 +615,7 @@ function WorkoutPageContent() {
       
       sessionStorage.setItem('workoutSummaryData', JSON.stringify(summaryData));
       
-      const successDiv = document.createElement('div');
-      successDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-green-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in zoom-in duration-300 font-bold text-center';
-      successDiv.innerHTML = '✅ האימון נשמר בהצלחה! מעביר לסיכום...';
-      document.body.appendChild(successDiv);
+      showToast('✅ Workout saved successfully!', "success", 2000);
       
       setTimeout(() => {
         window.location.href = '/trainee/workout/summary';
@@ -537,11 +623,7 @@ function WorkoutPageContent() {
       
     } catch (error: any) {
       console.error('Error finishing workout:', error);
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'fixed top-24 left-4 right-4 z-50 bg-red-500/90 text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4 duration-300 font-bold text-center';
-      errorDiv.innerHTML = `❌ שגיאה בשמירת האימון: ${error.message}`;
-      document.body.appendChild(errorDiv);
-      setTimeout(() => errorDiv.remove(), 4000);
+      showToast(`❌ Error saving workout: ${error.message}`, "error", 5000);
     } finally {
       setSaving(false);
     }
@@ -556,40 +638,29 @@ function WorkoutPageContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
-            <Loader2 className="h-16 w-16 animate-spin mx-auto text-primary relative z-10" />
-          </div>
-          <div>
-            <p className="text-xl font-black text-foreground animate-pulse">טוען אימון...</p>
-            <p className="text-sm text-muted-foreground mt-1">מכין את התרגילים שלך</p>
-          </div>
-          <div className="flex gap-2 justify-center">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
-        </div>
-      </div>
+      <LoadingSpinner 
+        fullScreen 
+        text="טוען אימון..." 
+        size="lg"
+        className="bg-[#1A1D2E]"
+      />
     );
   }
 
   if (!workoutPlan || routines.length === 0 || !selectedRoutine || exercises.length === 0) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center" dir="rtl">
-        <Dumbbell className="h-16 w-16 text-primary mb-4" />
-        <h1 className="text-2xl font-black mb-3 text-foreground">אין אימון זמין</h1>
-        <p className="text-muted-foreground max-w-sm mb-6">
+      <div className="relative bg-[#1A1D2E] w-full min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <Dumbbell className="h-16 w-16 text-[#5B7FFF] mb-4" />
+        <h1 className="text-2xl font-outfit font-bold mb-3 text-white">אין אימון זמין</h1>
+        <p className="text-[#9CA3AF] max-w-sm mb-6 font-outfit font-normal">
           {!workoutPlan && "המאמן שלך עדיין לא יצר תוכנית אימונים פעילה."}
-          {workoutPlan && routines.length === 0 && "תוכנית האימונים לא מכילה רוטינות."}
-          {workoutPlan && routines.length > 0 && !selectedRoutine && "לא נמצאה רוטינה מתאימה."}
-          {workoutPlan && routines.length > 0 && selectedRoutine && exercises.length === 0 && "הרוטינה לא מכילה תרגילים."}
+          {workoutPlan && routines.length === 0 && "תוכנית האימונים לא מכילה שגרות."}
+          {workoutPlan && routines.length > 0 && !selectedRoutine && "לא נמצאה שגרה מתאימה."}
+          {workoutPlan && routines.length > 0 && selectedRoutine && exercises.length === 0 && "השגרה לא מכילה תרגילים."}
         </p>
         <Link href="/trainee/dashboard">
-          <Button className="gap-2">
-            חזרה לדף הבית <ArrowRight className="h-5 w-5" />
+          <Button className="gap-2 bg-[#5B7FFF] hover:bg-[#6B8EFF] text-white rounded-xl h-12 px-6">
+            חזרה לדשבורד
           </Button>
         </Link>
       </div>
@@ -597,188 +668,171 @@ function WorkoutPageContent() {
   }
 
   return (
-    <div className="min-h-full bg-background pb-32" dir="rtl">
-      
-      {/* Header - Connected to top header */}
-      <div className="bg-gradient-to-r from-card to-card/95 border-b-2 border-border rounded-b-2xl px-4 sm:px-6 py-4 sm:py-6">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="bg-primary p-2 sm:p-2.5 rounded-lg sm:rounded-xl">
-              <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-black text-foreground">FitLog</h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Workout Tracker</p>
-            </div>
-          </div>
-          
-          <Link href="/trainee/dashboard">
-            <Button variant="outline" size="icon" className="rounded-lg sm:rounded-xl h-9 w-9 sm:h-10 sm:w-10">
-              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          </Link>
-        </div>
-
-        {/* Workout Info */}
-        <div className="bg-card rounded-xl sm:rounded-2xl p-3 sm:p-4 border-2 border-border">
-          <div className="flex items-center justify-between mb-3">
-            <div onClick={() => setShowRoutineSelector(!showRoutineSelector)} className="cursor-pointer flex-1">
-              <span className="text-xs text-primary font-bold uppercase mb-1 block">אימון היום</span>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-foreground">{workoutPlan.name}</h2>
-                <span className="bg-foreground text-background text-xs font-bold px-2.5 py-1 rounded-lg">{selectedRoutine.letter}</span>
-                <ChevronDown className={cn(
-                  "h-5 w-5 text-muted-foreground transition-transform",
-                  showRoutineSelector && 'rotate-180'
-                )} />
-              </div>
-            </div>
+    <div className="relative bg-[#1A1D2E] w-full min-h-screen">
+      {/* Main Content */}
+      <div className="w-full overflow-y-auto pb-24">
+        <div className="w-full max-w-[393px] mx-auto px-5 pt-12">
+          <div className="flex flex-col items-start w-full gap-6">
             
-            {/* Progress Circle */}
-            <div className="relative w-14 h-14">
-              <svg className="w-14 h-14 transform -rotate-90">
-                <circle cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none" className="text-accent" />
-                <circle
-                  cx="28" cy="28" r="24" stroke="currentColor" strokeWidth="5" fill="none"
-                  strokeDasharray={`${2 * Math.PI * 24}`}
-                  strokeDashoffset={`${2 * Math.PI * 24 * (1 - progress / 100)}`}
-                  className="text-primary transition-all duration-500"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-sm font-black text-foreground">{progress}%</span>
-              </div>
+            {/* Header */}
+            <div className="w-full flex items-center justify-between">
+              <Link href="/trainee/workouts" className="w-10 h-10 bg-[#2D3142] rounded-full flex items-center justify-center hover:bg-[#3D4058] transition-colors">
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </Link>
+              <h1 className="text-2xl font-outfit font-bold text-white">
+                {selectedRoutine ? (selectedRoutine.name || `אימון ${selectedRoutine.letter}`) : 'אימון'}
+              </h1>
+              <div className="w-10 h-10"></div>
             </div>
-          </div>
 
-          {/* Stats */}
-          <div className="flex gap-3">
-            <div className="flex-1 bg-orange-500/10 rounded-xl p-3 flex items-center gap-2 border border-orange-500/20">
-              <div className="bg-orange-500 p-1.5 rounded-lg">
-                <Flame className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <span className="block text-xs text-muted-foreground font-medium">תרגילים</span>
-                <span className="block text-lg font-black text-foreground">
-                  {Object.values(exercisesData).filter(d => d.isComplete).length}/{exercises.length}
-                </span>
-              </div>
-            </div>
-            <div className="flex-1 bg-blue-500/10 rounded-xl p-3 flex items-center gap-2 border border-blue-500/20">
-              <div className="bg-blue-500 p-1.5 rounded-lg">
-                <Timer className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <span className="block text-xs text-muted-foreground font-medium">זמן</span>
-                <span className="block text-lg font-black text-foreground">
-                  {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            {/* Workout Stats Card */}
+            <div className="w-full bg-[#2D3142] rounded-2xl p-4">
+              <div className="grid grid-cols-3 gap-4">
+                {/* Exercises Stat */}
+                <div className="bg-[#1A1D2E] rounded-xl p-3 flex flex-col items-center gap-2">
+                  <div className="bg-[#FF8A00] p-2 rounded-lg">
+                    <Flame className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-outfit font-bold text-white">
+                      {Object.values(exercisesData).filter(d => d.isComplete).length}/{exercises.length}
+                    </div>
+                    <div className="text-xs font-outfit font-normal text-[#9CA3AF]">תרגילים</div>
+                  </div>
+                </div>
 
-      {/* Content with padding */}
-      <div className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Routine Selector */}
-      {showRoutineSelector && (
-         <div 
-           className="fixed inset-0 bg-black/50 z-30 backdrop-blur-sm" 
-           onClick={() => setShowRoutineSelector(false)}
-         >
-            <div 
-              className="fixed top-32 left-4 right-4 z-40 bg-card rounded-2xl p-4 shadow-2xl border-2 border-border"
-              onClick={(e) => e.stopPropagation()}
-            >
-               <h3 className="text-lg font-black text-foreground mb-3">בחר אימון</h3>
-               {routines
-                 .filter(routine => routine.routine_exercises && routine.routine_exercises.length > 0)
-                 .map((routine) => (
-                  <button
-                    key={routine.id}
-                    onClick={() => handleRoutineChange(routine)}
-                    className={cn(
-                        "w-full text-right p-3 rounded-xl font-bold flex items-center justify-between mb-2 transition-all",
-                        selectedRoutine.id === routine.id 
-                          ? "bg-primary text-white" 
-                          : "bg-accent text-foreground hover:bg-accent/80"
-                    )}
-                  >
-                      <div className="flex items-center gap-3">
-                        <span className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center font-black",
-                          selectedRoutine.id === routine.id ? "bg-white/20" : "bg-foreground/10"
-                        )}>
-                          {routine.letter}
-                        </span>
-                        <span>{routine.name}</span>
-                      </div>
-                      {selectedRoutine.id === routine.id && <CheckCircle2 className="w-5 h-5" />}
-                  </button>
-               ))}
-            </div>
-         </div>
-      )}
+                {/* Time Stat */}
+                <div className="bg-[#1A1D2E] rounded-xl p-3 flex flex-col items-center gap-2">
+                  <div className="bg-[#5B7FFF] p-2 rounded-lg">
+                    <Timer className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-outfit font-bold text-white">
+                      {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-xs font-outfit font-normal text-[#9CA3AF]">זמן</div>
+                  </div>
+                </div>
 
-      {/* Exercises */}
-      <div className="space-y-4 max-w-2xl mx-auto">
-        {exercises.map((exercise, index) => {
-          const data = exercisesData[exercise.id] || { 
-             heaviestWeight: "", heaviestReps: "", heaviestRir: "1", totalSetsDone: 0, isComplete: false 
-          };
-          
-          return (
-            <div key={exercise.id}>
-              <ExerciseCard
-                 exercise={exercise}
-                 data={data}
-                 onUpdate={(field, value) => updateExerciseData(exercise.id, field, value)}
-              />
+                {/* Progress Stat */}
+                <div className="bg-[#1A1D2E] rounded-xl p-3 flex flex-col items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <svg className="w-12 h-12 transform -rotate-90">
+                      <circle cx="24" cy="24" r="20" stroke="#3D4058" strokeWidth="3" fill="none" />
+                      <circle
+                        cx="24" cy="24" r="20" stroke="#5B7FFF" strokeWidth="3" fill="none"
+                        strokeDasharray={`${2 * Math.PI * 20}`}
+                        strokeDashoffset={`${2 * Math.PI * 20 * (1 - progress / 100)}`}
+                        className="transition-all duration-500"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-outfit font-bold text-white">{progress}%</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs font-outfit font-normal text-[#9CA3AF]">התקדמות</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          );
-        })}
+
+            {/* Exercises */}
+            <div className="w-full flex flex-col gap-5">
+              {exercises.map((exercise, index) => {
+                const data = exercisesData[exercise.id] || { 
+                  weight: "",
+                  reps: "",
+                  rir: "1",
+                  isComplete: false
+                };
+                
+                return (
+                  <div key={exercise.id}>
+                    <ExerciseCard
+                      exercise={exercise}
+                      data={data}
+                      onUpdate={(field, value) => updateExerciseData(exercise.id, field, value)}
+                      onCopyPreviousWorkout={() => copyPreviousWorkoutSet(exercise.id)}
+                      onClearExercise={() => clearExercise(exercise.id)}
+                    />
+                  </div>
+                );
+              })}
         
-        {/* Success Message */}
-        {exercises.length > 0 && Object.values(exercisesData).every(d => d.isComplete) && (
-          <div className="bg-green-500/10 border-2 border-green-500/30 rounded-2xl p-5 text-center">
-            <div className="text-4xl mb-2">🎉</div>
-            <h3 className="text-xl font-black text-foreground mb-1">עבודה מדהימה!</h3>
-            <p className="text-sm text-muted-foreground">סיימת את כל התרגילים!</p>
-          </div>
-        )}
-      </div>
-
-      {/* Finish Button */}
-      <div className="fixed bottom-20 left-0 right-0 p-4 z-20">
-        <div className="max-w-2xl mx-auto">
-            <Button
-              onClick={handleFinishWorkout}
-              disabled={saving}
-              className={cn(
-                "w-full h-14 rounded-2xl font-black text-lg transition-all",
-                progress === 100 
-                  ? "bg-green-500 hover:bg-green-600 text-white" 
-                  : "bg-primary hover:bg-primary/90 text-white",
-                saving && "opacity-80"
-              )}
-            >
-              {saving ? (
-                 <div className="flex items-center gap-2">
-                   <Loader2 className="h-5 w-5 animate-spin" />
-                   <span>שומר...</span>
-                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
-                  <span>{progress === 100 ? "סיום אימון 🎉" : "סיום אימון"}</span>
+              {/* Success Message */}
+              {exercises.length > 0 && Object.values(exercisesData).every(d => d.isComplete) && (
+                <div className="bg-[#4CAF50] rounded-2xl p-6 text-center">
+                  <div className="text-5xl mb-3">🎉</div>
+                  <h3 className="text-2xl font-outfit font-bold text-white mb-2">עבודה מעולה!</h3>
+                  <p className="text-base text-white/90">סיימת את כל התרגילים!</p>
                 </div>
               )}
-            </Button>
+
+              {/* Finish Button */}
+              <Button
+                onClick={handleFinishWorkout}
+                disabled={saving}
+                className={cn(
+                  "w-full h-14 rounded-xl font-outfit font-bold text-lg transition-all",
+                  progress === 100 
+                    ? "bg-[#4CAF50] hover:bg-[#45A049] text-white" 
+                    : "bg-[#5B7FFF] hover:bg-[#6B8EFF] text-white",
+                  saving && "opacity-80"
+                )}
+              >
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>שומר...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-5 h-5" />
+                    <span>{progress === 100 ? "סיים אימון 🎉" : "סיים אימון"}</span>
+                  </div>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
+
+      {/* Finish Confirmation Dialog */}
+      <Dialog open={showFinishConfirm} onOpenChange={setShowFinishConfirm}>
+        <DialogContent className="sm:max-w-md bg-[#2D3142] border-[#3D4058]">
+          <DialogHeader>
+            <DialogTitle className="text-white font-outfit font-bold text-xl">אישור סיום אימון</DialogTitle>
+            <DialogDescription className="text-[#9CA3AF] font-outfit font-normal text-base">
+              יש לך {incompleteCount} תרגילים שלא סומנו כמושלמים. האם אתה בטוח שברצונך לסיים את האימון?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowFinishConfirm(false)}
+              className="w-full sm:w-auto border-[#3D4058] text-white hover:bg-[#3D4058] bg-[#1A1D2E] h-11 rounded-xl"
+            >
+              ביטול
+            </Button>
+            <Button
+              onClick={finishWorkout}
+              disabled={saving}
+              className="w-full sm:w-auto bg-[#5B7FFF] hover:bg-[#6B8EFF] text-white h-11 rounded-xl"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  שומר...
+                </>
+              ) : (
+                "סיים אימון"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

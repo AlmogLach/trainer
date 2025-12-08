@@ -14,10 +14,12 @@ import { getTrainerTrainees, getActiveWorkoutPlan, createWorkoutPlan, updateWork
 import { supabase } from "@/lib/supabase";
 import type { User, NutritionMenu } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toast";
 
 function NewNutritionPlanContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [trainees, setTrainees] = useState<User[]>([]);
@@ -136,7 +138,7 @@ function NewNutritionPlanContent() {
 
   const removeMeal = (mealId: string) => {
     if (meals.length <= 1) {
-      alert("חייב להיות לפחות ארוחה אחת");
+      showToast("חייב להיות לפחות ארוחה אחת", "warning", 3000);
       return;
     }
     setMeals(prev => prev.filter(meal => meal.id !== mealId));
@@ -196,17 +198,17 @@ function NewNutritionPlanContent() {
 
   const handleSave = async () => {
     if (!selectedTraineeId) {
-      alert("אנא בחר מתאמן");
+      showToast("אנא בחר מתאמן", "warning", 3000);
       return;
     }
 
     if (!planName.trim()) {
-      alert("אנא הזן שם לתוכנית");
+      showToast("אנא הזן שם לתוכנית", "warning", 3000);
       return;
     }
 
     if (proteinPercent + carbsPercent + fatPercent !== 100) {
-      alert("סכום האחוזים של המקרונוטריינטים חייב להיות 100%");
+      showToast("סכום האחוזים של המקרונוטריינטים חייב להיות 100%", "warning", 4000);
       return;
     }
 
@@ -258,10 +260,11 @@ function NewNutritionPlanContent() {
       }
 
       // Redirect to nutrition plans page
+      showToast("תוכנית התזונה נשמרה בהצלחה!", "success", 3000);
       router.push("/trainer/nutrition-plans");
     } catch (error: any) {
       console.error("Error saving nutrition plan:", error);
-      alert("שגיאה בשמירת תוכנית התזונה: " + (error.message || error.toString()));
+      showToast("שגיאה בשמירת תוכנית התזונה: " + (error.message || error.toString()), "error", 5000);
     } finally {
       setSaving(false);
     }
@@ -269,41 +272,61 @@ function NewNutritionPlanContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center" dir="rtl">
-        <Loader2 className="h-8 w-8 animate-spin text-[#00ff88]" />
+      <div className="h-[calc(100vh-8rem)] w-full flex flex-col items-center justify-center gap-6">
+        <div className="relative">
+          {/* Outer pulsing circle */}
+          <div className="absolute inset-0 rounded-full bg-blue-500/20 dark:bg-blue-500/10 animate-ping" />
+          {/* Middle pulsing circle */}
+          <div className="absolute inset-2 rounded-full bg-blue-500/30 dark:bg-blue-500/20 animate-pulse" />
+          {/* Spinner */}
+          <div className="relative">
+            <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 h-16 w-16" strokeWidth={2.5} />
+          </div>
+        </div>
+        <div className="text-center space-y-2">
+          <p className="text-base font-bold text-gray-900 dark:text-white">טוען נתונים...</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">מכין את יצירת תוכנית התזונה</p>
+        </div>
+        {/* Loading dots */}
+        <div className="flex gap-2">
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] p-4 lg:p-6" dir="rtl">
-      <div className="max-w-7xl mx-auto flex gap-6">
-        {/* Main Content */}
-        <div className="flex-1 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link href="/trainer/nutrition-plans">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-gray-800">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-white">צור תוכנית תזונה חדשה</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 pb-32" dir="rtl">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-slate-800">
+          <div className="flex items-center gap-4">
+            <Link href="/trainer/nutrition-plans">
+              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl">
+                <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-slate-400" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">צור תוכנית תזונה חדשה</h1>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">בנה תוכנית תזונה מותאמת אישית</p>
+            </div>
           </div>
         </div>
 
         {/* Basic Info Card */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
           <CardHeader>
-            <CardTitle className="text-white">פרטים בסיסיים</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-white font-bold text-lg sm:text-xl">פרטים בסיסיים</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">בחר מתאמן:</label>
+              <label className="text-sm text-gray-900 dark:text-white mb-2 block font-bold">בחר מתאמן:</label>
               <select
                 value={selectedTraineeId}
                 onChange={(e) => setSelectedTraineeId(e.target.value)}
-                className="w-full bg-[#0f1a2a] border border-gray-700 text-white rounded px-3 py-2"
+                className="w-full bg-white dark:bg-slate-900/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl px-3 py-2 focus:border-blue-600 dark:focus:border-blue-500 transition-all"
               >
                 <option value="">בחר מתאמן...</option>
                 {trainees.map(trainee => (
@@ -315,31 +338,31 @@ function NewNutritionPlanContent() {
             </div>
 
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">שם התוכנית:</label>
+              <label className="text-sm text-gray-900 dark:text-white mb-2 block font-bold">שם התוכנית:</label>
               <Input
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
                 placeholder="לדוגמה: חיטוב מתקדם"
-                className="bg-[#0f1a2a] border-gray-700 text-white"
+                className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
               />
             </div>
 
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">יעד קלורי (קק"ל):</label>
+              <label className="text-sm text-gray-900 dark:text-white mb-2 block font-bold">יעד קלורי (קק"ל):</label>
               <Input
                 type="number"
                 value={calorieTarget}
                 onChange={(e) => setCalorieTarget(parseInt(e.target.value) || 2500)}
-                className="bg-[#0f1a2a] border-gray-700 text-white"
+                className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
               />
             </div>
 
             {/* Macronutrient Distribution */}
             <div>
-              <label className="text-sm text-gray-400 mb-2 block">חלוקת מקרונוטריינטים:</label>
+              <label className="text-sm text-gray-900 dark:text-white mb-2 block font-bold">חלוקת מקרונוטריינטים:</label>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">חלבון (%)</label>
+                  <label className="text-xs text-gray-500 dark:text-slate-400 mb-1 block font-medium">חלבון (%)</label>
                   <Input
                     type="number"
                     min="0"
@@ -353,11 +376,11 @@ function NewNutritionPlanContent() {
                         setFatPercent(remaining);
                       }
                     }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
+                    className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">פחמימות (%)</label>
+                  <label className="text-xs text-gray-500 dark:text-slate-400 mb-1 block font-medium">פחמימות (%)</label>
                   <Input
                     type="number"
                     min="0"
@@ -371,11 +394,11 @@ function NewNutritionPlanContent() {
                         setFatPercent(remaining);
                       }
                     }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
+                    className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">שומן (%)</label>
+                  <label className="text-xs text-gray-500 dark:text-slate-400 mb-1 block font-medium">שומן (%)</label>
                   <Input
                     type="number"
                     min="0"
@@ -389,24 +412,24 @@ function NewNutritionPlanContent() {
                         setCarbsPercent(remaining);
                       }
                     }}
-                    className="bg-[#0f1a2a] border-gray-700 text-white"
+                    className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white rounded-xl focus:border-blue-600 dark:focus:border-blue-500 transition-all"
                   />
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#00ff88]"></div>
-                  <span className="text-gray-400">חלבון: {proteinPercent}%</span>
+                  <div className="w-4 h-4 rounded bg-blue-600 dark:bg-blue-400"></div>
+                  <span className="text-gray-900 dark:text-white font-bold">חלבון: {proteinPercent}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#ffa500]"></div>
-                  <span className="text-gray-400">פחמימות: {carbsPercent}%</span>
+                  <div className="w-4 h-4 rounded bg-orange-500 dark:bg-orange-400"></div>
+                  <span className="text-gray-900 dark:text-white font-bold">פחמימות: {carbsPercent}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#ff6b6b]"></div>
-                  <span className="text-gray-400">שומן: {fatPercent}%</span>
+                  <div className="w-4 h-4 rounded bg-red-500 dark:bg-red-400"></div>
+                  <span className="text-gray-900 dark:text-white font-bold">שומן: {fatPercent}%</span>
                 </div>
-                <span className={`text-xs ${proteinPercent + carbsPercent + fatPercent === 100 ? 'text-[#00ff88]' : 'text-red-400'}`}>
+                <span className={`text-xs font-bold ${proteinPercent + carbsPercent + fatPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                   סה"כ: {proteinPercent + carbsPercent + fatPercent}%
                 </span>
               </div>
@@ -415,25 +438,25 @@ function NewNutritionPlanContent() {
         </Card>
 
         {/* Meals Card */}
-        <Card className="bg-[#1a2332] border-gray-800">
+        <Card className="border-none shadow-sm bg-white dark:bg-slate-900/50 dark:border-slate-800 overflow-hidden rounded-2xl">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-gray-900 dark:text-white font-bold flex items-center gap-2">
                 <Apple className="h-5 w-5" />
                 ארוחות ומזונות
               </CardTitle>
               <Button
                 onClick={addMeal}
-                className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm"
               >
                 <Plus className="h-4 w-4 ml-2" />
                 הוסף ארוחה
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6">
             {meals.map((meal) => (
-              <div key={meal.id} className="border border-gray-800 rounded-lg p-4 bg-[#0f1a2a]">
+              <div key={meal.id} className="border border-gray-200 dark:border-slate-800 rounded-xl p-3 sm:p-4 bg-gray-50 dark:bg-slate-800/50">
                 <div className="flex items-center justify-between mb-4">
                   {editingMealName[meal.id] !== undefined ? (
                     <div className="flex items-center gap-2 flex-1">
@@ -465,7 +488,7 @@ function NewNutritionPlanContent() {
                           }
                         }}
                         autoFocus
-                        className="bg-[#1a2332] border-gray-700 text-white flex-1 max-w-xs"
+                        className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white flex-1 max-w-xs rounded-xl"
                       />
                       <Button
                         size="sm"
@@ -474,7 +497,7 @@ function NewNutritionPlanContent() {
                             updateMealName(meal.id, editingMealName[meal.id].trim());
                           }
                         }}
-                        className="bg-[#00ff88] hover:bg-[#00e677] text-black"
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl"
                       >
                         שמור
                       </Button>
@@ -488,7 +511,7 @@ function NewNutritionPlanContent() {
                             return updated;
                           });
                         }}
-                        className="text-gray-400 hover:text-white"
+                        className="text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -496,7 +519,7 @@ function NewNutritionPlanContent() {
                   ) : (
                     <>
                       <h3 
-                        className="text-lg font-semibold text-white cursor-pointer hover:text-[#00ff88] transition-colors"
+                        className="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         onClick={() => startEditingMealName(meal.id, meal.mealName)}
                       >
                         {meal.mealName}
@@ -506,7 +529,7 @@ function NewNutritionPlanContent() {
                           size="sm"
                           variant="ghost"
                           onClick={() => startEditingMealName(meal.id, meal.mealName)}
-                          className="text-gray-400 hover:text-white"
+                          className="text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -528,7 +551,7 @@ function NewNutritionPlanContent() {
                               setSelectedMealForFood(meal.id);
                               setShowFoodHistory(true);
                             }}
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                            className="border-gray-200 dark:border-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
                             title="הוסף מהיסטוריה"
                           >
                             <History className="h-4 w-4" />
@@ -536,7 +559,7 @@ function NewNutritionPlanContent() {
                           <Button
                             size="sm"
                             onClick={() => addFoodToMeal(meal.id)}
-                            className="bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+                            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm"
                           >
                             <Plus className="h-4 w-4 ml-2" />
                             הוסף מזון
@@ -552,25 +575,25 @@ function NewNutritionPlanContent() {
                 ) : (
                   <div className="space-y-3">
                     {meal.foods.map((food) => (
-                      <div key={food.id} className="flex items-center gap-3 p-3 bg-[#1a2332] rounded-lg border border-gray-800">
+                      <div key={food.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-800">
                         <div className="flex-1 grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">שם המזון:</label>
+                            <label className="text-xs text-gray-900 dark:text-white mb-1 block font-medium">שם המזון:</label>
                             <Input
                               value={food.foodName}
                               onChange={(e) => updateFood(meal.id, food.id, "foodName", e.target.value)}
                               placeholder="לדוגמה: חזה עוף"
-                              className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                              className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm rounded-xl"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-400 mb-1 block">כמות (גרם):</label>
+                            <label className="text-xs text-gray-900 dark:text-white mb-1 block font-medium">כמות (גרם):</label>
                             <Input
                               type="number"
                               value={food.amount}
                               onChange={(e) => updateFood(meal.id, food.id, "amount", e.target.value)}
                               placeholder="200"
-                              className="bg-[#0f1a2a] border-gray-700 text-white text-sm"
+                              className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white text-sm rounded-xl"
                             />
                           </div>
                         </div>
@@ -592,11 +615,11 @@ function NewNutritionPlanContent() {
         </Card>
 
         {/* Save Button */}
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <Button
             onClick={handleSave}
             disabled={saving || !selectedTraineeId || !planName.trim()}
-            className="flex-1 bg-[#00ff88] hover:bg-[#00e677] text-black font-semibold"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-bold rounded-xl shadow-sm"
           >
             {saving ? (
               <>
@@ -613,7 +636,7 @@ function NewNutritionPlanContent() {
           <Link href="/trainer/nutrition-plans">
             <Button
               variant="outline"
-              className="border-gray-700 text-gray-300 hover:bg-gray-800"
+              className="border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl shadow-sm"
             >
               ביטול
             </Button>
@@ -624,18 +647,18 @@ function NewNutritionPlanContent() {
       {/* Food History Sidebar */}
       <aside className={`
         ${showFoodHistory ? 'flex' : 'hidden'} lg:flex
-        lg:w-80 flex-col bg-[#1a2332] border-l border-gray-800
+        lg:w-80 flex-col bg-white dark:bg-slate-900/50 border-l border-gray-200 dark:border-slate-800
         fixed lg:relative inset-y-0 left-0 z-30 lg:z-auto
       `}>
-        <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <History className="h-5 w-5" />
             היסטוריית מזונות
           </h2>
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden text-white hover:bg-gray-800"
+            className="lg:hidden text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
             onClick={() => {
               setShowFoodHistory(false);
               setSelectedMealForFood(null);
@@ -645,14 +668,14 @@ function NewNutritionPlanContent() {
           </Button>
         </div>
         
-        <div className="p-4 border-b border-gray-800">
+        <div className="p-4 border-b border-gray-200 dark:border-slate-800">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-slate-400" />
             <Input
               value={foodSearchQuery}
               onChange={(e) => setFoodSearchQuery(e.target.value)}
               placeholder="חפש מזון..."
-              className="bg-[#0f1a2a] border-gray-700 text-white pr-10"
+              className="bg-white dark:bg-slate-900/50 border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white pr-10 rounded-xl"
             />
           </div>
         </div>
@@ -660,12 +683,12 @@ function NewNutritionPlanContent() {
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {loadingFoodHistory ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-[#00ff88]" />
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
             </div>
           ) : selectedMealForFood ? (
-            <div className="mb-3 p-3 bg-[#00ff88]/20 border border-[#00ff88]/50 rounded-lg">
-              <p className="text-xs text-[#00ff88] font-semibold mb-1">מוסיף לארוחה:</p>
-              <p className="text-sm text-white">
+            <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-xl">
+              <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-1">מוסיף לארוחה:</p>
+              <p className="text-sm text-gray-900 dark:text-white">
                 {meals.find(m => m.id === selectedMealForFood)?.mealName || ''}
               </p>
               <Button
@@ -675,7 +698,7 @@ function NewNutritionPlanContent() {
                   setSelectedMealForFood(null);
                   setShowFoodHistory(false);
                 }}
-                className="mt-2 text-xs text-gray-400 hover:text-white h-6 px-2"
+                className="mt-2 text-xs text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white h-6 px-2"
               >
                 <X className="h-3 w-3 ml-1" />
                 ביטול בחירה
@@ -691,7 +714,7 @@ function NewNutritionPlanContent() {
             filteredFoodHistory.map((food, index) => (
               <div
                 key={`${food.foodName}-${index}`}
-                className="flex items-center gap-3 p-3 bg-[#0f1a2a] rounded-lg hover:bg-[#1a2332] cursor-pointer border border-gray-800"
+                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 cursor-pointer border border-gray-200 dark:border-slate-800"
                 onClick={() => {
                   if (selectedMealForFood) {
                     addFoodFromHistory(selectedMealForFood, food);
@@ -701,16 +724,16 @@ function NewNutritionPlanContent() {
                   }
                 }}
               >
-                <Apple className="h-5 w-5 text-gray-400" />
+                <Apple className="h-5 w-5 text-gray-600 dark:text-slate-400" />
                 <div className="flex-1">
-                  <p className="text-white text-sm">{food.foodName}</p>
+                  <p className="text-gray-900 dark:text-white text-sm">{food.foodName}</p>
                   {food.amount && (
-                    <p className="text-gray-500 text-xs">כמות: {food.amount} גרם</p>
+                    <p className="text-gray-500 dark:text-slate-400 text-xs">כמות: {food.amount} גרם</p>
                   )}
                 </div>
                 <Button
                   size="sm"
-                  className="bg-[#00ff88] hover:bg-[#00e677] text-black"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-xl"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (selectedMealForFood) {
@@ -727,7 +750,6 @@ function NewNutritionPlanContent() {
           )}
         </div>
       </aside>
-      </div>
     </div>
   );
 }
